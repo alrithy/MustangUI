@@ -51,7 +51,7 @@ export default function App() {
   const Screen = SCREENS[screen];
 
   return (
-    <div className="shell" data-rail={settings.railSide} data-booting={booting || undefined}>
+    <div className="shell" data-rail={settings.railSide}>
       <TopStatusBar />
       <div className="shell__body">
         <NavigationRail />

@@ -6,9 +6,27 @@
   place-items: center;
   background: #000;
   overflow: hidden;
-  transition: opacity var(--dur-context) var(--ease-standard);
+  transition: opacity 170ms var(--ease-standard);
 }
 .startup[data-leaving='true'] { opacity: 0; pointer-events: none; }
+
+/* Stage two of the exit. The interface underneath is already painted,
+   so the only job left is to bring it up from darkness rather than
+   switch it on: the black ground clears in 240ms and this dark,
+   desaturated tone releases over the 340ms behind it. In Day Mode the
+   mineral surface therefore arrives dimmed and brightens continuously
+   — there is no frame at which the panel jumps to full value. In the
+   dark themes the veil is that theme's own ground and is invisible. */
+.startup__veil {
+  position: absolute;
+  inset: 0;
+  z-index: 89;
+  background: var(--boot-veil);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 380ms cubic-bezier(0.5, 0, 0.72, 0.42) 50ms;
+}
+.startup__veil[data-leaving='true'] { opacity: 0; }
 
 /* Low-frequency wake: one wide, dim band crossing the panel once. It
    never reaches the emblem's own value — the badge stays the brightest
@@ -46,8 +64,8 @@
    silhouette itself is untouched artwork at every frame. */
 .startup__ponystage {
   position: absolute;
-  inset-block-start: -9.5rem;
-  width: 40rem;
+  inset-block-start: -11.5rem;
+  width: 49rem;
   aspect-ratio: 1200 / 446;
   animation: startup-pony-travel 1500ms var(--ease-precise) 120ms both;
   will-change: transform, opacity;
@@ -82,18 +100,28 @@
   opacity: 0;
   animation: startup-pony-spec 1250ms var(--ease-standard) 140ms both;
 }
+/* Broad and soft rather than narrow and bright. A tight high-value
+   band only ever catches the chrome rim, which reads as a silver
+   outline; a wide, low-peak gradient rolls across the gloss surface
+   itself and brings up the black body and its internal reflections on
+   the way past. Peak stays well under chrome value — this is light
+   moving over a black badge, not a badge made of light. */
 .startup__ponysweep::before {
   content: '';
   position: absolute;
   inset-block: -30%;
   inset-inline-start: 0;
-  width: 62%;
+  width: 104%;
   background: linear-gradient(
-    104deg,
+    102deg,
     transparent 0%,
-    rgba(226, 228, 232, 0.16) 26%,
-    rgba(248, 249, 250, 0.62) 48%,
-    rgba(226, 228, 232, 0.16) 70%,
+    rgba(198, 204, 212, 0.05) 14%,
+    rgba(214, 220, 228, 0.12) 28%,
+    rgba(232, 237, 242, 0.22) 40%,
+    rgba(243, 246, 249, 0.3) 50%,
+    rgba(232, 237, 242, 0.22) 60%,
+    rgba(214, 220, 228, 0.12) 72%,
+    rgba(198, 204, 212, 0.05) 86%,
     transparent 100%
   );
   animation: startup-pony-band 1250ms var(--ease-precise) 140ms both;
@@ -104,11 +132,16 @@
   62% { transform: translate3d(0, 0, 0) scale(1); }
   100% { transform: translate3d(-3.2rem, 0, 0) scale(1); }
 }
+/* Full value only while the light is actually crossing the badge — the
+   rim is the brightest thing in the asset, so holding it at full after
+   the sweep has passed is what starts to read as chrome. It settles
+   back a step and leaves as a black emblem. */
 @keyframes startup-pony-body {
   0% { opacity: 0; }
   16% { opacity: 0.3; }   /* form sensed, not read */
-  46% { opacity: 0.92; }
-  72% { opacity: 0.92; }
+  44% { opacity: 1; }
+  64% { opacity: 1; }
+  84% { opacity: 0.88; }
   100% { opacity: 0; }
 }
 @keyframes startup-pony-spec {
@@ -118,8 +151,8 @@
   100% { opacity: 0; }
 }
 @keyframes startup-pony-band {
-  0% { transform: translateX(-105%); }
-  100% { transform: translateX(275%); }
+  0% { transform: translateX(-108%); }
+  100% { transform: translateX(200%); }
 }
 
 /* ---------- Tri-bar ---------------------------------------------
@@ -171,15 +204,16 @@
 }
 
 @media (max-width: 1700px) {
-  .startup__ponystage { width: 32rem; inset-block-start: -8rem; }
+  .startup__ponystage { width: 39rem; inset-block-start: -9.75rem; }
 }
 @media (max-width: 1400px) {
-  .startup__ponystage { width: 26rem; inset-block-start: -7rem; }
+  .startup__ponystage { width: 32rem; inset-block-start: -8.5rem; }
   .startup__word { font-size: 2.2rem; }
 }
 
 /* Reduced motion keeps the sequence but removes the travel. */
 @media (prefers-reduced-motion: reduce) {
+  .startup, .startup__veil { transition-duration: 200ms; transition-delay: 0ms; }
   .startup__ponystage { animation-duration: 1ms; }
   .startup__ponysweep::before { animation-duration: 1ms; }
   .startup__wake { animation-duration: 1ms; }
