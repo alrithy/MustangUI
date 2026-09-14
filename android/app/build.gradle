@@ -14,6 +14,12 @@ android {
         versionName '1.0.0'
     }
 
+    // Diagnostics.enabled() reads BuildConfig.DEBUG, so the panel-metrics
+    // bridge method exists only in a debug build.
+    buildFeatures {
+        buildConfig true
+    }
+
     buildTypes {
         debug {
             // The HMI is the product surface; nothing is stripped from a

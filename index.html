@@ -28,6 +28,12 @@
       }
     </style>
 
+    <!-- Adapts the CSS viewport to the physical panel when the launcher
+         hosts this bundle; inert in a browser. Must run before first
+         layout, and is a separate file rather than inline because the
+         launcher serves a script-src 'self' CSP. -->
+    <script src="/viewport.js"></script>
+
     <title>MUSTANG — نظام المعلومات والترفيه</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/plex-ar-arabic-400.woff2" crossorigin />

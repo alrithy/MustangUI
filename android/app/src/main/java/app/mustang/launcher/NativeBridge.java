@@ -28,6 +28,9 @@ final class NativeBridge {
 
         /** The web layer reported it failed; raises native recovery. */
         void onUiFailure(String message);
+
+        /** Panel metrics for the debug overlay; null in a release build. */
+        JSONObject panelDiagnostics();
     }
 
     private final Host host;
@@ -91,6 +94,14 @@ final class NativeBridge {
             case "uiFailure":
                 host.onUiFailure(args == null ? "" : args.optString("message"));
                 return true;
+
+            case "diagnostics": {
+                // Debug builds only: a shipped launcher tells the page
+                // nothing about the device it is running on.
+                JSONObject panel = host.panelDiagnostics();
+                if (panel == null) throw new IllegalStateException("release_build");
+                return panel;
+            }
 
             case "vehicle":
                 return vehicle.snapshot();

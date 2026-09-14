@@ -95,19 +95,127 @@ Verify by screen-recording real cold starts — see DEVICE-DISCOVERY.md.
 
 ## Geometry
 
-The bundle is composed for 2400×900 **CSS pixels**. A WebView defaults to
-1 CSS px = 1 dp, so on a unit reporting a density other than 1.0 the
-layout viewport would come out as 2400/density and the approved
-composition would be cropped.
+This is the part most likely to be got wrong, so it is spelled out.
 
-`MainActivity` pins `setInitialScale(100)` and disables the wide-viewport
-path, which makes 1 CSS px = 1 physical px and reproduces the approved
-geometry at any density. `setTextZoom(100)` stops a vendor system
+### The mapping
+
+Android has three pixel units in play:
+
+| Unit | Meaning |
+|---|---|
+| Physical px | What the panel has. 2400 × 900 on this unit. |
+| Android dp | `physical / density`, where `density = densityDpi / 160`. |
+| CSS px | What the page lays out in. |
+
+The documented WebView behaviour is that it *"converts your CSS pixel
+values to density-independent pixel values, so your web page appears at
+the same perceivable size as a medium-density screen — about 160 dpi."*
+So by default **1 CSS px = 1 dp**, and the CSS viewport the page receives
+is `physical / density`:
+
+| Panel | densityDpi | density | CSS viewport without correction |
+|---|---|---|---|
+| 2400×900 | 160 | 1.0 | 2400 × 900 |
+| 2400×900 | 240 | 1.5 | 1600 × 600 |
+| 2400×900 | 320 | 2.0 | 1200 × 450 |
+| 2400×900 | 213 (vendor) | 1.33125 | 1803 × 676 |
+
+Only a 160 dpi unit sees the composition the HMI was authored for.
+
+### Why that matters more than it looks
+
+The HMI is not a page that merely gets smaller. Its rem base is derived
+from viewport units — `clamp(13px, min(2.24vh, 0.86vw), 20px)` — and
+about thirty media queries adjust the layout for genuinely smaller
+panels. At a 1200 px viewport the type scale clamps to its floor and the
+compact breakpoints fire, so the panel renders the small-screen
+compatibility layout, stretched over a 2400 px display. Captured
+uncorrected at 320 dpi: the rail label overflows its tile and the range
+readout disappears from the drivetrain bar entirely.
+
+That also rules out the obvious fix. Rendering a 2400×900 box and
+shrinking it with a CSS `transform: scale()` would not help: media
+queries and viewport units are evaluated against the viewport, not
+against a transformed ancestor, so all thirty would still read the wrong
+width. **The CSS viewport itself has to be 2400.**
+
+### What does not work
+
+`WebView.setInitialScale()`. It is documented as *not* taking screen
+density into account, unlike the scale properties in the viewport meta
+tag — which makes its meaning relative to dp exactly the thing that
+cannot be assumed across vendor firmware. An earlier revision of this
+project used `setInitialScale(100)` and asserted it produced a 1:1
+CSS-to-physical mapping. That assertion was not verified and is not
+relied on.
+
+### What is used
+
+The viewport meta tag, whose scale properties *are* density-aware.
+`public/viewport.js` runs in `<head>` before first layout, and only on
+the launcher's origin:
+
+1. Measures the dp viewport it was given — `documentElement.clientWidth`.
+2. Sets `width=2400` with `initial-scale` pinned to `measured / 2400`.
+
+No density is hardcoded anywhere; the scale is derived from what the
+device actually reports. `MainActivity` enables
+`setUseWideViewPort(true)` so the meta tag is honoured at all, and
+`setLoadWithOverviewMode(true)` as a fallback that fits by width if the
+script ever fails to run. `setTextZoom(100)` stops a vendor system
 font-size setting from reflowing the panel.
 
-2400×900 is the composition target. It is **not** an assertion that this
-unit's 2400 physical pixels equal 2400 Android dp — confirm with
-`wm size` and `wm density` before trusting the result.
+### The result, measured
+
+Verified in Chromium under mobile emulation — the same Blink viewport
+path WebView uses — at all four densities above:
+
+| density | dp viewport | page scale | CSS viewport | rendered |
+|---|---|---|---|---|
+| 1.0 | 2400×900 | 1.0 | 2400×900 | 2400×900 px |
+| 1.5 | 1600×600 | 0.66667 | 2400×900 | 2400×900 px |
+| 2.0 | 1200×450 | 0.5 | 2400×900 | 2400×900 px |
+| 1.33125 | 1803×676 | 0.75125 | 2400×900 | 2400×900 px |
+
+Root font size, touch-target boxes and the shell box are identical at
+every density, and the rendered output is the full panel with nothing
+cropped and nothing letterboxed.
+
+One trap worth recording: `window.devicePixelRatio` does **not** include
+the page scale — Blink keeps that in `visualViewport.scale`. The physical
+span of the composition is `cssPx × pageScale × devicePixelRatio`. Using
+`devicePixelRatio` alone overstates it by `1/pageScale`.
+
+### Touch targets
+
+Physical target size is `designPx × (panel physical width / 2400)`, which
+has no density term in it at all. So the 76 dp automotive minimum holds
+as long as the panel is the physical size the design assumes. That is a
+question about the glass, not about `densityDpi`, and it is on the
+discovery list: measure the panel and check `xdpi`/`ydpi`.
+
+2400×900 remains the composition target. It is **not** an assertion about
+this unit's dp — confirm with `wm size` and `wm density`, and with the
+diagnostics overlay below.
+
+### Diagnostics
+
+Debug builds carry a panel-diagnostics overlay, opened with the same
+long-press on the MUSTANG wordmark that opens the developer panel in the
+browser. It reports both halves of the mapping — physical px, density,
+densityDpi, WebView measured px from the native side, and
+`devicePixelRatio`, `innerWidth`/`innerHeight`, `clientWidth`/
+`clientHeight`, `visualViewport` and the applied page scale from the page
+— plus a verdict on whether the CSS viewport is the expected 2400.
+
+The same record is written to logcat once at start-up, so it can be read
+from a bench without touching the screen:
+
+```sh
+adb logcat -s MustangPanel:I
+```
+
+Release builds refuse the bridge call and log nothing.
 
 ## Offline and security
 
@@ -233,11 +341,19 @@ locally.
 ## Tests
 
 ```sh
-node scripts/verify-state.cjs                    # reducer, both modes
-npm run build && node scripts/verify-ui.cjs      # browser, both modes
+npm run verify:state                      # reducer, both platform modes
+npm run build && npm run verify:ui        # browser, both platform modes
+npm run build && npm run verify:panel     # geometry across four densities
 ```
 
 `verify-ui.cjs` serves `dist/` from the launcher's own origin and injects
 a fake native host, so the Android code path — bridge protocol included —
-is exercised without an APK or a device. Set `CHROMIUM_PATH` if your
-Chromium is not the build Playwright expects.
+is exercised without an APK or a device.
+
+`verify-panel.cjs` does the geometry, under Chromium mobile emulation so
+the viewport meta runs through the same Blink path WebView uses. It
+includes a control case with the correction removed, which both
+reproduces the uncorrected bug and calibrates the comparison threshold
+against a real regression rather than a guess.
+
+Set `CHROMIUM_PATH` if your Chromium is not the build Playwright expects.

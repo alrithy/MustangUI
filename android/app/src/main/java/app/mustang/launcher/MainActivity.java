@@ -27,6 +27,7 @@ import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
@@ -55,17 +56,6 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
      * cold WebView is not a fast machine.
      */
     private static final long READY_TIMEOUT_MS = 20_000L;
-
-    /**
-     * The bundle is composed for a 2400x900 panel in CSS pixels. A
-     * WebView defaults to 1 CSS px == 1 dp, so on any unit whose density
-     * is not 1.0 the layout viewport would come out as 2400/density and
-     * the approved composition would be cropped or letterboxed. Pinning
-     * the scale to 100 makes 1 CSS px == 1 physical px, which reproduces
-     * the approved geometry exactly whatever density the vendor reports.
-     * Verify with `adb shell wm size` and `wm density`.
-     */
-    private static final int PIXEL_EXACT_SCALE = 100;
 
     private static final String CSP =
         "default-src 'self'; "
@@ -136,7 +126,6 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
         web.setLongClickable(false);
         web.setHapticFeedbackEnabled(false);
         web.setOnLongClickListener(v -> true);
-        web.setInitialScale(PIXEL_EXACT_SCALE);
 
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);       // the HMI is a React app
@@ -155,10 +144,32 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
-        // Ignore the document's own viewport meta so PIXEL_EXACT_SCALE is
-        // what actually decides the layout viewport.
-        settings.setUseWideViewPort(false);
-        settings.setLoadWithOverviewMode(false);
+
+        /*
+         * Panel geometry. WebView converts CSS pixels to density-
+         * independent pixels, so by default the CSS viewport is
+         * (physical width / density) — a 2400px panel reports 2400 CSS px
+         * only at 160 dpi, 1600 at 240 dpi, 1200 at 320 dpi.
+         *
+         * The HMI's rem base is derived from vh/vw and ~30 media queries
+         * key off the viewport, so the CSS viewport has to genuinely be
+         * 2400 wide; scaling a rendered box with a CSS transform would
+         * leave every one of those queries reading the wrong width.
+         *
+         * setInitialScale() is deliberately NOT used: it is documented as
+         * not taking screen density into account, which makes its meaning
+         * relative to dp exactly the thing we cannot assume across vendor
+         * firmware. Instead wide-viewport mode lets the document's own
+         * viewport meta decide, and public/viewport.js pins it to
+         * width=2400 at a scale it measures from this device. Overview
+         * mode is the fallback that fits content by width if that script
+         * ever fails to run.
+         *
+         * Confirm on the unit with `adb shell wm size` / `wm density`,
+         * and with the debug diagnostics overlay.
+         */
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
         // The panel's font size is part of the approved design; a vendor
         // system font-size setting must not reflow the HMI.
         settings.setTextZoom(100);
@@ -237,12 +248,25 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
         main.post(() -> {
             uiReady = true;
             main.removeCallbacks(watchdog);
+            // Logged here rather than in onCreate: by now the WebView has
+            // been measured, so its size is real and not zero.
+            Diagnostics.log(this, web);
         });
     }
 
     @Override
     public void onUiFailure(String message) {
         main.post(this::recover);
+    }
+
+    @Override
+    public JSONObject panelDiagnostics() {
+        if (!Diagnostics.enabled()) return null;
+        try {
+            return Diagnostics.snapshot(this, web);
+        } catch (JSONException | RuntimeException failed) {
+            return null;
+        }
     }
 
     /* ---------------- Recovery ---------------- */

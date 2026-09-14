@@ -122,9 +122,27 @@ be no white, no grey, no default Android splash and no icon flash before
 the pony. Repeat in Day and Night mode. A source review cannot establish
 this on vendor firmware.
 
-**Geometry.** Does the HMI fill 2400×900 exactly, with no letterbox and
-no crop? Are touch targets physically ~76 dp at the vendor's density? Do
-immersive insets actually hide the system bars?
+**Geometry.** Open the diagnostics overlay (long-press the MUSTANG
+wordmark on a debug build) or read the start-up record with
+`adb logcat -s MustangPanel:I`, and confirm:
+
+- `css viewport` is 2400 wide and the verdict reads VIEWPORT OK.
+- `viewport adapter` shows `applied: true`, with `measured dip` equal to
+  `wm size` ÷ `wm density` × 160, and `initial-scale` equal to
+  `measured dip ÷ 2400`.
+- `effective physical` is the panel's real pixel count. Remember this is
+  `cssPx × pageScale × devicePixelRatio` — `devicePixelRatio` alone is
+  not the whole story.
+- `fully visible` is true: nothing cropped.
+
+Then measure the glass. Physical touch-target size is
+`designPx × (panel width in mm / 2400)` and has no density term, so the
+76 dp automotive minimum depends on the panel being the size the design
+assumes — not on `densityDpi`. Check a large button against a ruler and
+compare with `xdpi`/`ydpi` from the overlay.
+
+Also confirm immersive insets actually hide the system bars, and that
+nothing scrolls in either axis.
 
 **Lifecycle.** Ignition sleep/wake. App switching and return. Pressing
 Home while already in the HMI. Does it survive a WebView update?

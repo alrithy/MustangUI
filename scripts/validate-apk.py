@@ -13,6 +13,9 @@ REQUIRED = [
     "AndroidManifest.xml",
     "classes.dex",
     "assets/web/index.html",
+    # Without this the CSS viewport is (panel / density), so the whole
+    # 2400x900 composition silently misfires on any unit above 160 dpi.
+    "assets/web/viewport.js",
     # The approved startup sequence and its Arabic type. If either is
     # missing the HMI still runs, but not as the design was approved.
     "assets/web/brand/mustang-pony.webp",
@@ -46,6 +49,8 @@ def main(path: str) -> int:
                 problems.append("index.html has no inline black first paint")
             if "color-scheme:dark" not in squashed:
                 problems.append("index.html does not settle the UA canvas to dark")
+            if "viewport.js" not in index:
+                problems.append("index.html does not load the panel viewport adapter")
             if "http://" in index or "https://" in index:
                 problems.append("index.html references a remote URL; the UI must be offline")
 

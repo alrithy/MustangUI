@@ -26,8 +26,20 @@ listed as PASS below has not been demonstrated.
   is unverified, the keypad dialling through the bridge, the Home intent
   returning to Home, media-access request, and zero page errors in every
   pass.
+- **Panel geometry across densities.** `node scripts/verify-panel.cjs` —
+  44/44 in Chromium under mobile emulation, which runs the viewport meta
+  through the same Blink path WebView uses. Four densities (160, 240,
+  320 and a fractional vendor 213 dpi) on a 2400×900 panel. Each one
+  reaches a 2400 CSS px viewport, an identical root font size and
+  identical touch-target boxes, renders at exactly 2400×900 physical
+  pixels, scrolls in neither axis, and is optically identical to the
+  160 dpi baseline. A control case with the correction removed is
+  included: it reproduces the uncorrected bug (1200 px viewport,
+  collapsed type scale) and calibrates the comparison threshold against
+  a real regression rather than a guess.
 - **Screenshots.** Prototype and head-unit renders compared at 2400×900;
-  the composition is unchanged. Artifacts in `/tmp/mustang-ui`.
+  the composition is unchanged. Per-density captures and the uncorrected
+  control are in `/tmp/mustang-ui`.
 - **Java parse check.** All launcher sources compile past parsing with
   `javac`; the only errors are unresolved `android.*`, `androidx.*` and
   `org.json.*` symbols, which is exactly what an absent SDK produces.
@@ -54,6 +66,11 @@ listed as PASS below has not been demonstrated.
   in the build file, but the workflow runs lint as a separate
   non-gating step so an unexpected finding in a future AGP cannot stand
   between a reviewer and an installable APK.
+- **The geometry fix on a real WebView.** The density matrix is verified
+  in Chromium, not in Android's WebView on this vendor's firmware. The
+  mechanism is the documented viewport meta path and the scale is
+  measured on the device rather than assumed, but the confirmation is
+  the diagnostics overlay on the unit.
 - **Everything requiring the physical head unit.** Cold-start recording,
   OEM splash behaviour, real density and physical touch-target size,
   immersive insets, ignition sleep/wake, app switching, native intents
