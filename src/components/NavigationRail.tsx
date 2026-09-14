@@ -51,7 +51,7 @@ export function NavigationRail() {
             onClick={() => dispatch({ type: 'navigate', screen: item.id })}
             className={`rail__item pressable${selected ? ' is-selected' : ''}`}
           >
-            <TriBar variant="marker" orientation="horizontal" size="md" active={selected} className="rail__marker" />
+            <TriBar variant="marker" orientation="horizontal" size="sm" active={selected} className="rail__marker" />
             <span className="rail__icon-wrap">
               <Icon name={item.icon} className="rail__icon" />
               {activity[item.id] && !selected && <span className="rail__dot" />}

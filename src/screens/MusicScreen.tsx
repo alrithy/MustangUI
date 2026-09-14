@@ -99,10 +99,9 @@ export function MusicScreen() {
         <div className="music__secondary">
           <IconButton
             icon={favorite ? 'heart-filled' : 'heart'}
-            label="المفضلة" size="md" tone="accent" active={favorite}
+            label="المفضلة" size="lg" tone="accent" active={favorite}
             onClick={() => dispatch({ type: 'media-favorite', id: track.id })}
           />
-          <span className="hairline music__secondaryrule" />
           <span className="t-meta music__count">
             {media.trackIndex + 1} من {TRACKS.length}
           </span>

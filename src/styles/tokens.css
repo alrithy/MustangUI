@@ -6,11 +6,12 @@
 
 :root {
   /* --- Root scale ------------------------------------------------
-     The head unit is a fixed-size physical panel. We derive one
-     scale unit from the smaller of the two axes so the layout keeps
-     its proportions across 1280x720 -> 1920x1080 without reflowing
-     into a "responsive website".                                  */
-  font-size: clamp(13px, min(2.2vh, 0.9vw), 17px);
+     The panel is a fixed physical object, so the whole interface is
+     driven by one unit derived from the smaller axis. 1rem is the
+     system's dp: the layout keeps identical proportions from the
+     2400x900 primary panel down to a 1280x720 compatibility unit,
+     instead of reflowing like a responsive website.                */
+  font-size: clamp(13px, min(2.24vh, 0.86vw), 20px);
 
   /* --- Spacing rhythm (4pt) -------------------------------------- */
   --space-1: 0.25rem;
@@ -33,18 +34,23 @@
   --radius-pill: 999px;
   --chamfer: 18px; /* Mustang signature: single cut corner on hero surfaces */
 
-  /* --- Touch geometry (automotive minimums) ---------------------- */
-  --touch-sm: 3.5rem;   /* 56dp — absolute floor           */
-  --touch-md: 4rem;     /* 64dp — standard control         */
-  --touch-lg: 4.5rem;   /* 72dp — frequent / primary       */
-  --touch-xl: 5.5rem;   /* 88dp — call answer, transport   */
+  /* --- Touch geometry -------------------------------------------
+     1rem = 16dp. Anything a driver may reach for while moving is
+     --touch-lg or larger; the visible glyph stays small, the hit
+     region does not. --touch-sm is for parked-only surfaces.      */
+  --touch-sm: 3.25rem;  /*  52dp — parked-only, secondary        */
+  --touch-md: 4rem;     /*  64dp — non-critical control          */
+  --touch-lg: 4.75rem;  /*  76dp — DRIVING-CRITICAL MINIMUM      */
+  --touch-xl: 5.75rem;  /*  92dp — primary transport, call       */
+  --touch-2xl: 7rem;    /* 112dp — hero play, answer             */
 
   /* --- Icon sizing ----------------------------------------------- */
   --icon-xs: 1rem;
   --icon-sm: 1.25rem;
   --icon-md: 1.5rem;
   --icon-lg: 2rem;
-  --icon-xl: 2.5rem;
+  --icon-xl: 2.25rem;
+  --icon-2xl: 2.75rem;
   --icon-stroke: 1.6;
 
   /* --- Type scale ------------------------------------------------
@@ -83,7 +89,8 @@
   --dur-fast: calc(160ms * var(--motion-scale));
   --dur-base: calc(220ms * var(--motion-scale));
   --dur-slow: calc(300ms * var(--motion-scale));
-  --dur-panel: calc(380ms * var(--motion-scale));
+  --dur-panel: calc(320ms * var(--motion-scale));
+  --dur-context: calc(380ms * var(--motion-scale));
 
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
@@ -95,33 +102,42 @@
   --opacity-press: 0.72;
   --opacity-scrim: 0.86;
 
-  /* --- Layout chrome --------------------------------------------- */
-  --rail-w: 5.5rem;
-  --statusbar-h: 3rem;
-  --bottombar-h: 4.75rem;
+  /* --- Layout chrome ---------------------------------------------
+     The physical console already carries volume, tuning, transport
+     and climate switchgear, so the bar at the bottom holds only what
+     software owns: drivetrain readout and the media handle.        */
+  --rail-w: 6rem;
+  --statusbar-h: 3.25rem;
+  --bottombar-h: 5rem;
   --content-pad: var(--space-6);
+  --gutter: var(--space-5);
+
+  /* How much of the content area the Home context panel occupies. The
+     map stage fills whatever is left, and animates between the two. */
+  --stage-gap: 34%;
+  --stage-gap-guiding: 28%;
 }
 
-/* Narrow head units: reclaim horizontal space from chrome. */
+/* Narrow compatibility units reclaim horizontal space from the chrome.
+   Driving-critical targets keep their size; the chrome gives way. */
 @media (max-width: 1400px) {
   :root {
     --rail-w: 5rem;
     --content-pad: var(--space-4);
+    --gutter: var(--space-4);
+    --touch-lg: 4.25rem;
+    --touch-xl: 5rem;
+    --touch-2xl: 6rem;
   }
 }
 
-/* Taller panels (1920x1080): the chrome breathes and every touch target
-   grows with it, so lists fill the panel instead of stretching a 720
-   layout over it. Type scale is unchanged — reading distance has not. */
-@media (min-height: 900px) {
+/* Tall panels (1920x1080) are not the primary shape: give the chrome a
+   little more room and let lists breathe. */
+@media (min-height: 1000px) {
   :root {
     --statusbar-h: 3.5rem;
-    --bottombar-h: 5.25rem;
+    --bottombar-h: 5.5rem;
     --content-pad: var(--space-8);
-    --touch-sm: 3.75rem;
-    --touch-md: 4.375rem;
-    --touch-lg: 5rem;
-    --touch-xl: 6rem;
   }
 }
 

@@ -25,9 +25,6 @@
 
 .shell__content {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -35,7 +32,16 @@
   background: var(--bg-primary);
   overflow: hidden;
 }
-.shell__screen { flex: 1; min-height: 0; min-width: 0; }
+.shell__screen { position: relative; height: 100%; min-height: 0; min-width: 0; z-index: 1; }
 
 /* Reduce-motion is a user setting here, not only a media query. */
 [data-motion='reduced'] { --motion-scale: 0.01; }
+
+/* The shell is already composed behind the startup sequence and simply
+   becomes visible as it clears — no second entrance animation. */
+.shell[data-booting] .shell__body,
+.shell[data-booting] .statusbar,
+.shell[data-booting] .bvb { opacity: 0; }
+.shell__body, .statusbar, .bvb {
+  transition: opacity var(--dur-context) var(--ease-standard);
+}

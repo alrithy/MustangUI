@@ -63,9 +63,16 @@
 .tbtn--md { min-height: var(--touch-md); font-size: var(--type-body); }
 .tbtn--lg { min-height: var(--touch-lg); font-size: var(--type-body-lg); padding-inline: var(--space-6); }
 .tbtn--xl { min-height: var(--touch-xl); font-size: var(--type-body-lg); padding-inline: var(--space-8); }
+.tbtn--2xl {
+  min-height: var(--touch-2xl);
+  font-size: var(--type-title-sm);
+  padding-inline: var(--space-8);
+  border-radius: var(--radius-lg);
+}
 
 .tbtn__icon { font-size: var(--icon-md); flex: none; }
 .tbtn--lg .tbtn__icon, .tbtn--xl .tbtn__icon { font-size: var(--icon-lg); }
+.tbtn--2xl .tbtn__icon { font-size: var(--icon-xl); }
 .tbtn__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .tbtn--block { width: 100%; }
 
@@ -117,10 +124,12 @@
 .ibtn--md { width: var(--touch-md); height: var(--touch-md); }
 .ibtn--lg { width: var(--touch-lg); height: var(--touch-lg); }
 .ibtn--xl { width: var(--touch-xl); height: var(--touch-xl); border-radius: var(--radius-lg); }
+.ibtn--2xl { width: var(--touch-2xl); height: var(--touch-2xl); border-radius: var(--radius-lg); }
 
 .ibtn__icon { font-size: var(--icon-md); }
 .ibtn--lg .ibtn__icon { font-size: var(--icon-lg); }
 .ibtn--xl .ibtn__icon { font-size: var(--icon-xl); }
+.ibtn--2xl .ibtn__icon { font-size: var(--icon-2xl); }
 
 .ibtn--filled { background: var(--surface-subtle); color: var(--text-primary); }
 .ibtn--accent { background: var(--accent-primary); color: var(--text-on-accent); }

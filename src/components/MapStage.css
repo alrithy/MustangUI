@@ -1,0 +1,37 @@
+/* The stage occupies the content area and is repositioned by placement.
+   Only inset and opacity animate, so the transition stays on the
+   compositor on head-unit class hardware. */
+.mapstage {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  z-index: 0;
+  transition:
+    inset var(--dur-context) var(--ease-enter),
+    opacity var(--dur-base) var(--ease-standard),
+    border-radius var(--dur-context) var(--ease-enter);
+}
+
+/* Home: the map is the wide canvas beside the context panel. It sits
+   on the far side from the driver, who reaches the panel, not the map. */
+.mapstage[data-placement='home'] { inset: 0 0 0 var(--stage-gap); }
+.mapstage[data-placement='home-guiding'] { inset: 0 0 0 var(--stage-gap-guiding); }
+.mapstage[data-placement='full'] { inset: 0; }
+.mapstage[data-placement='off'] {
+  inset: 0 0 0 var(--stage-gap);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* A single tensioned edge where the canvas meets the context panel —
+   the body-side reference, not a border. */
+.mapstage__edge {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--divider) 14%, var(--divider) 86%, transparent);
+  pointer-events: none;
+}
+[dir='rtl'] .mapstage__edge { inset-inline-end: auto; inset-inline-start: 0; }

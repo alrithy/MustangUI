@@ -1,135 +1,207 @@
 /* ============================================================
    HOME
-   Not a widget wall. One hero that owns the current context, and
-   a three-row support column whose contents change with state.
+   One hero, one context. The map is the hero and lives in the
+   shell's map stage, so it is already on screen before guidance
+   starts and simply grows when it does. This screen owns the
+   context panel on the driver's side of the panel, plus the light
+   ambient overlay that sits on the canvas.
 
-     idle / parked   hero = now playing
-     guidance        hero = route, media collapses to the mini player
-     parked          support column trades telemetry for app access
+   idle      context = now playing
+   guiding   context = maneuver, arrival, collapsed media
+   call      context = caller, answer / decline; the map stays
+   parked    context = now playing with queue, plus app access
    ============================================================ */
 
+import { useEffect, useState } from 'react';
 import { AlbumArt } from '../components/AlbumArt';
-import { MapCanvas } from '../components/MapCanvas';
 import { MANEUVER_GLYPH, ManeuverPanel } from '../components/ManeuverPanel';
 import { MiniPlayer } from '../components/MiniPlayer';
-import { IconButton, Meter, Surface, TouchButton } from '../components/primitives';
-import { APPS, DESTINATIONS, TRACKS, WEATHER } from '../state/demoData';
-import { useDerived, useDispatch, useSystem, useTrack } from '../state/systemStore';
+import { IconButton, Meter, TouchButton } from '../components/primitives';
+import { DESTINATIONS, TRACKS, WEATHER } from '../state/demoData';
+import { contactById, useDerived, useDispatch, useSystem, useTrack } from '../state/systemStore';
 import {
-  arrivalTime, distanceKm, duration, longDate, clockTime, temperature, timecode,
+  arrivalTime, clockTime, distanceKm, duration, longDate, temperature, timecode,
 } from '../system/format';
 import { Icon } from '../system/icons';
-import { useEffect, useState } from 'react';
 import './HomeScreen.css';
 
 export function HomeScreen() {
-  const { homeContext, colorMode } = useDerived();
-  const guidance = homeContext === 'nav';
+  const { homeContext } = useDerived();
+  const { phone } = useSystem();
+  const showCall = phone.status !== 'idle';
 
   return (
     <div className="screen home" data-context={homeContext}>
-      <section className="home__hero">
-        {guidance ? <GuidanceHero /> : <MediaHero />}
-      </section>
+      {/* Ambient layer: sits on the map canvas, never boxes it in. */}
+      <MapOverlay />
 
-      <aside className="home__side">
-        {guidance ? (
-          <>
-            <ClockBand colorMode={colorMode} compact />
-            <UpcomingSteps />
-            <VehicleGlance />
-            <MiniPlayer />
-          </>
-        ) : (
-          <>
-            <ClockBand colorMode={colorMode} />
-            <DestinationsCard />
-            {homeContext === 'parked' ? <AppShortcuts /> : <VehicleGlance />}
-          </>
-        )}
-      </aside>
+      <section className="home__context">
+        {showCall ? <CallContext /> : homeContext === 'nav' ? <GuidanceContext /> : <MediaContext />}
+      </section>
     </div>
   );
 }
 
-/* ---------- Hero: media ------------------------------------------- */
-function MediaHero() {
+/* ---------- Ambient overlay on the canvas --------------------------
+   Time, date, weather and the two saved destinations. Nothing here is
+   a card: the information floats on the map at low weight so the map
+   stays a calm surface. */
+function MapOverlay() {
+  const { homeContext, colorMode } = useDerived();
+  const { nav } = useSystem();
+  const dispatch = useDispatch();
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 20_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const guiding = homeContext === 'nav';
+  const saved = DESTINATIONS.filter((d) => d.kind === 'home' || d.kind === 'work');
+
+  return (
+    <div className="home__overlay" data-guiding={guiding}>
+      {!guiding && (
+      <div className="home__ambient">
+        <div className="home__clock">
+          <span className="n-hero home__time">{clockTime(now)}</span>
+          <span className="home__date">{longDate(now)}</span>
+        </div>
+        <span className="home__ambientsep" />
+        <div className="home__weather">
+          <Icon name={colorMode === 'day' ? 'sun' : 'moon'} className="home__wicon" />
+          <span className="n-value home__temp">{temperature(WEATHER.tempC)}</span>
+          <span className="home__wcond">
+            {WEATHER.condition}
+            <span className="n-value home__wrange">{WEATHER.highC}° / {WEATHER.lowC}°</span>
+          </span>
+        </div>
+      </div>
+      )}
+
+      {!guiding && (
+        <div className="home__saved">
+          {saved.map((d) => (
+            <button
+              key={d.id}
+              type="button"
+              className="home__chip pressable"
+              data-scale="true"
+              onClick={() => dispatch({ type: 'nav-start', destination: d })}
+            >
+              <Icon name={d.kind === 'home' ? 'home' : 'briefcase'} className="home__chipicon" />
+              <span className="home__chiptext">
+                <span className="home__chipname truncate">{d.name}</span>
+                <span className="home__chipsub truncate">{d.district}</span>
+              </span>
+              <span className="home__chipeta">
+                <span className="n-value">{d.etaMin}</span>
+                <span className="home__chipunit">د</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {guiding && nav.destination && (
+        <button
+          type="button"
+          className="home__routechip pressable"
+          onClick={() => dispatch({ type: 'navigate', screen: 'nav' })}
+        >
+          <Icon name="pin" className="home__routeicon" />
+          <span className="truncate">{nav.destination.name}</span>
+          <Icon name="chevron-left" className="home__routego" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Context: media ------------------------------------------ */
+function MediaContext() {
   const { media } = useSystem();
+  const { parked } = useDerived();
   const dispatch = useDispatch();
   const track = useTrack();
   const remaining = track.durationSec - media.positionSec;
 
   return (
-    <Surface tone="base" radius="lg" pad="none" chamfer className="hero hero--media">
-      <span className="hero__ambient" style={{ background: track.ambient }} aria-hidden="true" />
-      <div className="hero__media-body">
-        <AlbumArt track={track} size="lg" className="hero__art" />
+    <div className="ctx ctx--media">
+      <span className="ctx__ambient" style={{ background: track.ambient }} aria-hidden="true" />
 
-        <div className="hero__info">
-          <span className="t-label hero__source">
-            {media.source === 'bluetooth' ? 'بلوتوث' : media.source === 'usb' ? 'USB' : 'راديو'}
-            <span className="hero__eq" data-on={media.playing} aria-hidden="true"><i /><i /><i /></span>
-          </span>
+      <header className="ctx__head">
+        <span className="t-label">
+          {media.source === 'bluetooth' ? 'بلوتوث' : media.source === 'usb' ? 'USB' : 'راديو'}
+        </span>
+        <span className="ctx__eq" data-on={media.playing} aria-hidden="true"><i /><i /><i /></span>
+      </header>
 
-          <button
-            type="button"
-            className="hero__titlebtn"
-            onClick={() => dispatch({ type: 'navigate', screen: 'music' })}
-          >
-            <h1 className="hero__title truncate"><bdi>{track.title}</bdi></h1>
-            <p className="hero__artist truncate"><bdi>{track.artist}</bdi></p>
-          </button>
+      <button
+        type="button"
+        className="ctx__artbtn pressable"
+        aria-label={`فتح الوسائط — ${track.title}`}
+        onClick={() => dispatch({ type: 'navigate', screen: 'music' })}
+      >
+        <AlbumArt track={track} size="xl" className="ctx__art" />
+      </button>
 
-          <div className="hero__progress">
-            <Meter ratio={media.positionSec / track.durationSec} height="sm" />
-            <div className="hero__times">
-              <span className="n-value hero__time">{timecode(media.positionSec)}</span>
-              <span className="n-value hero__time">-{timecode(remaining)}</span>
-            </div>
-          </div>
-
-          <div className="hero__transport">
-            <IconButton icon="prev" label="السابق" size="lg"
-              onClick={() => dispatch({ type: 'media-step', delta: -1 })} />
-            <IconButton
-              icon={media.playing ? 'pause' : 'play'}
-              label={media.playing ? 'إيقاف مؤقت' : 'تشغيل'}
-              size="xl" variant="filled"
-              onClick={() => dispatch({ type: 'media-toggle' })}
-            />
-            <IconButton icon="next" label="التالي" size="lg"
-              onClick={() => dispatch({ type: 'media-step', delta: 1 })} />
-          </div>
-        </div>
-
-        {/* The queue appears where there is room to read it: parked, or
-            on a taller panel. Visibility is CSS so the markup is stable. */}
-        <QueuePreview />
+      <div className="ctx__meta">
+        <h1 className="ctx__title truncate"><bdi>{track.title}</bdi></h1>
+        <p className="ctx__artist truncate"><bdi>{track.artist}</bdi></p>
       </div>
-    </Surface>
+
+      <div className="ctx__progress">
+        <Meter ratio={media.positionSec / track.durationSec} height="sm" />
+        <div className="ctx__times">
+          <span className="n-value ctx__time">{timecode(media.positionSec)}</span>
+          <span className="n-value ctx__time">-{timecode(remaining)}</span>
+        </div>
+      </div>
+
+      <div className="ctx__transport">
+        <IconButton icon="prev" label="المقطع السابق" size="xl"
+          onClick={() => dispatch({ type: 'media-step', delta: -1 })} />
+        <IconButton
+          icon={media.playing ? 'pause' : 'play'}
+          label={media.playing ? 'إيقاف مؤقت' : 'تشغيل'}
+          size="2xl" variant="filled" active={media.playing}
+          onClick={() => dispatch({ type: 'media-toggle' })}
+        />
+        <IconButton icon="next" label="المقطع التالي" size="xl"
+          onClick={() => dispatch({ type: 'media-step', delta: 1 })} />
+      </div>
+
+      {parked && <ParkedExtras />}
+    </div>
   );
 }
 
-function QueuePreview() {
+/* Parked unlocks what is unsafe to read while moving. The queue is
+   what the media panel gains; apps stay one tap away on the rail
+   rather than being crammed into this column. */
+function ParkedExtras() {
   const { media } = useSystem();
   const dispatch = useDispatch();
-  const upcoming = [1, 2, 3].map((o) => (media.trackIndex + o) % TRACKS.length);
+  const upcoming = [1, 2].map((o) => (media.trackIndex + o) % TRACKS.length);
 
   return (
-    <div className="hero__queue">
+    <div className="ctx__parked">
       <span className="t-label">التالي في القائمة</span>
-      <ul>
+      <ul className="ctx__queue">
         {upcoming.map((i) => {
           const t = TRACKS[i];
           return (
             <li key={t.id}>
-              <button type="button" className="row row--compact hero__queueitem pressable"
+              <button type="button" className="ctx__queueitem pressable"
                 onClick={() => dispatch({ type: 'media-select', index: i })}>
                 <AlbumArt track={t} size="xs" />
-                <span className="hero__queuetext">
+                <span className="ctx__queuetext">
                   <span className="truncate"><bdi>{t.title}</bdi></span>
                   <span className="truncate muted"><bdi>{t.artist}</bdi></span>
                 </span>
+                <span className="n-value ctx__queuedur">{timecode(t.durationSec)}</span>
               </button>
             </li>
           );
@@ -139,211 +211,128 @@ function QueuePreview() {
   );
 }
 
-/* ---------- Hero: guidance ----------------------------------------- */
-function GuidanceHero() {
+/* ---------- Context: guidance ---------------------------------------- */
+function GuidanceContext() {
   const { nav } = useSystem();
   const dispatch = useDispatch();
   const step = nav.steps[nav.stepIndex];
   const next = nav.steps[nav.stepIndex + 1];
   const rem = distanceKm(nav.remainingKm);
-  const eta = duration(nav.etaMin);
+  const dur = duration(nav.etaMin);
 
   return (
-    <Surface tone="base" radius="lg" pad="none" chamfer className="hero hero--nav">
-      <div className="hero__map">
-        <MapCanvas progress={nav.progress} routeActive variant="mini" />
-      </div>
-      <div className="hero__guidance">
-        <ManeuverPanel step={step} distanceM={nav.toManeuverM} next={next} />
-      </div>
-      <div className="hero__etabar">
-        <div className="hero__etagroup">
-          <span className="t-label">الوصول</span>
-          <span className="n-value hero__etaval">{arrivalTime(nav.etaMin)}</span>
-        </div>
-        <span className="hairline-v hero__etasep" />
-        <div className="hero__etagroup">
-          <span className="t-label">المتبقي</span>
-          <span className="hero__etapair">
-            <span className="n-value hero__etaval">{rem.value}</span>
-            <span className="hero__etaunit">{rem.unit}</span>
-          </span>
-        </div>
-        <span className="hairline-v hero__etasep" />
-        <div className="hero__etagroup">
-          <span className="t-label">المدة</span>
-          <span className="hero__etapair">
-            <span className="n-value hero__etaval">{eta.value}</span>
-            <span className="hero__etaunit">{eta.unit}</span>
-          </span>
-        </div>
-        <span className="hero__spacer" />
-        <TouchButton size="md" variant="ghost" icon="close"
-          onClick={() => dispatch({ type: 'nav-end' })}>
-          إنهاء
-        </TouchButton>
-      </div>
-    </Surface>
-  );
-}
+    <div className="ctx ctx--nav">
+      <ManeuverPanel step={step} distanceM={nav.toManeuverM} next={next} />
 
-/* ---------- Support column ------------------------------------------ */
-function ClockBand({ colorMode, compact = false }: { colorMode: 'day' | 'night'; compact?: boolean }) {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 20_000);
-    return () => window.clearInterval(id);
-  }, []);
+      <div className="ctx__eta">
+        <EtaCell label="الوصول" value={arrivalTime(nav.etaMin)} />
+        <span className="hairline-v ctx__etasep" />
+        <EtaCell label="المتبقي" value={rem.value} unit={rem.unit} />
+        <span className="hairline-v ctx__etasep" />
+        <EtaCell label="المدة" value={dur.value} unit={dur.unit} />
+      </div>
 
-  return (
-    <div className={`clockband${compact ? ' clockband--compact' : ''}`}>
-      <div className="clockband__time">
-        <span className={compact ? 'n-value clockband__value' : 'n-hero clockband__value'}>
-          {clockTime(now)}
-        </span>
-        <span className="clockband__date">{longDate(now)}</span>
-      </div>
-      <span className="hairline-v clockband__sep" />
-      <div className="clockband__weather">
-        <Icon name={colorMode === 'day' ? 'sun' : 'moon'} className="clockband__wicon" />
-        <span className="n-value clockband__temp">{temperature(WEATHER.tempC)}</span>
-        <span className="clockband__cond">
-          {WEATHER.condition}
-          <span className="clockband__range n-value">
-            {WEATHER.highC}° / {WEATHER.lowC}°
-          </span>
-        </span>
-      </div>
+      <RouteAhead />
+
+      <MiniPlayer />
+
+      <TouchButton size="lg" variant="secondary" icon="close" block
+        onClick={() => dispatch({ type: 'nav-end' })}>
+        إنهاء التوجيه
+      </TouchButton>
     </div>
   );
 }
 
-/* The hero shows the current maneuver and the one after it. This is
-   the rest of the route — enough to know what shape the drive has,
-   at a size that does not invite reading while moving. */
-function UpcomingSteps() {
+/* The maneuver card covers the next two turns. This is the shape of the
+   rest of the drive — read once when it appears, not while moving. */
+function RouteAhead() {
   const { nav } = useSystem();
-  const rest = nav.steps.slice(nav.stepIndex + 2, nav.stepIndex + 6);
+  const rest = nav.steps.slice(nav.stepIndex + 2);
 
   return (
-    <Surface tone="base" radius="md" pad="sm" className="upnext">
-      <span className="t-label upnext__head">بقية المسار</span>
-      <ul className="upnext__list">
-        {rest.length === 0 && <li className="upnext__empty t-meta">اقتربت من الوجهة</li>}
-        {rest.map((st) => {
+    <div className="ctx__ahead">
+      <span className="t-label">بقية المسار</span>
+      <ul className="ctx__aheadlist">
+        {rest.length === 0 && <li className="ctx__aheadempty t-meta">اقتربت من الوجهة</li>}
+        {rest.slice(0, 4).map((st) => {
           const d = distanceKm(st.distanceM / 1000);
           return (
-            <li key={st.id} className="upnext__item">
-              <Icon name={MANEUVER_GLYPH[st.kind]} className="upnext__icon" />
-              <span className="truncate upnext__road">{st.road}</span>
-              <span className="upnext__dist">
+            <li key={st.id} className="ctx__aheaditem">
+              <Icon name={MANEUVER_GLYPH[st.kind]} className="ctx__aheadicon" />
+              <span className="truncate ctx__aheadroad">{st.road}</span>
+              <span className="ctx__aheaddist">
                 <span className="n-value">{d.value}</span>
-                <span className="upnext__unit">{d.unit}</span>
+                <span className="ctx__aheadunit">{d.unit}</span>
               </span>
             </li>
           );
         })}
       </ul>
-    </Surface>
-  );
-}
-
-function DestinationsCard() {
-  const dispatch = useDispatch();
-  const shortcuts = DESTINATIONS.filter((d) => d.kind === 'home' || d.kind === 'work');
-  const recent = DESTINATIONS.filter((d) => d.kind === 'recent').slice(0, 2);
-
-  return (
-    <Surface tone="base" radius="md" pad="none" className="destcard">
-      <header className="destcard__head">
-        <span className="t-label">الوجهات</span>
-        <span className="destcard__place t-meta">الرياض — العليا</span>
-      </header>
-      <div className="destcard__list">
-        {shortcuts.map((d) => (
-          <button key={d.id} type="button" className="row row--compact destcard__row pressable"
-            onClick={() => dispatch({ type: 'nav-start', destination: d })}>
-            <Icon name={d.kind === 'home' ? 'home' : 'briefcase'} className="destcard__icon" />
-            <span className="destcard__text">
-              <span className="destcard__name truncate">{d.name}</span>
-              <span className="destcard__sub truncate">{d.district}</span>
-            </span>
-            <span className="destcard__eta">
-              <span className="n-value">{d.etaMin}</span>
-              <span className="destcard__unit">د</span>
-            </span>
-          </button>
-        ))}
-        <span className="hairline destcard__rule" />
-        {recent.map((d) => (
-          <button key={d.id} type="button" className="row row--compact destcard__row destcard__row--quiet pressable"
-            onClick={() => dispatch({ type: 'nav-start', destination: d })}>
-            <Icon name="clock" className="destcard__icon" />
-            <span className="destcard__text">
-              <span className="destcard__name truncate">{d.name}</span>
-              <span className="destcard__sub truncate">{d.district}</span>
-            </span>
-            <span className="destcard__eta">
-              <span className="n-value">{d.etaMin}</span>
-              <span className="destcard__unit">د</span>
-            </span>
-          </button>
-        ))}
-      </div>
-    </Surface>
-  );
-}
-
-function VehicleGlance() {
-  const { vehicle } = useSystem();
-  const lowTire = vehicle.tires.some((t) => t.psi < 33);
-
-  return (
-    <div className="glance">
-      <div className="glance__item">
-        <span className="t-label">المدى</span>
-        <span className="glance__value">
-          <span className="n-value">{vehicle.rangeKm}</span>
-          <span className="glance__unit">كم</span>
-        </span>
-        <Meter ratio={vehicle.fuelPct / 100} height="sm"
-          tone={vehicle.fuelPct < 15 ? 'warning' : 'neutral'} />
-      </div>
-      <span className="hairline-v glance__sep" />
-      <div className="glance__item">
-        <span className="t-label">الوقود</span>
-        <span className="glance__value">
-          <span className="n-value">{Math.round(vehicle.fuelPct)}</span>
-          <span className="glance__unit">٪</span>
-        </span>
-      </div>
-      <span className="hairline-v glance__sep" />
-      <div className="glance__item">
-        <span className="t-label">الإطارات</span>
-        <span className={`glance__value${lowTire ? ' is-warn' : ''}`}>
-          <Icon name={lowTire ? 'info' : 'shield'} className="glance__icon" />
-          <span className="glance__status">{lowTire ? 'انتبه' : 'سليمة'}</span>
-        </span>
-      </div>
     </div>
   );
 }
 
-function AppShortcuts() {
+function EtaCell({ label, value, unit }: { label: string; value: string; unit?: string }) {
+  return (
+    <div className="ctx__etacell">
+      <span className="t-label">{label}</span>
+      <span className="ctx__etaval">
+        <span className="n-value">{value}</span>
+        {unit && <span className="ctx__etaunit">{unit}</span>}
+      </span>
+    </div>
+  );
+}
+
+/* ---------- Context: call --------------------------------------------
+   The call takes the context panel, never the screen: guidance on the
+   canvas beside it stays exactly where the driver last saw it. */
+function CallContext() {
+  const { phone, nav } = useSystem();
   const dispatch = useDispatch();
-  const picks = APPS.filter((a) => ['a-maps', 'a-radio', 'a-podcast', 'a-video'].includes(a.id));
+  const contact = contactById(phone.contactId);
+  if (!contact) return null;
+  const incoming = phone.status === 'incoming';
 
   return (
-    <div className="shortcuts">
-      {picks.map((a) => (
-        <button key={a.id} type="button" className="shortcuts__item pressable" data-scale="true"
-          onClick={() => (a.target
-            ? dispatch({ type: 'navigate', screen: a.target })
-            : dispatch({ type: 'navigate', screen: 'apps' }))}>
-          <Icon name={a.icon} className="shortcuts__icon" />
-          <span className="shortcuts__label truncate">{a.name}</span>
-        </button>
-      ))}
+    <div className="ctx ctx--call" data-state={phone.status}>
+      <span className="t-label ctx__callstate">
+        {incoming ? 'مكالمة واردة' : 'مكالمة جارية'}
+      </span>
+      <h1 className="ctx__callname clamp-2">{contact.name}</h1>
+      <span className="ctx__callmeta ltr-num">
+        {incoming ? contact.phone : timecode(phone.durationSec)}
+      </span>
+
+      <span className="ctx__spacer" />
+
+      {incoming ? (
+        <div className="ctx__callactions">
+          <TouchButton variant="accept" size="2xl" icon="phone" block
+            onClick={() => dispatch({ type: 'call-accept' })}>رد</TouchButton>
+          <TouchButton variant="danger" size="2xl" icon="phone-end" block
+            onClick={() => dispatch({ type: 'call-decline' })}>رفض</TouchButton>
+        </div>
+      ) : (
+        <div className="ctx__callactions">
+          <div className="ctx__callrow">
+            <IconButton icon={phone.muted ? 'mic-off' : 'mic'} label="كتم الميكروفون"
+              size="xl" variant="filled" active={phone.muted}
+              onClick={() => dispatch({ type: 'call-mute' })} />
+            <IconButton icon="speaker" label="مكبر الصوت" size="xl" variant="filled"
+              active={phone.speaker} onClick={() => dispatch({ type: 'call-speaker' })} />
+          </div>
+          <TouchButton variant="danger" size="2xl" icon="phone-end" block
+            onClick={() => dispatch({ type: 'call-end' })}>إنهاء المكالمة</TouchButton>
+        </div>
+      )}
+
+      {nav.active && (
+        <p className="ctx__callnav t-meta">
+          <Icon name="nav" /> التوجيه مستمر إلى {nav.destination?.name}
+        </p>
+      )}
     </div>
   );
 }

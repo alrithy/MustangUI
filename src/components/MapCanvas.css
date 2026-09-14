@@ -5,32 +5,66 @@
   overflow: hidden;
   background: var(--map-land);
 }
+
+/* A soft fall-off at the edges so the canvas reads as a lit surface
+   rather than a cropped rectangle. One gradient, no blur. */
+.mapcanvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    128% 108% at 50% 46%,
+    transparent 34%,
+    rgba(0, 0, 0, 0.22) 78%,
+    rgba(0, 0, 0, 0.42) 100%
+  );
+}
+[data-mode='day'] .mapcanvas::before {
+  background: radial-gradient(
+    128% 108% at 50% 46%,
+    transparent 40%,
+    rgba(40, 38, 32, 0.07) 80%,
+    rgba(40, 38, 32, 0.13) 100%
+  );
+}
 .mapcanvas__svg { display: block; width: 100%; height: 100%; }
 .map-world { transition: transform var(--dur-slow) linear; }
 
 .map-land { fill: var(--map-land); }
 .map-block { fill: var(--map-block); }
-.map-water { fill: var(--map-water); opacity: 0.55; }
+.map-block--light { fill: var(--map-block-light); }
+.map-water { fill: var(--map-water); opacity: 0.85; }
+.map-park { fill: var(--map-park); }
 
-.map-streets line {
+/* Road hierarchy is carried by width and value together. Nothing here
+   is brighter than the buildings it runs between — a bright road mesh
+   is what makes a dark map read as graph paper. */
+.map-local line {
+  stroke: var(--map-local);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+.map-collectors line {
   stroke: var(--map-road);
-  stroke-width: 1.5;
+  stroke-width: 2.6;
   vector-effect: non-scaling-stroke;
 }
 .map-arterials line {
   stroke: var(--map-arterial);
-  stroke-width: 5.5;
+  stroke-width: 6;
+  stroke-linecap: round;
   vector-effect: non-scaling-stroke;
 }
 
 .map-labels text {
   fill: var(--map-label);
-  opacity: 0.85;
   font-family: var(--font-ui);
   font-weight: 500;
   paint-order: stroke;
   stroke: var(--map-land);
-  stroke-width: 3px;
+  stroke-width: 3.5px;
   stroke-linejoin: round;
 }
 
@@ -38,7 +72,7 @@
 .map-route-halo {
   fill: none;
   stroke: var(--map-route-halo);
-  stroke-width: 13;
+  stroke-width: 10.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -46,7 +80,7 @@
 .map-route-done {
   fill: none;
   stroke: var(--map-arterial);
-  stroke-width: 5;
+  stroke-width: 4.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -54,7 +88,7 @@
 .map-route {
   fill: none;
   stroke: var(--map-route);
-  stroke-width: 5;
+  stroke-width: 4.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;

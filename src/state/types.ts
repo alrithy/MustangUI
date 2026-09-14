@@ -165,6 +165,10 @@ export interface SettingsState {
   reduceMotion: boolean;
   chimeVolume: number;
   driverAlerts: boolean;
+  /** Startup sequence on power-on. */
+  startupOn: boolean;
+  greetingOn: boolean;
+  greetingText: string;
 }
 
 export interface SystemState {

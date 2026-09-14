@@ -11,16 +11,17 @@
 
 .phone__body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
   gap: var(--space-8);
   flex: 1;
   min-height: 0;
 }
 
-/* Two columns keep rows at full touch height without a 1800px line. */
+/* Columns keep every row at full touch height without stretching a
+   single name across the whole panel. */
 .phone__list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-rows: min-content;
   gap: var(--space-1) var(--space-6);
   grid-auto-rows: min-content;
@@ -28,6 +29,8 @@
   min-height: 0;
   padding-inline-end: var(--space-2);
 }
+@media (max-width: 1900px) { .phone__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1180px) { .phone__list { grid-template-columns: minmax(0, 1fr); } }
 
 .phone__rowtext { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1; }
 .phone__rowname { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
@@ -42,12 +45,7 @@
 .phone__rowdur { font-size: var(--type-caption); font-weight: var(--weight-regular); }
 .phone__rowdur::before { content: '·'; margin-inline-end: 0.4em; }
 .phone__diricon.is-missed { color: var(--status-danger); }
-.phone__rowmeta {
-  flex: none;
-  font-size: var(--type-meta);
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
+.phone__rowmeta { flex: none; font-size: var(--type-meta); color: var(--text-muted); }
 
 /* ---------- Keypad ---------------------------------------------------- */
 .phone__keypadwrap { min-height: 0; display: flex; align-items: center; justify-content: center; }
@@ -96,12 +94,7 @@
 .phone__callbody { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
 .phone__callstate { color: var(--accent-primary); margin-top: var(--space-3); }
 .phone__callname { font-size: var(--type-title-lg); font-weight: var(--weight-medium); }
-.phone__callnum {
-  font-size: var(--type-body);
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-  unicode-bidi: isolate;
-}
+.phone__callnum { font-size: var(--type-body); color: var(--text-muted); }
 .phone__calltime { font-size: var(--type-title-sm); color: var(--text-secondary); margin-top: var(--space-3); }
 
 .phone__callactions { display: flex; align-items: center; gap: var(--space-5); }
@@ -141,7 +134,7 @@
 .quickdial__grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-rows: minmax(8rem, auto);
+  grid-auto-rows: minmax(7rem, auto);
   align-content: start;
   gap: var(--space-3);
   min-height: 0;

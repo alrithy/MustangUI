@@ -24,65 +24,83 @@ const FOCUS_Y = 340;
 
 /* --- World geometry ---------------------------------------------
    Generated once at module scope so panning never reveals an edge.
-   Riyadh's north grid: long arterials, a finer street mesh between
-   them, and superblocks that vary just enough to not read as graph
-   paper. */
-const WORLD = { x0: -700, x1: 1700, y0: -400, y1: 1100 };
 
-const ARTERIALS_H = [-240, 160, 262, 348, 448, 548, 760, 980];
-const ARTERIALS_V = [-460, -180, 118, 214, 486, 742, 862, 1160, 1460];
+   The grid is deliberately irregular. A city drawn on even spacing
+   reads as graph paper; Riyadh's north is a coarse arterial frame
+   with blocks of very different depth inside it, and that variation
+   is what makes the canvas read as a place rather than a mesh. */
+const WORLD = { x0: -900, x1: 1900, y0: -600, y1: 1300 };
 
-function buildStreets() {
-  const h: number[] = [];
-  const v: number[] = [];
-  for (let y = WORLD.y0; y <= WORLD.y1; y += 44) {
-    if (!ARTERIALS_H.some((a) => Math.abs(a - y) < 26)) h.push(y);
+/* Seeded so the city is identical on every load and nothing animates. */
+let seed = 20250914;
+const rand = () => {
+  seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+  return seed / 0x7fffffff;
+};
+
+/** Irregular line positions: a base pitch with up to 40% jitter. */
+function lattice(from: number, to: number, pitch: number, jitter: number) {
+  const out: number[] = [];
+  let v = from;
+  while (v < to) {
+    out.push(Math.round(v));
+    v += pitch * (1 - jitter + rand() * jitter * 2);
   }
-  for (let x = WORLD.x0; x <= WORLD.x1; x += 62) {
-    if (!ARTERIALS_V.some((a) => Math.abs(a - x) < 30)) v.push(x);
-  }
-  return { h, v };
+  return out;
 }
-const STREETS = buildStreets();
 
-/* Deterministic block field — a seeded hash, so the city is identical
-   on every load and nothing animates. */
-function buildBlocks() {
-  const cells: Array<[number, number, number, number]> = [];
-  let seed = 20250913;
-  const rand = () => {
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-    return seed / 0x7fffffff;
-  };
-  const xs = [...ARTERIALS_V, ...STREETS.v].sort((a, b) => a - b);
-  const ys = [...ARTERIALS_H, ...STREETS.h].sort((a, b) => a - b);
+/* Three road classes. The arterials carry the route and the names;
+   collectors thread between them; the rest is local grain. */
+const ARTERIALS_H = [-240, 160, 348, 548, 860];
+const ARTERIALS_V = [-380, 118, 486, 862, 1320];
+const COLLECTORS_H = lattice(WORLD.y0, WORLD.y1, 104, 0.34)
+  .filter((y) => !ARTERIALS_H.some((a) => Math.abs(a - y) < 46));
+const COLLECTORS_V = lattice(WORLD.x0, WORLD.x1, 128, 0.34)
+  .filter((x) => !ARTERIALS_V.some((a) => Math.abs(a - x) < 54));
+const LOCAL_H = lattice(WORLD.y0, WORLD.y1, 46, 0.3)
+  .filter((y) => ![...ARTERIALS_H, ...COLLECTORS_H].some((a) => Math.abs(a - y) < 22));
+const LOCAL_V = lattice(WORLD.x0, WORLD.x1, 58, 0.3)
+  .filter((x) => ![...ARTERIALS_V, ...COLLECTORS_V].some((a) => Math.abs(a - x) < 26));
+
+/* Two block weights: the bulk of the fabric, plus a lighter set that
+   catches the eye and keeps large areas from going flat. */
+interface Block { x: number; y: number; w: number; h: number; light: boolean }
+
+function buildBlocks(): Block[] {
+  const cells: Block[] = [];
+  const xs = [...ARTERIALS_V, ...COLLECTORS_V, ...LOCAL_V].sort((a, b) => a - b);
+  const ys = [...ARTERIALS_H, ...COLLECTORS_H, ...LOCAL_H].sort((a, b) => a - b);
   for (let i = 0; i < xs.length - 1; i += 1) {
     for (let j = 0; j < ys.length - 1; j += 1) {
       const w = xs[i + 1] - xs[i];
       const h = ys[j + 1] - ys[j];
-      if (w < 20 || h < 18) continue;
+      if (w < 16 || h < 14) continue;
       const r = rand();
-      if (r < 0.2) continue; // open lots keep the grid from reading as tile
-      const inset = 4 + r * 9;
-      const trimX = r > 0.72 ? w * 0.34 : 0;   // half-built blocks
-      const trimY = r > 0.86 ? h * 0.3 : 0;
-      cells.push([
-        xs[i] + inset,
-        ys[j] + inset,
-        Math.max(6, w - inset * 2 - trimX),
-        Math.max(6, h - inset * 2 - trimY),
-      ]);
+      if (r < 0.26) continue;                  // open lots and yards
+      const inset = 3 + r * 7;
+      // Partly-built parcels: trim one axis so edges are not all flush.
+      const tw = r > 0.78 ? w * (0.26 + rand() * 0.3) : 0;
+      const th = r > 0.88 ? h * (0.22 + rand() * 0.26) : 0;
+      cells.push({
+        x: xs[i] + inset,
+        y: ys[j] + inset,
+        w: Math.max(5, w - inset * 2 - tw),
+        h: Math.max(5, h - inset * 2 - th),
+        light: r > 0.93,
+      });
     }
   }
   return cells;
 }
 const BLOCKS = buildBlocks();
 
-/* Wadi Hanifa: the one organic edge in an orthogonal city. */
+/* Wadi Hanifa and one green corridor: the two non-orthogonal edges. */
 const WADI =
-  'M-700 620 C -420 596, -180 520, 60 470 C 300 420, 430 372, 600 300 ' +
-  'C 790 220, 980 190, 1240 150 C 1420 122, 1560 118, 1700 108 ' +
-  'L 1700 -400 L -700 -400 Z';
+  'M-900 700 C -560 672, -240 590, 60 520 C 360 450, 520 392, 700 300 ' +
+  'C 900 196, 1150 150, 1460 104 C 1660 74, 1800 66, 1900 58 ' +
+  'L 1900 -18 C 1760 -8, 1620 0, 1440 26 C 1130 72, 880 118, 680 222 ' +
+  'C 500 314, 340 372, 40 442 C -250 512, -570 594, -900 622 Z';
+const PARK = 'M236 596 L470 596 L470 742 L236 742 Z';
 
 const LABELS: Array<{ x: number; y: number; text: string; size: number }> = [
   { x: 700, y: 138, text: 'طريق الملك سلمان', size: 10 },
@@ -131,14 +149,27 @@ export function MapCanvas({ progress, routeActive, variant = 'full', className =
         <rect x="0" y="0" width={VIEW_W} height="600" className="map-land" />
         <g transform={frame} className="map-world">
           <path d={WADI} className="map-water" />
+          <path d={PARK} className="map-park" />
 
-          {BLOCKS.map(([x, y, w, h], i) => (
-            <rect key={i} x={x} y={y} width={w} height={h} className="map-block" />
+          {BLOCKS.map((b, i) => (
+            <rect
+              key={i}
+              x={b.x}
+              y={b.y}
+              width={b.w}
+              height={b.h}
+              className={b.light ? 'map-block map-block--light' : 'map-block'}
+            />
           ))}
 
-          <g className="map-streets">
-            {STREETS.h.map((y) => <line key={`sh${y}`} x1={WORLD.x0} y1={y} x2={WORLD.x1} y2={y} />)}
-            {STREETS.v.map((x) => <line key={`sv${x}`} x1={x} y1={WORLD.y0} x2={x} y2={WORLD.y1} />)}
+          <g className="map-local">
+            {LOCAL_H.map((y) => <line key={`lh${y}`} x1={WORLD.x0} y1={y} x2={WORLD.x1} y2={y} />)}
+            {LOCAL_V.map((x) => <line key={`lv${x}`} x1={x} y1={WORLD.y0} x2={x} y2={WORLD.y1} />)}
+          </g>
+
+          <g className="map-collectors">
+            {COLLECTORS_H.map((y) => <line key={`ch${y}`} x1={WORLD.x0} y1={y} x2={WORLD.x1} y2={y} />)}
+            {COLLECTORS_V.map((x) => <line key={`cv${x}`} x1={x} y1={WORLD.y0} x2={x} y2={WORLD.y1} />)}
           </g>
 
           <g className="map-arterials">

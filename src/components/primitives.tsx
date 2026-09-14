@@ -60,7 +60,7 @@ interface TouchButtonProps {
   icon?: string;
   onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'accept';
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   block?: boolean;
   /** Present only on toggles. Undefined means "not a toggle". */
   active?: boolean;
@@ -95,7 +95,7 @@ interface IconButtonProps {
   icon: string;
   label: string;
   onClick?: () => void;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   variant?: 'ghost' | 'filled' | 'accent' | 'danger' | 'accept';
   /** Present only on toggles. Undefined means "not a toggle". */
   active?: boolean;

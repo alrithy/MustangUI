@@ -47,14 +47,17 @@
   /* Explicit rgba fades: color-mix() is not available on older
      Automotive WebViews, so gradients never depend on it. */
   --surface-fade: 18, 20, 22;
-  --call-accept: #2c7350;
-  --call-decline: #9c2f39;
+  --call-accept: #24603f;
+  --call-decline: #86242c;
 
-  --map-land: #0c0e10;
-  --map-block: #15181b;
-  --map-arterial: #2b3033;
-  --map-road: #1c2023;
-  --map-water: #0e1a22;
+  --map-land: #090b0d;
+  --map-block: #14171a;
+  --map-block-light: #1b1f23;
+  --map-arterial: #262c31;
+  --map-road: #1a1e22;
+  --map-local: #141719;
+  --map-water: #0b1210;
+  --map-park: #101712;
   --map-route: #dcd9d5;
   --map-route-halo: rgba(200, 37, 60, 0.55);
   --map-label: #656b70;
@@ -100,14 +103,17 @@
   /* Explicit rgba fades: color-mix() is not available on older
      Automotive WebViews, so gradients never depend on it. */
   --surface-fade: 20, 19, 17;
-  --call-accept: #4c6b46;
-  --call-decline: #8f4038;
+  --call-accept: #3e5a3a;
+  --call-decline: #79332c;
 
-  --map-land: #0d0c0a;
-  --map-block: #171613;
-  --map-arterial: #322e26;
-  --map-road: #201e19;
-  --map-water: #16170f;
+  --map-land: #0a0908;
+  --map-block: #171513;
+  --map-block-light: #1e1c17;
+  --map-arterial: #2b271f;
+  --map-road: #1c1a16;
+  --map-local: #151311;
+  --map-water: #101310;
+  --map-park: #141510;
   --map-route: #e0d9cb;
   --map-route-halo: rgba(201, 174, 123, 0.5);
   --map-label: #6c665c;
@@ -153,14 +159,17 @@
   /* Explicit rgba fades: color-mix() is not available on older
      Automotive WebViews, so gradients never depend on it. */
   --surface-fade: 16, 21, 29;
-  --call-accept: #2f7461;
-  --call-decline: #96434b;
+  --call-accept: #276050;
+  --call-decline: #7d363d;
 
-  --map-land: #080c12;
-  --map-block: #12181f;
-  --map-arterial: #28323d;
-  --map-road: #1a222b;
-  --map-water: #0b1a26;
+  --map-land: #070a10;
+  --map-block: #121820;
+  --map-block-light: #18202a;
+  --map-arterial: #232d38;
+  --map-road: #161d25;
+  --map-local: #111720;
+  --map-water: #091319;
+  --map-park: #0c1614;
   --map-route: #d3dee8;
   --map-route-halo: rgba(124, 178, 220, 0.5);
   --map-label: #5f6c78;
@@ -179,8 +188,8 @@
   --bg-secondary: #e7e4dc;
   --bg-chrome: #d0ccc2;
 
-  --surface-primary: #f2f0ea;
-  --surface-elevated: #f8f6f1;
+  --surface-primary: #ebe8e0;
+  --surface-elevated: #f4f2ec;
   --surface-subtle: rgba(24, 26, 28, 0.05);
   --surface-sunken: rgba(24, 26, 28, 0.11);
   --surface-press: rgba(24, 26, 28, 0.1);
@@ -204,15 +213,18 @@
   --status-danger: #b02a34;
   --status-info: #2c6e9e;
 
-  --surface-fade: 242, 240, 234;
+  --surface-fade: 235, 232, 224;
   --call-accept: #1c6a45;
   --call-decline: #98262f;
 
-  --map-land: #e0ddd4;
-  --map-block: #e9e6dd;
-  --map-arterial: #c2beb2;
-  --map-road: #d5d1c7;
-  --map-water: #cdd8dc;
+  --map-land: #dcd8cd;
+  --map-block: #cfcabd;
+  --map-block-light: #c6c0b1;
+  --map-arterial: #f4f1ea;
+  --map-road: #e9e5db;
+  --map-local: #e1ddd3;
+  --map-water: #d2d3c8;
+  --map-park: #d0d6c6;
   --map-label: #6d7276;
 }
 
@@ -230,8 +242,8 @@
   --bg-primary: #e0dacb;
   --bg-secondary: #e9e4d6;
   --bg-chrome: #d2ccbb;
-  --surface-primary: #f4f0e6;
-  --surface-elevated: #faf7ef;
+  --surface-primary: #ede9dd;
+  --surface-elevated: #f6f3ea;
   --text-primary: #1c1a15;
   --text-secondary: #55503f;
   --text-muted: #7f7967;
@@ -240,12 +252,15 @@
   --accent-wash: rgba(134, 97, 37, 0.11);
   --accent-glow: rgba(134, 97, 37, 0.28);
   --accent-secondary: #8a6e48;
-  --surface-fade: 244, 240, 230;
+  --surface-fade: 237, 233, 221;
 
-  --map-land: #e2ddce;
-  --map-block: #ebe6d8;
-  --map-arterial: #c4bda8;
-  --map-road: #d7d1c0;
+  --map-land: #ded8c7;
+  --map-block: #d1cab7;
+  --map-block-light: #c8c0aa;
+  --map-arterial: #f5f1e6;
+  --map-road: #eae5d7;
+  --map-local: #e2dccc;
+  --map-park: #d3d7c2;
   --map-route: #3d382c;
   --map-route-halo: rgba(134, 97, 37, 0.5);
 }
@@ -254,8 +269,8 @@
   --bg-primary: #d8dcdf;
   --bg-secondary: #e3e6e9;
   --bg-chrome: #cad0d4;
-  --surface-primary: #eef1f3;
-  --surface-elevated: #f5f7f8;
+  --surface-primary: #e7ebee;
+  --surface-elevated: #f1f4f6;
   --text-primary: #14181c;
   --text-secondary: #47525b;
   --text-muted: #737e87;
@@ -264,13 +279,16 @@
   --accent-wash: rgba(29, 95, 143, 0.1);
   --accent-glow: rgba(29, 95, 143, 0.28);
   --accent-secondary: #46627b;
-  --surface-fade: 238, 241, 243;
+  --surface-fade: 231, 235, 238;
 
-  --map-land: #dbdfe2;
-  --map-block: #e6e9eb;
-  --map-arterial: #bcc3c8;
-  --map-road: #d0d5d9;
-  --map-water: #c6d6de;
+  --map-land: #d6dade;
+  --map-block: #c8ced3;
+  --map-block-light: #bfc6cc;
+  --map-arterial: #f1f4f6;
+  --map-road: #e6eaed;
+  --map-local: #dee3e7;
+  --map-water: #ccd4d3;
+  --map-park: #ccd8cd;
   --map-route: #2f3941;
   --map-route-halo: rgba(29, 95, 143, 0.5);
 }

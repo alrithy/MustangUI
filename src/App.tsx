@@ -5,12 +5,13 @@
    never moves, so the panel keeps its physical identity.
    ============================================================ */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { BottomVehicleBar } from './components/BottomVehicleBar';
-import { CallBanner } from './components/CallBanner';
+import { MapStage } from './components/MapStage';
 import { DevPanel } from './components/DevPanel';
 import { NavigationRail } from './components/NavigationRail';
 import { SafetyOverlay } from './components/SafetyOverlay';
+import { StartupSequence } from './components/StartupSequence';
 import { TopStatusBar } from './components/TopStatusBar';
 import { AppsScreen } from './screens/AppsScreen';
 import { CarScreen } from './screens/CarScreen';
@@ -34,8 +35,9 @@ const SCREENS: Record<ScreenId, () => JSX.Element> = {
 };
 
 export default function App() {
-  const { screen, settings, vehicle, phone } = useSystem();
+  const { screen, settings, vehicle } = useSystem();
   const { colorMode } = useDerived();
+  const [booting, setBooting] = useState(() => settings.startupOn);
 
   /* Theme axes live on <html> so tokens resolve for portals too. */
   useEffect(() => {
@@ -49,23 +51,23 @@ export default function App() {
   const Screen = SCREENS[screen];
 
   return (
-    <div className="shell" data-rail={settings.railSide}>
+    <div className="shell" data-rail={settings.railSide} data-booting={booting || undefined}>
       <TopStatusBar />
       <div className="shell__body">
         <NavigationRail />
         <main className="shell__content" id="content">
-          {/* key remounts the screen so its enter transition runs */}
+          {/* The map is mounted once and repositioned by the active
+              screen, so Home -> Navigation grows the same canvas. */}
+          <MapStage />
           <div className="shell__screen">
             <Screen key={screen} />
           </div>
-          {/* A call outranks the screen but never replaces it: the
-              banner docks below, so guidance above stays visible. */}
-          {phone.status !== 'idle' && screen !== 'phone' && <CallBanner />}
           <SafetyOverlay />
         </main>
       </div>
       <BottomVehicleBar />
       <DevPanel />
+      {booting && <StartupSequence onDone={() => setBooting(false)} />}
     </div>
   );
 }

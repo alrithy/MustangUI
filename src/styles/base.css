@@ -152,6 +152,14 @@ h1, h2, h3, h4, p { margin: 0; font-weight: inherit; }
   letter-spacing: -0.025em;
 }
 
+/* Phone numbers, times and any digit run with no strong character of
+   its own: force the LTR run so groups never reorder under RTL. */
+.ltr-num {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Latin technical wordmarks: MUSTANG, GT, TRACK, RPM, PSI. */
 .latin {
   font-size: var(--type-caption);

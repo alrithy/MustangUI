@@ -93,6 +93,7 @@ const SHAPES: Record<string, ReactNode> = {
   video: <><rect x="2.8" y="5.4" width="13.4" height="13.2" rx="2.2" /><path d="m16.2 13 5-3.2v4.4l-5-3.2z" /></>,
   browser: <><circle cx="12" cy="12" r="8.8" /><path d="M3.4 12h17.2" /><path d="M12 3.2a13.6 13.6 0 0 1 0 17.6 13.6 13.6 0 0 1 0-17.6z" /></>,
   gallery: <><rect x="3.2" y="4.6" width="17.6" height="14.8" rx="2.2" /><circle cx="8.6" cy="9.8" r="1.7" /><path d="m4.2 17.4 4.8-4.6 3.6 3.4 3-2.8 4.2 4" /></>,
+  cast: <><rect x="2.8" y="4.6" width="18.4" height="12.6" rx="2.2" /><path d="M8.6 20.6h6.8" /><path d="M12 17.2v3.4" /><path d="M6.6 8.6a5.6 5.6 0 0 1 5.6 5.6" /><path d="M6.6 12.2a2 2 0 0 1 2 2" /></>,
   store: <><path d="M4 9.4h16v9.2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><path d="M3.2 9.4 5 4.6a1.4 1.4 0 0 1 1.3-.9h11.4a1.4 1.4 0 0 1 1.3.9l1.8 4.8" /><path d="M9.4 13.4h5.2" /></>,
 
   /* ---- Weather ---- */

@@ -1,323 +1,326 @@
 /* ============================================================
    HOME
-   Two columns on one shared baseline grid. The hero is always the
-   same box; only its contents change with context.
+   The map stage fills the content area behind this screen. Home
+   contributes two things: the ambient overlay that floats on the
+   canvas, and the context panel on the driver's side.
    ============================================================ */
 
 .home {
-  display: grid;
-  grid-template-columns: minmax(0, 1.34fr) minmax(0, 1fr);
-  gap: var(--space-5);
+  position: relative;
   height: 100%;
   min-height: 0;
 }
-.home__hero { min-width: 0; min-height: 0; display: flex; }
-/* Row shape follows context: idle keeps one flexible middle row,
-   guidance adds the route preview and demotes media to the base. */
-.home__side {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: var(--space-4);
-  min-width: 0;
-  min-height: 0;
-}
-.home[data-context='nav'] .home__side {
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
-  gap: var(--space-3);
-}
 
-.hero {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* Album colour bleeds into the hero at low strength — enough to feel
-   responsive to the track, never enough to tint the type. */
-/* The artwork tints the hero, but only just: a directional wash that
-   fades out well before it reaches the type. */
-.hero__ambient {
+/* ---------- Context panel ---------------------------------------------
+   Occupies the near edge of the panel — the side the driver reaches.
+   Its width is the same token the map stage reads, so the two move as
+   one when guidance starts. */
+.home__context {
   position: absolute;
-  inset: 0;
-  opacity: 0.4;
-  pointer-events: none;
-  transition: background-color var(--dur-panel) var(--ease-standard);
-  -webkit-mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.9), transparent 62%);
-  mask-image: linear-gradient(to left, rgba(0, 0, 0, 0.9), transparent 62%);
+  inset-block: 0;
+  left: 0;
+  width: calc(var(--stage-gap) - var(--gutter));
+  display: flex;
+  z-index: 2;
+  transition: width var(--dur-context) var(--ease-enter);
+}
+.home[data-context='nav'] .home__context {
+  width: calc(var(--stage-gap-guiding) - var(--gutter));
 }
 
-/* ---------- Hero: media -------------------------------------------- */
-.hero__media-body {
+.ctx {
   position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-content: center;
-  gap: var(--space-8);
-  height: 100%;
-  padding: var(--space-8);
-}
-.home[data-context='parked'] .hero__media-body {
-  grid-template-columns: auto minmax(18rem, 1fr) minmax(0, 0.6fr);
-  gap: var(--space-6);
-}
-
-/* Artwork is sized off the panel height so a 1080 unit uses the room
-   it has instead of stretching a 720 layout. */
-.hero__art {
-  height: clamp(10rem, 40vh, 21rem);
-  width: auto;
-  aspect-ratio: 1;
-  box-shadow: var(--shadow-lift);
-}
-.hero__info {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: var(--space-4);
+  flex: 1;
   min-width: 0;
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--surface-primary);
+  overflow: hidden;
+}
+.ctx__spacer { flex: 1; min-height: var(--space-2); }
+
+/* Parked adds the queue to this column, so the artwork gives up more
+   of its floor rather than pushing the queue off the bottom. */
+.home[data-context='parked'] .ctx__artbtn { min-height: 6rem; }
+
+/* The media column hangs off the artwork: head and art at the top,
+   metadata below it, and the transport anchored to the base. */
+.ctx--media { gap: var(--space-3); }
+.ctx--media .ctx__meta { margin-top: var(--space-3); }
+.ctx--media .ctx__progress { margin-top: auto; }
+.ctx--media .ctx__transport { margin-top: var(--space-2); }
+
+/* One tensioned corner, cut on the edge that faces the canvas. */
+.ctx::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: var(--chamfer);
+  height: var(--chamfer);
+  background: var(--bg-primary);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+[dir='rtl'] .ctx::after { clip-path: polygon(0 0, 100% 0, 100% 100%); }
+
+/* ---------- Media context --------------------------------------------- */
+.ctx__ambient {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  pointer-events: none;
+  transition: background-color var(--dur-context) var(--ease-standard);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 58%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 58%);
+}
+.ctx > * { position: relative; }
+
+.ctx__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.ctx__eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 0.75rem; }
+.ctx__eq i { width: 2px; height: 38%; border-radius: 1px; background: var(--accent-primary); opacity: 0.32; }
+.ctx__eq[data-on='true'] i { opacity: 1; animation: ctx-eq 1.4s var(--ease-standard) infinite; }
+.ctx__eq[data-on='true'] i:nth-child(2) { animation-delay: 0.18s; }
+.ctx__eq[data-on='true'] i:nth-child(3) { animation-delay: 0.36s; }
+@keyframes ctx-eq { 0%, 100% { height: 34%; } 50% { height: 100%; } }
+
+/* The artwork is bounded by the panel height as well as its width, so
+   it can never push the transport off the bottom of the column. */
+/* The artwork takes the slack in the column and derives its width from
+   that height, so it is bounded on both axes and can never overrun the
+   metadata below it. */
+.ctx__artbtn {
+  display: block;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 9rem;      /* never collapses when the panel gains content */
+  text-align: center;
+}
+.ctx__art {
+  display: inline-block;
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  max-height: 26rem;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lift);
 }
 
-.hero__source { display: flex; align-items: center; gap: var(--space-3); }
-.hero__eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 0.7rem; }
-.hero__eq i {
-  width: 2px;
-  background: var(--accent-primary);
-  opacity: 0.35;
-  border-radius: 1px;
-  height: 40%;
-}
-/* Three bars only, tied to playback state — a status light, not a
-   visualiser. It stops when the audio stops. */
-.hero__eq[data-on='true'] i { animation: hero-eq 1.4s var(--ease-standard) infinite; opacity: 1; }
-.hero__eq[data-on='true'] i:nth-child(2) { animation-delay: 0.18s; }
-.hero__eq[data-on='true'] i:nth-child(3) { animation-delay: 0.36s; }
-@keyframes hero-eq {
-  0%, 100% { height: 35%; }
-  50% { height: 100%; }
-}
-
-.hero__titlebtn { display: block; text-align: start; min-width: 0; }
-.hero__title {
-  font-size: var(--type-title-lg);
+.ctx__meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.ctx__title {
+  font-size: var(--type-title);
   font-weight: var(--weight-medium);
   letter-spacing: var(--track-tight);
   line-height: 1.2;
 }
-.hero__artist {
-  font-size: var(--type-body-lg);
-  color: var(--text-secondary);
-  margin-top: 0.15rem;
-}
+.ctx__artist { font-size: var(--type-body-lg); color: var(--text-secondary); }
 
-.hero__progress { display: flex; flex-direction: column; gap: var(--space-2); }
-.hero__times { display: flex; justify-content: space-between; }
-.hero__time { font-size: var(--type-caption); color: var(--text-muted); font-weight: var(--weight-regular); }
+.ctx__progress { display: flex; flex-direction: column; gap: var(--space-2); }
+.ctx__times { display: flex; justify-content: space-between; }
+.ctx__time { font-size: var(--type-caption); font-weight: var(--weight-regular); color: var(--text-muted); }
 
-.hero__transport { display: flex; align-items: center; gap: var(--space-2); }
-.hero__spacer { flex: 1; }
-
-.hero__queue {
-  display: none;
-  flex-direction: column;
-  gap: var(--space-3);
-  justify-content: center;
-  min-width: 0;
-  padding-inline-start: var(--space-5);
-  border-inline-start: 1px solid var(--divider);
-}
-.hero__queue ul { display: flex; flex-direction: column; gap: var(--space-1); }
-.hero__queueitem { padding-inline: var(--space-2); border-radius: var(--radius-sm); }
-.hero__queuetext { display: flex; flex-direction: column; min-width: 0; font-size: var(--type-meta); }
-.hero__queuetext .muted { font-size: var(--type-caption); }
-
-/* ---------- Hero: guidance ------------------------------------------ */
-.hero--nav { display: flex; flex-direction: column; }
-.hero__map { position: absolute; inset: 0; }
-.hero__map::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(var(--surface-fade), 0.9) 0%,
-    rgba(var(--surface-fade), 0.32) 34%,
-    rgba(var(--surface-fade), 0) 55%,
-    rgba(var(--surface-fade), 0.5) 100%
-  );
-}
-.hero__guidance { position: relative; padding: var(--space-6) var(--space-8) 0; }
-/* The ETA row gets a real band rather than relying on a gradient: map
-   labels must never compete with the numbers a driver reads. */
-.hero__etabar {
-  position: relative;
-  margin-top: auto;
+.ctx__transport {
   display: flex;
   align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-4) var(--space-8) var(--space-5);
-  background: rgba(var(--surface-fade), 0.94);
-  border-top: 1px solid var(--divider);
-}
-.hero__etagroup { display: flex; flex-direction: column; gap: var(--space-1); }
-.hero__etapair { display: flex; align-items: baseline; gap: 0.25em; }
-.hero__etaval { font-size: var(--type-title-sm); }
-.hero__etaunit { font-size: var(--type-meta); color: var(--text-muted); }
-.hero__etasep { height: 2rem; align-self: center; }
-
-/* ---------- Clock band ----------------------------------------------- */
-.clockband {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-2) var(--space-2) var(--space-4);
-  border-bottom: 1px solid var(--divider);
-}
-.clockband__time { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.clockband__value { color: var(--text-primary); }
-.clockband:not(.clockband--compact) .clockband__value { font-size: 3.4rem; }
-.clockband__date { font-size: var(--type-meta); color: var(--text-muted); }
-.clockband__sep { height: 2.75rem; align-self: center; }
-
-.clockband__weather { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
-.clockband__wicon { font-size: var(--icon-lg); color: var(--text-secondary); }
-.clockband__temp { font-size: var(--type-title-sm); }
-.clockband__cond { display: flex; flex-direction: column; font-size: var(--type-meta); color: var(--text-secondary); }
-.clockband__range { font-size: var(--type-caption); color: var(--text-muted); font-weight: var(--weight-regular); }
-
-.clockband--compact { padding-block: var(--space-2); gap: var(--space-4); }
-.clockband--compact .clockband__value { font-size: var(--type-title); font-weight: var(--weight-light); }
-.clockband--compact .clockband__sep { height: 1.75rem; }
-.clockband--compact .clockband__wicon { font-size: var(--icon-md); }
-.clockband--compact .clockband__temp { font-size: var(--type-body-lg); }
-
-/* ---------- Destinations --------------------------------------------- */
-.destcard { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
-.destcard__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--space-4);
-  padding: var(--space-4) var(--space-5) var(--space-2);
 }
-.destcard__place { color: var(--text-muted); }
-.destcard__list {
+.ctx__transport .ibtn--2xl {
+  border-radius: 50%;
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--border-strong), var(--shadow-soft);
+}
+/* Playing state is carried by a ring, never a fill. */
+.ctx__transport .ibtn--2xl[aria-pressed='true'] {
+  box-shadow: inset 0 0 0 2px var(--accent-primary), 0 0 20px -8px var(--accent-glow);
+}
+
+/* ---------- Parked extras ---------------------------------------------- */
+.ctx__parked {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  flex: 1;
-  min-height: 0;
-  padding: var(--space-1) var(--space-2) var(--space-2);
-  gap: 1px;
-}
-.destcard__row { min-height: var(--touch-md); border-radius: var(--radius-sm); }
-.destcard__icon { font-size: var(--icon-sm); color: var(--text-secondary); flex: none; }
-.destcard__row--quiet .destcard__icon { color: var(--text-muted); }
-.destcard__text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.destcard__name { font-size: var(--type-body); font-weight: var(--weight-medium); }
-.destcard__row--quiet .destcard__name { font-weight: var(--weight-regular); color: var(--text-secondary); }
-.destcard__sub { font-size: var(--type-caption); color: var(--text-muted); }
-.destcard__eta { display: flex; align-items: baseline; gap: 0.2em; flex: none; }
-.destcard__eta .n-value { font-size: var(--type-body); }
-.destcard__unit { font-size: var(--type-caption); color: var(--text-muted); }
-.destcard__rule { margin: var(--space-2) var(--space-3); }
-
-/* ---------- Vehicle glance -------------------------------------------- */
-.glance {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-2) var(--space-1);
-  border-top: 1px solid var(--divider);
-}
-.glance__item { display: flex; flex-direction: column; gap: var(--space-2); flex: 1; min-width: 0; }
-.glance__value { display: flex; align-items: baseline; gap: 0.3em; }
-.glance__value .n-value { font-size: var(--type-title-sm); }
-.glance__unit { font-size: var(--type-caption); color: var(--text-muted); }
-.glance__icon { font-size: var(--icon-sm); color: var(--status-success); align-self: center; }
-.glance__value.is-warn .glance__icon { color: var(--status-warning); }
-.glance__status { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
-.glance__value.is-warn .glance__status { color: var(--status-warning); }
-.glance__sep { align-self: stretch; }
-
-/* ---------- Parked shortcuts -------------------------------------------- */
-.shortcuts {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-2);
   padding-top: var(--space-3);
   border-top: 1px solid var(--divider);
 }
-.shortcuts__item {
+.ctx__queue { display: flex; flex-direction: column; gap: 1px; }
+.ctx__queueitem {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  min-height: var(--touch-lg);
-  padding: var(--space-2);
-  border-radius: var(--radius-md);
-  background: var(--surface-subtle);
-  color: var(--text-secondary);
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--touch-sm);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-sm);
+  text-align: start;
 }
-.shortcuts__icon { font-size: var(--icon-md); }
-.shortcuts__label { font-size: var(--type-caption); max-width: 100%; }
+.ctx__queuetext { display: flex; flex-direction: column; min-width: 0; flex: 1; font-size: var(--type-meta); }
+.ctx__queuetext .muted { font-size: var(--type-caption); }
+.ctx__queuedur { font-size: var(--type-caption); color: var(--text-muted); font-weight: var(--weight-regular); }
 
-/* ---------- Narrow / short panels ---------------------------------------- */
-/* The queue shows only where it can actually be read: the hero has to be
-   wide enough that the transport row keeps its full size beside it. */
-@media (min-width: 1700px) {
-  .home[data-context='parked'] .hero__queue { display: flex; }
-}
-@media (min-height: 900px) {
-  .hero__info { gap: var(--space-8); }
-  .hero__art { height: clamp(10rem, 40vh, 26rem); }
-  .destcard__list { justify-content: space-evenly; }
-}
-@media (min-height: 900px) and (min-width: 1700px) {
-  .hero__queue { display: flex; gap: var(--space-4); }
-  .hero__media-body {
-    grid-template-columns: auto minmax(19rem, 1fr) minmax(0, 0.6fr);
-    gap: var(--space-8);
-  }
-}
+/* ---------- Guidance context -------------------------------------------- */
+.ctx--nav { gap: var(--space-5); }
+.ctx__eta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.ctx__etacell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.ctx__etaval { display: flex; align-items: baseline; gap: 0.25em; }
+.ctx__etaval .n-value { font-size: var(--type-title-sm); }
+.ctx__etaunit { font-size: var(--type-meta); color: var(--text-muted); }
+.ctx__etasep { height: 2.25rem; }
 
-@media (max-width: 1699px) {
-  .home[data-context='parked'] .hero__media-body { grid-template-columns: auto minmax(0, 1fr); }
-}
-@media (max-width: 1500px) {
-  .home { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: var(--space-4); }
-  .hero__media-body { gap: var(--space-5); padding: var(--space-5); }
-  .hero__art { height: clamp(9rem, 34vh, 15rem); }
-}
-@media (max-height: 700px) {
-  .clockband { padding-bottom: var(--space-3); }
-}
-
-
-/* ---------- Route preview (guidance context) ---------------------------- */
-.upnext { display: flex; flex-direction: column; gap: var(--space-2); min-height: 0; overflow: hidden; }
-.upnext__item { flex: none; }
-.upnext__head { padding-inline: var(--space-2); }
-.upnext__list {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly;
-  flex: 1;
-  min-height: 0;
-}
-.upnext__item {
+.ctx__ahead { display: flex; flex-direction: column; gap: var(--space-2); flex: 1; min-height: 0; }
+.ctx__aheadlist { display: flex; flex-direction: column; justify-content: center; flex: 1; min-height: 0; }
+.ctx__aheaditem {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   min-height: 2.6rem;
-  padding-inline: var(--space-2);
   border-bottom: 1px solid var(--divider);
 }
-.upnext__item:last-child { border-bottom: 0; }
-.upnext__icon { font-size: var(--icon-sm); color: var(--text-muted); flex: none; }
-.upnext__road { font-size: var(--type-meta); color: var(--text-secondary); flex: 1; min-width: 0; }
-.upnext__dist { display: flex; align-items: baseline; gap: 0.2em; flex: none; }
-.upnext__dist .n-value { font-size: var(--type-meta); color: var(--text-secondary); }
-.upnext__unit { font-size: 0.6875rem; color: var(--text-muted); }
-.upnext__empty { padding: var(--space-3) var(--space-2); color: var(--text-muted); }
+.ctx__aheaditem:last-child { border-bottom: 0; }
+.ctx__aheadicon { font-size: var(--icon-sm); color: var(--text-muted); flex: none; }
+.ctx__aheadroad { font-size: var(--type-meta); color: var(--text-secondary); flex: 1; min-width: 0; }
+.ctx__aheaddist { display: flex; align-items: baseline; gap: 0.2em; flex: none; }
+.ctx__aheaddist .n-value { font-size: var(--type-meta); color: var(--text-secondary); }
+.ctx__aheadunit { font-size: 0.6875rem; color: var(--text-muted); }
+.ctx__aheadempty { color: var(--text-muted); }
+
+/* ---------- Call context ------------------------------------------------- */
+.ctx--call { animation: ctx-call-in var(--dur-panel) var(--ease-enter) both; }
+@keyframes ctx-call-in {
+  from { opacity: 0; transform: translateY(0.75rem); }
+  to { opacity: 1; transform: none; }
+}
+.ctx--call[data-state='incoming'] { box-shadow: inset 0 2px 0 0 var(--accent-primary); }
+.ctx__callstate { color: var(--accent-primary); }
+.ctx__callname {
+  font-size: var(--type-title-lg);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--track-tight);
+  line-height: 1.15;
+}
+.ctx__callmeta { font-size: var(--type-body-lg); color: var(--text-muted); }
+.ctx__callactions { display: flex; flex-direction: column; gap: var(--space-3); }
+.ctx__callrow { display: flex; gap: var(--space-3); }
+.ctx__callrow .ibtn { flex: 1; width: auto; }
+.ctx__callnav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-muted);
+  padding-top: var(--space-1);
+}
+.ctx__callnav svg { font-size: var(--icon-sm); color: var(--accent-primary); }
+
+/* ============================================================
+   AMBIENT OVERLAY ON THE CANVAS
+   Floating information, never a card. It clears the map's centre so
+   the route is never behind text.
+   ============================================================ */
+.home__overlay {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  right: 0;
+  left: var(--stage-gap);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-6);
+  pointer-events: none;
+  z-index: 1;
+  transition: left var(--dur-context) var(--ease-enter);
+}
+.home[data-context='nav'] .home__overlay { left: var(--stage-gap-guiding); }
+.home__overlay > * { pointer-events: auto; }
+
+/* A soft ground under the ambient block so the clock never competes
+   with a road label passing beneath it. One gradient, no blur. */
+.home__ambient {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  align-self: flex-start;
+}
+.home__ambient::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--space-6) * -1) calc(var(--space-8) * -1);
+  z-index: -1;
+  background: radial-gradient(
+    72% 100% at 100% 30%,
+    rgba(var(--surface-fade), 0.78) 0%,
+    rgba(var(--surface-fade), 0.42) 52%,
+    rgba(var(--surface-fade), 0) 100%
+  );
+}
+.home__clock { display: flex; flex-direction: column; gap: var(--space-1); }
+.home__time {
+  font-size: 3.6rem;
+  color: var(--text-primary);
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+}
+.home__date { font-size: var(--type-meta); color: var(--text-secondary); }
+.home__ambientsep { width: 1px; align-self: stretch; margin-block: 0.4rem; background: var(--divider); }
+
+.home__weather { display: flex; align-items: center; gap: var(--space-3); }
+.home__wicon { font-size: var(--icon-lg); color: var(--text-secondary); }
+.home__temp { font-size: var(--type-title-sm); }
+.home__wcond { display: flex; flex-direction: column; font-size: var(--type-meta); color: var(--text-secondary); }
+.home__wrange { font-size: var(--type-caption); color: var(--text-muted); font-weight: var(--weight-regular); }
+
+/* Saved destinations sit at the far corner, away from the route. */
+.home__saved { display: flex; gap: var(--space-3); align-self: flex-end; }
+.home__chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-lg);
+  min-width: 13rem;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(var(--surface-fade), 0.9);
+  box-shadow: var(--shadow-soft);
+  text-align: start;
+}
+.home__chipicon { font-size: var(--icon-md); color: var(--text-secondary); flex: none; }
+.home__chiptext { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.home__chipname { font-size: var(--type-body); font-weight: var(--weight-medium); }
+.home__chipsub { font-size: var(--type-caption); color: var(--text-muted); }
+.home__chipeta { display: flex; align-items: baseline; gap: 0.2em; flex: none; }
+.home__chipeta .n-value { font-size: var(--type-body); }
+.home__chipunit { font-size: var(--type-caption); color: var(--text-muted); }
+
+.home__routechip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  align-self: flex-end;
+  margin-top: auto;
+  min-height: var(--touch-lg);
+  max-width: 24rem;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(var(--surface-fade), 0.9);
+  box-shadow: var(--shadow-soft);
+  font-size: var(--type-body);
+  font-weight: var(--weight-medium);
+}
+.home__routeicon { font-size: var(--icon-md); color: var(--accent-primary); flex: none; }
+.home__routego { font-size: var(--icon-sm); color: var(--text-muted); flex: none; }
+
+/* ---------- Compatibility panels ----------------------------------------- */
+@media (max-width: 1500px) {
+  :root { --stage-gap: 42%; --stage-gap-guiding: 34%; }
+  .ctx { padding: var(--space-4); gap: var(--space-3); }
+  .home__overlay { padding: var(--space-4); }
+  .home__time { font-size: 2.8rem; }
+  .home__chip { min-width: 10rem; }
+}
+@media (max-height: 740px) {
+  .ctx__parked { display: none; }
+}

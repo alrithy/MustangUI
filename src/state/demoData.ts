@@ -108,6 +108,8 @@ export const APPS: AppEntry[] = [
   { id: 'a-phone',   name: 'الهاتف',      icon: 'phone',     restricted: false, target: 'phone' },
   { id: 'a-radio',   name: 'الراديو',     icon: 'radio',     restricted: false },
   { id: 'a-podcast', name: 'البودكاست',   icon: 'podcast',   restricted: false },
+  { id: 'a-cast',    name: 'عرض الهاتف',  icon: 'cast',      restricted: false },
+  { id: 'a-fuel',    name: 'محطات الوقود', icon: 'fuel',      restricted: false },
   { id: 'a-bt',      name: 'البلوتوث',    icon: 'bluetooth', restricted: false },
   { id: 'a-car',     name: 'المركبة',     icon: 'car',       restricted: false, target: 'car' },
   { id: 'a-settings',name: 'الإعدادات',   icon: 'settings',  restricted: false, target: 'settings' },

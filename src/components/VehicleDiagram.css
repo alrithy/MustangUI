@@ -3,22 +3,23 @@
 /* A schematic has to read as a drawn object in both modes, so it uses
    the sunken material and a real stroke rather than a tint. */
 .vd__body {
-  fill: var(--surface-sunken);
-  stroke: var(--border-strong);
-  stroke-width: 1.6;
+  fill: var(--surface-subtle);
+  stroke: var(--text-muted);
+  stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
 .vd__glass {
-  fill: none;
-  stroke: var(--border-strong);
-  stroke-width: 1.2;
-  opacity: 0.7;
+  fill: var(--surface-sunken);
+  stroke: var(--text-muted);
+  stroke-width: 1.4;
+  opacity: 0.8;
   vector-effect: non-scaling-stroke;
 }
 .vd__roof {
-  fill: none;
-  stroke: var(--border-subtle);
+  fill: var(--surface-sunken);
+  stroke: var(--border-strong);
   stroke-width: 1.2;
+  opacity: 0.75;
   vector-effect: non-scaling-stroke;
 }
 .vd__shoulder {
@@ -27,5 +28,5 @@
   opacity: 0.45;
   vector-effect: non-scaling-stroke;
 }
-.vd__wheel { fill: var(--text-muted); opacity: 0.7; }
+.vd__wheel { fill: var(--text-secondary); opacity: 0.85; }
 .vd__wheel.is-warn { fill: var(--status-warning); opacity: 1; }

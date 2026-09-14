@@ -1,15 +1,20 @@
 /* ============================================================
    VEHICLE
-   Linear data only — bars, numbers, one schematic. No circular
-   gauges: the cluster owns those, and a duplicate tachometer on
-   the centre screen is decoration.
+   One hero and a field of structured telemetry — not a grid of equal
+   cards. The hero is the car itself: a top-down schematic with each
+   tyre reading anchored to its own wheel, and drive mode at its base.
+   Everything else is flat data on the background, grouped by hairline,
+   because a table of numbers should look like a table of numbers.
 
-   Every value on this screen is simulated. Drivetrain state is
-   presented as a readout and is never interactive.
+   No circular gauges: the cluster owns those, and a second tachometer
+   on the centre screen is decoration.
+
+   Every value here is simulated. Drivetrain state is a readout and is
+   never interactive.
    ============================================================ */
 
 import { VehicleDiagram } from '../components/VehicleDiagram';
-import { Meter, SectionHead, Segmented, Surface, ValueBlock } from '../components/primitives';
+import { Meter, Segmented, Surface, ValueBlock } from '../components/primitives';
 import { useDispatch, useSystem } from '../state/systemStore';
 import type { DriveMode } from '../state/types';
 import { Icon } from '../system/icons';
@@ -34,58 +39,53 @@ export function CarScreen() {
 
   return (
     <div className="screen car">
-      <header className="car__head">
-        <div className="car__mode">
+      {/* ---- Hero: the vehicle ---- */}
+      <Surface tone="base" radius="lg" pad="none" className="car__hero">
+        <header className="car__herohead">
+          <h1 className="car__herotitle">Mustang GT Fastback</h1>
+          <span className="t-label">ضغط الإطارات · PSI</span>
+        </header>
+
+        <div className="car__tires">
+          <TireCell pos="fl" />
+          <TireCell pos="fr" />
+          <div className="car__diagram"><VehicleDiagram warn={lowTires} /></div>
+          <TireCell pos="rl" />
+          <TireCell pos="rr" />
+        </div>
+
+        <footer className="car__mode">
           <span className="t-label">وضع القيادة</span>
           <Segmented<DriveMode>
             options={DRIVE_MODES}
             value={vehicle.driveMode}
             onChange={(mode) => dispatch({ type: 'set-drive-mode', mode })}
-            size="lg"
+            size="lg" block
             ariaLabel="وضع القيادة"
           />
-        </div>
-        <p className="car__disclaimer t-caption">
-          <Icon name="info" className="car__discicon" />
-          القيم معروضة لأغراض العرض التوضيحي
-        </p>
-      </header>
+        </footer>
+      </Surface>
 
-      <div className="car__grid">
-        {/* --- Tyres --- */}
-        <Surface tone="base" radius="md" pad="md" className="car__card car__card--tires">
-          <SectionHead title="ضغط الإطارات" tag="PSI" />
-          <div className="car__tires">
-            {(['fl', 'fr'] as const).map((p) => <TireCell key={p} pos={p} />)}
-            <div className="car__diagram">
-              <VehicleDiagram warn={lowTires} />
-            </div>
-            {(['rl', 'rr'] as const).map((p) => <TireCell key={p} pos={p} />)}
+      {/* ---- Telemetry: flat, grouped by rule, no card chrome ---- */}
+      <div className="car__data">
+        <section className="car__group car__group--energy">
+          <h2 className="car__grouptitle">الوقود والمدى</h2>
+          <div className="car__energy">
+            <ValueBlock label="المدى المتوقع" value={vehicle.rangeKm} unit="كم" size="lg" />
+            <ValueBlock label="مستوى الوقود" value={Math.round(vehicle.fuelPct)} unit="٪" size="lg"
+              tone={vehicle.fuelPct < 15 ? 'warning' : 'default'} />
           </div>
-        </Surface>
-
-        {/* --- Energy --- */}
-        <Surface tone="base" radius="md" pad="md" className="car__card">
-          <SectionHead title="الوقود والمدى" />
-          <div className="car__stack">
-            <div className="car__fuel">
-              <ValueBlock label="المدى المتوقع" value={vehicle.rangeKm} unit="كم" size="lg" />
-              <ValueBlock label="مستوى الوقود" value={Math.round(vehicle.fuelPct)} unit="٪" size="lg"
-                tone={vehicle.fuelPct < 15 ? 'warning' : 'default'} />
-            </div>
-            <Meter ratio={vehicle.fuelPct / 100} height="lg" ticks={4}
-              tone={vehicle.fuelPct < 15 ? 'warning' : 'neutral'} />
-            <div className="car__scale">
-              <span className="latin">F</span>
-              <span className="latin">1/2</span>
-              <span className="latin">E</span>
-            </div>
+          <Meter ratio={vehicle.fuelPct / 100} height="lg" ticks={4}
+            tone={vehicle.fuelPct < 15 ? 'warning' : 'neutral'} />
+          <div className="car__scale">
+            <span className="latin">F</span><span className="latin">1/2</span><span className="latin">E</span>
           </div>
-        </Surface>
+        </section>
 
-        {/* --- Powertrain --- */}
-        <Surface tone="base" radius="md" pad="md" className="car__card">
-          <SectionHead title="مجموعة نقل الحركة" />
+        <span className="hairline-v car__rule" />
+
+        <section className="car__group">
+          <h2 className="car__grouptitle">مجموعة نقل الحركة</h2>
           <div className="car__metrics">
             <ValueBlock label="حرارة المبرد" value={`${Math.round(vehicle.coolantC)}°`} latinLabel="C"
               tone={vehicle.coolantC > 110 ? 'warning' : 'default'} />
@@ -94,30 +94,32 @@ export function CarScreen() {
               tone={vehicle.voltage < 12.4 ? 'warning' : 'default'} />
             <ValueBlock label="دورات المحرك" value={vehicle.rpm.toLocaleString('en-US')} latinLabel="RPM" />
           </div>
-        </Surface>
+        </section>
 
-        {/* --- Trip --- */}
-        <Surface tone="base" radius="md" pad="md" className="car__card">
-          <SectionHead title="عداد الرحلة" tag="TRIP A" />
+        <span className="hairline-v car__rule" />
+
+        <section className="car__group">
+          <h2 className="car__grouptitle">عداد الرحلة <span className="latin car__tag">TRIP A</span></h2>
           <div className="car__metrics">
             <ValueBlock label="المسافة" value={vehicle.trip.distanceKm.toFixed(1)} unit="كم" />
             <ValueBlock label="متوسط الاستهلاك" value={vehicle.trip.avgKmL.toFixed(1)} unit="كم/ل" />
             <ValueBlock label="المدة" value={Math.round(vehicle.trip.durationMin)} unit="د" />
             <ValueBlock label="متوسط السرعة" value={vehicle.trip.avgSpeed} unit="كم/س" />
           </div>
-        </Surface>
+        </section>
 
+        <footer className="car__identity">
+          <InfoCell k="العداد الكلي" v={`${Math.round(vehicle.odometerKm).toLocaleString('en-US')} كم`} />
+          <span className="hairline-v car__idsep" />
+          <InfoCell k="الصيانة القادمة" v="بعد 2,680 كم" />
+          <span className="hairline-v car__idsep" />
+          <InfoCell k="حالة الأنظمة" v="سليمة" ok />
+          <p className="car__disclaimer t-caption">
+            <Icon name="info" className="car__discicon" />
+            القيم معروضة لأغراض العرض التوضيحي
+          </p>
+        </footer>
       </div>
-
-      <footer className="car__identity">
-        <InfoCell k="الطراز" v="Mustang GT Fastback · 5.0L V8" latin />
-        <span className="hairline-v car__idsep" />
-        <InfoCell k="العداد الكلي" v={`${Math.round(vehicle.odometerKm).toLocaleString('en-US')} كم`} />
-        <span className="hairline-v car__idsep" />
-        <InfoCell k="الصيانة القادمة" v="بعد 2,680 كم" />
-        <span className="hairline-v car__idsep" />
-        <InfoCell k="حالة الأنظمة" v="سليمة" ok />
-      </footer>
     </div>
   );
 }
@@ -131,20 +133,17 @@ function TireCell({ pos }: { pos: 'fl' | 'fr' | 'rl' | 'rr' }) {
       <span className="t-label">{TIRE_LABEL[pos]}</span>
       <span className={`car__tireval${low ? ' is-warn' : ''}`}>
         <span className="n-value">{tire.psi.toFixed(1)}</span>
-        <span className="car__tireunit latin">psi</span>
       </span>
       <span className="car__tiretemp">{Math.round(tire.tempC)}°</span>
     </div>
   );
 }
 
-function InfoCell({ k, v, latin = false, ok = false }: { k: string; v: string; latin?: boolean; ok?: boolean }) {
+function InfoCell({ k, v, ok = false }: { k: string; v: string; ok?: boolean }) {
   return (
     <div className="car__idcell">
       <span className="t-label">{k}</span>
-      <span className={`car__idvalue${latin ? ' car__infolatin' : ''}${ok ? ' is-ok' : ''}`}>
-        <bdi>{v}</bdi>
-      </span>
+      <span className={`car__idvalue${ok ? ' is-ok' : ''}`}><bdi>{v}</bdi></span>
     </div>
   );
 }

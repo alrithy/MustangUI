@@ -1,22 +1,28 @@
+/* ============================================================
+   NAVIGATION RAIL
+   Icon-first. Only the active destination carries its label, so the
+   rail reads as a row of marks rather than a column of words, and
+   the selected item is the one thing with text on it.
+   ============================================================ */
+
 .rail {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-1);
   width: var(--rail-w);
   flex: none;
-  padding-block: var(--space-2);
+  padding-block: var(--space-3);
   background: var(--bg-chrome);
   position: relative;
   z-index: 2;
 }
 
-/* The rail separates from content with a hairline, not a border. */
 .rail::after {
   content: '';
   position: absolute;
-  top: var(--space-4);
-  bottom: var(--space-4);
+  top: var(--space-5);
+  bottom: var(--space-5);
   width: 1px;
   background: linear-gradient(to bottom, transparent, var(--divider) 8%, var(--divider) 92%, transparent);
 }
@@ -29,9 +35,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  min-height: var(--touch-lg);
-  padding: var(--space-2) var(--space-1);
+  gap: 0;
+  min-height: var(--touch-lg);   /* 76dp — reached while driving */
+  padding: var(--space-1);
   border-radius: var(--radius-md);
   color: var(--text-muted);
   transition:
@@ -39,43 +45,63 @@
     background-color var(--dur-fast) var(--ease-standard);
 }
 
-/* Marker sits against the outer edge of the panel, so it reads as
-   an illuminated element on the bezel rather than a UI badge. */
-.rail__marker { position: absolute; top: 50%; transform: translateY(-50%); }
-[data-rail='left'] .rail__marker { left: 0; }
-[data-rail='right'] .rail__marker { right: 0; }
+/* The tri-bar illuminates against the outer edge of the panel, so it
+   reads as a lamp on the bezel rather than a UI badge. */
+.rail__marker {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+[data-rail='left'] .rail__marker { left: 0.35rem; }
+[data-rail='right'] .rail__marker { right: 0.35rem; }
 
 .rail__icon-wrap { position: relative; display: flex; }
 .rail__icon {
-  font-size: var(--icon-md);
+  font-size: var(--icon-lg);
   transition: transform var(--dur-base) var(--ease-precise);
 }
+
+/* Labels collapse to nothing until their destination is selected. */
 .rail__label {
-  font-size: 0.75rem;
-  line-height: 1.1;
+  font-size: 0.6875rem;
+  line-height: 1;
   font-weight: var(--weight-medium);
   text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-height: 0;
+  opacity: 0;
+  transition:
+    max-height var(--dur-base) var(--ease-standard),
+    opacity var(--dur-fast) var(--ease-standard),
+    margin-top var(--dur-base) var(--ease-standard);
 }
 
 .rail__dot {
   position: absolute;
-  top: -0.1rem;
-  inset-inline-end: -0.35rem;
+  top: -0.15rem;
+  inset-inline-end: -0.4rem;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: var(--accent-primary);
-  opacity: 0.85;
 }
 
 .rail__item.is-selected {
   color: var(--text-primary);
   background: var(--surface-primary);
 }
-.rail__item.is-selected .rail__icon { color: var(--text-primary); }
-.rail__item.is-selected .rail__label { color: var(--text-primary); }
+.rail__item.is-selected .rail__label {
+  max-height: 1.2em;
+  opacity: 1;
+  margin-top: 0.3rem;
+}
 
+@media (prefers-reduced-motion: reduce) {
+  .rail__label { transition: none; }
+}
 @media (max-height: 700px) {
-  .rail__item { min-height: var(--touch-sm); gap: 0.2rem; }
-  .rail__label { font-size: 0.6875rem; }
+  .rail__item { min-height: var(--touch-md); }
 }

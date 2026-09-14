@@ -111,7 +111,7 @@ function PeopleList({ tab }: { tab: Tab }) {
                 )}
               </span>
             </span>
-            <span className="phone__rowmeta"><bdi>{contact.phone}</bdi></span>
+            <span className="phone__rowmeta ltr-num">{contact.phone}</span>
           </button>
         </li>
       ))}
@@ -180,7 +180,7 @@ function ActiveCall() {
           {incoming ? 'مكالمة واردة' : 'مكالمة جارية'}
         </span>
         <h1 className="phone__callname truncate">{contact.name}</h1>
-        <span className="phone__callnum" dir="ltr">{contact.phone}</span>
+        <span className="phone__callnum ltr-num">{contact.phone}</span>
         {!incoming && <span className="n-value phone__calltime">{timecode(phone.durationSec)}</span>}
       </div>
 

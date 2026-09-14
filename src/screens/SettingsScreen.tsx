@@ -134,6 +134,43 @@ function DisplaySection() {
         />
       </Row>
       </section>
+
+      <section className="settings__group">
+      <SectionHead title="بدء التشغيل" tag="STARTUP" />
+      <Row label="تسلسل بدء التشغيل" hint="يظهر عند تشغيل المركبة">
+        <Toggle
+          on={settings.startupOn}
+          onChange={(v) => dispatch({ type: 'set-setting', key: 'startupOn', value: v })}
+          label="تسلسل بدء التشغيل"
+        />
+      </Row>
+      <Row label="رسالة الترحيب">
+        <Toggle
+          on={settings.greetingOn}
+          onChange={(v) => dispatch({ type: 'set-setting', key: 'greetingOn', value: v })}
+          label="رسالة الترحيب"
+        />
+      </Row>
+      <Row label="نص الترحيب" hint="يُنطق صوتياً في النظام النهائي">
+        <input
+          type="text"
+          className="settings__input"
+          value={settings.greetingText}
+          maxLength={40}
+          aria-label="نص الترحيب"
+          disabled={!settings.greetingOn}
+          onChange={(e) => dispatch({ type: 'set-greeting-text', value: e.target.value })}
+        />
+      </Row>
+      <button
+        type="button"
+        className="settings__replay pressable"
+        onClick={() => window.location.reload()}
+      >
+        <Icon name="sync" />
+        معاينة تسلسل بدء التشغيل
+      </button>
+      </section>
     </>
   );
 }

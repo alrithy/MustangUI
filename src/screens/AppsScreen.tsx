@@ -1,29 +1,28 @@
 /* ============================================================
    APPS
-   Deliberately secondary: a curated library in three columns, not
-   a launcher grid. Entries that demand sustained attention are
-   locked while the vehicle moves and unlock on their own when it
-   stops — the driver is never asked to dismiss anything.
+   Secondary by construction: three labelled bands on the background,
+   no card chrome, no colour. Entries that demand sustained attention
+   are held back while the vehicle moves and release themselves when
+   it stops — the driver is never asked to dismiss anything.
    ============================================================ */
 
-import { Surface } from '../components/primitives';
 import { APPS } from '../state/demoData';
 import { useDerived, useDispatch, useSystem } from '../state/systemStore';
 import { Icon } from '../system/icons';
 import './AppsScreen.css';
 
-const GROUPS = [
+const BANDS = [
   {
     key: 'drive',
     title: 'أثناء القيادة',
     tag: 'ALWAYS ON',
-    ids: ['a-maps', 'a-music', 'a-phone', 'a-radio', 'a-podcast'],
+    ids: ['a-maps', 'a-music', 'a-phone', 'a-radio', 'a-podcast', 'a-fuel'],
   },
   {
     key: 'system',
     title: 'النظام والمركبة',
     tag: 'SYSTEM',
-    ids: ['a-bt', 'a-car', 'a-settings'],
+    ids: ['a-cast', 'a-bt', 'a-car', 'a-settings'],
   },
   {
     key: 'parked',
@@ -47,32 +46,40 @@ export function AppsScreen() {
 
   return (
     <div className="screen apps">
-      {GROUPS.map((g) => (
-        <Surface key={g.key} tone="base" radius="md" pad="none" className="apps__col">
+      {BANDS.map((band) => (
+        <section key={band.key} className="apps__band">
           <header className="apps__head">
-            <h2 className="apps__title">{g.title}</h2>
-            <span className="latin apps__tag">{g.tag}</span>
+            <h2 className="apps__title">{band.title}</h2>
+            <span className="latin apps__tag">{band.tag}</span>
+            {band.key === 'parked' && moving && (
+              <span className="apps__held t-meta">
+                <Icon name="lock" /> تتوفر عند التوقف
+              </span>
+            )}
+            <span className="hairline apps__rule" />
           </header>
-          <ul className="apps__list">
-            {g.ids.map((id) => {
+
+          <ul className="apps__row">
+            {band.ids.map((id) => {
               const app = APPS.find((a) => a.id === id)!;
-              const locked = app.restricted && moving;
+              const held = app.restricted && moving;
               return (
                 <li key={app.id}>
                   <button
                     type="button"
-                    className={`row apps__item pressable${locked ? ' is-locked' : ''}`}
+                    data-scale="true"
+                    className={`apps__tile pressable${held ? ' is-held' : ''}`}
                     onClick={() => open(app.id)}
                   >
                     <span className="apps__icon"><Icon name={app.icon} /></span>
                     <span className="apps__name truncate">{app.name}</span>
-                    {locked && <Icon name="lock" className="apps__lock" />}
+                    {held && <Icon name="lock" className="apps__lock" />}
                   </button>
                 </li>
               );
             })}
           </ul>
-        </Surface>
+        </section>
       ))}
     </div>
   );

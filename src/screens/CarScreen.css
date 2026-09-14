@@ -1,96 +1,160 @@
-.car { display: flex; flex-direction: column; gap: var(--space-4); height: 100%; min-height: 0; }
+/* ============================================================
+   VEHICLE
+   Hero card on the driver's side; telemetry as flat, ruled groups.
+   ============================================================ */
 
-.car__head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-6);
-  flex: none;
-}
-.car__mode { display: flex; flex-direction: column; gap: var(--space-3); }
-.car__disclaimer { display: flex; align-items: center; gap: var(--space-2); color: var(--text-muted); }
-.car__discicon { font-size: var(--icon-xs); }
-
-/* One row of four. The whole vehicle overview has to fit a 720px
-   panel without scrolling — a driver should never hunt for a value. */
-.car__grid {
+/* The hero sits on the driver's side of the panel, as on Home: the
+   only control on this screen is inside it. */
+.car {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: var(--space-4);
-  flex: 1;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.86fr);
+  gap: var(--space-6);
+  height: 100%;
   min-height: 0;
 }
-.car__card { display: flex; flex-direction: column; min-height: 0; }
+.car__hero { grid-column: 2; grid-row: 1; }
+.car__data { grid-column: 1; grid-row: 1; }
 
-/* ---------- Tyres ------------------------------------------------------
-   direction:ltr — the schematic maps to the physical car, so it must
-   not mirror with the interface. */
+/* ---------- Hero: the vehicle ------------------------------------------ */
+.car__hero {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: var(--space-5) var(--space-6) var(--space-5);
+}
+.car__herohead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--divider);
+}
+.car__herotitle {
+  font-size: var(--type-title-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--track-tight);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* direction:ltr — the schematic maps to the physical car and must not
+   mirror with the interface. */
 .car__tires {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  gap: var(--space-4) var(--space-5);
   flex: 1;
   min-height: 0;
+  padding-block: var(--space-5);
   direction: ltr;
 }
-.car__diagram { grid-column: 2; grid-row: 1 / span 2; display: flex; justify-content: center; min-height: 0; }
-.car__tire { display: flex; flex-direction: column; gap: var(--space-1); justify-content: center; direction: rtl; }
+.car__diagram {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  justify-content: center;
+  align-self: stretch;
+  min-height: 0;
+}
+.car__tire { display: flex; flex-direction: column; gap: var(--space-1); direction: rtl; }
 .car__tire--fl { grid-column: 1; grid-row: 1; align-items: flex-end; }
 .car__tire--fr { grid-column: 3; grid-row: 1; align-items: flex-start; }
 .car__tire--rl { grid-column: 1; grid-row: 2; align-items: flex-end; }
 .car__tire--rr { grid-column: 3; grid-row: 2; align-items: flex-start; }
 
-.car__tireval { display: flex; align-items: baseline; gap: 0.25em; }
-.car__tireval .n-value { font-size: var(--type-title-sm); }
+.car__tireval .n-value { font-size: var(--type-title); }
 .car__tireval.is-warn .n-value { color: var(--status-warning); }
-.car__tireunit { font-size: 0.625rem; color: var(--text-muted); }
 .car__tiretemp { font-size: var(--type-caption); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
-/* ---------- Energy ------------------------------------------------------ */
-.car__stack { display: flex; flex-direction: column; justify-content: center; gap: var(--space-4); flex: 1; min-height: 0; }
-.car__fuel { display: flex; gap: var(--space-8); }
+.car__mode {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--divider);
+}
+
+/* ---------- Telemetry field --------------------------------------------- */
+.car__data {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: stretch;
+  column-gap: var(--space-6);
+  row-gap: var(--space-5);
+  min-height: 0;
+}
+.car__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  min-height: 0;
+}
+/* Titles stay at the top of their column; the values sit optically
+   centred in the space below, so the field reads as one ruled table.
+   Within a group the values and their meter stay together. */
+.car__metrics { flex: 1; min-height: 0; align-content: center; }
+.car__group--energy { justify-content: center; gap: var(--space-3); }
+.car__group--energy .car__grouptitle { margin-bottom: auto; }
+.car__group--energy > .meter { margin-top: var(--space-2); }
+
+.car__grouptitle {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--type-title-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--track-tight);
+}
+.car__tag { font-size: 0.625rem; color: var(--text-muted); }
+.car__rule { align-self: stretch; }
+
+.car__energy { display: flex; gap: var(--space-8); flex: none; }
 .car__scale { display: flex; justify-content: space-between; font-size: 0.625rem; color: var(--text-muted); letter-spacing: 0.1em; }
 
-/* ---------- Metric grids -------------------------------------------------- */
 .car__metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-content: space-evenly;
-  gap: var(--space-4) var(--space-5);
-  flex: 1;
-  min-height: 0;
+  gap: var(--space-5) var(--space-6);
 }
 
-/* ---------- Identity strip -------------------------------------------------- */
+/* ---------- Identity strip ----------------------------------------------- */
 .car__identity {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: var(--space-6);
-  flex: none;
-  padding-top: var(--space-3);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--divider);
 }
 .car__idcell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.car__idvalue { font-size: var(--type-body); font-weight: var(--weight-medium); }
+.car__idvalue { font-size: var(--type-body); font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; }
 .car__idvalue.is-ok { color: var(--status-success); }
-.car__infolatin { font-variant-numeric: tabular-nums; }
 .car__idsep { height: 1.75rem; }
-
-/* A taller panel gets two rows of larger cards rather than one row of
-   four stretched ones. */
-@media (min-height: 900px) {
-  .car__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .car__tires { gap: var(--space-4) var(--space-6); }
+.car__disclaimer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+  color: var(--text-muted);
 }
+.car__discicon { font-size: var(--icon-xs); }
 
-@media (max-width: 1500px) {
-  .car__grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); }
-  .car__grid > .car__card:nth-child(4) { display: none; }
-  .car__metrics { gap: var(--space-3); }
+/* ---------- Compatibility panels ------------------------------------------ */
+@media (max-width: 1700px) {
+  .car { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr); gap: var(--space-5); }
+  .car__data {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    column-gap: var(--space-5);
+  }
+  .car__data > .car__group:nth-of-type(3) { grid-column: 1 / -1; }
+  .car__data > .car__rule:nth-of-type(2) { display: none; }
 }
 @media (max-width: 1180px) {
-  .car__grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
-  .car__grid > .car__card:nth-child(3) { display: none; }
-  .car__identity > *:nth-child(n + 5) { display: none; }
+  .car { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .car__metrics { gap: var(--space-3) var(--space-4); }
 }

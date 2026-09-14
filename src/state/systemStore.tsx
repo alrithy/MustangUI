@@ -57,6 +57,9 @@ function loadSettings(): SystemState['settings'] {
     reduceMotion: false,
     chimeVolume: 4,
     driverAlerts: true,
+    startupOn: true,
+    greetingOn: true,
+    greetingText: 'مرحباً حسن',
   };
   try {
     const raw = localStorage.getItem('mustang.settings');
@@ -93,7 +96,8 @@ export type Action =
   | { type: 'set-appearance'; appearance: Appearance }
   | { type: 'set-rail-side'; side: RailSide }
   | { type: 'set-ambient'; daylight: boolean }
-  | { type: 'set-setting'; key: 'reduceMotion' | 'driverAlerts'; value: boolean }
+  | { type: 'set-setting'; key: 'reduceMotion' | 'driverAlerts' | 'startupOn' | 'greetingOn'; value: boolean }
+  | { type: 'set-greeting-text'; value: string }
   | { type: 'set-chime'; value: number }
   | { type: 'set-drive-mode'; mode: DriveMode }
   | { type: 'set-gear'; gear: Gear }
@@ -268,6 +272,8 @@ export function reducer(s: SystemState, a: Action): SystemState {
     case 'set-ambient': return { ...s, settings: { ...s.settings, ambientDaylight: a.daylight } };
     case 'set-setting': return { ...s, settings: { ...s.settings, [a.key]: a.value } };
     case 'set-chime': return { ...s, settings: { ...s.settings, chimeVolume: clamp(a.value, 0, 7) } };
+    case 'set-greeting-text':
+      return { ...s, settings: { ...s.settings, greetingText: a.value.slice(0, 40) } };
 
     /* Vehicle */
     case 'set-drive-mode': return { ...s, vehicle: { ...s.vehicle, driveMode: a.mode } };

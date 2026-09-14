@@ -1,0 +1,123 @@
+.startup {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: #000;
+  overflow: hidden;
+  transition: opacity var(--dur-context) var(--ease-standard);
+}
+.startup[data-leaving='true'] { opacity: 0; pointer-events: none; }
+
+/* Low-frequency wake: one wide, dim band crossing the panel once. */
+.startup__wake {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 78% at 50% 56%,
+    rgba(210, 206, 200, 0.1) 0%,
+    rgba(120, 118, 116, 0.04) 38%,
+    transparent 72%
+  );
+  opacity: 0;
+  animation: startup-wake 1500ms var(--ease-standard) both;
+}
+@keyframes startup-wake {
+  0% { opacity: 0; transform: scaleY(0.18); }
+  38% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: 0.35; transform: scaleY(1); }
+}
+
+.startup__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+/* The pony crosses the frame and leaves. It is never parked on screen. */
+.startup__pony {
+  position: absolute;
+  inset-block-start: -6rem;
+  width: 16rem;
+  height: auto;
+  opacity: 0;
+  animation: startup-pony 1150ms var(--ease-precise) 120ms both;
+}
+.startup__ponybody { fill: #e9e7e4; }
+.startup__ponytail { fill: #e9e7e4; }
+.startup__ponyleg path {
+  fill: none;
+  stroke: #e9e7e4;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.startup__ponyneck {
+  fill: none;
+  stroke: #e9e7e4;
+  stroke-width: 22;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@keyframes startup-pony {
+  0% { opacity: 0; transform: translateX(9rem) scale(0.96); }
+  34% { opacity: 0.95; }
+  70% { opacity: 0.95; transform: translateX(0) scale(1); }
+  100% { opacity: 0; transform: translateX(-2.5rem) scale(1); }
+}
+
+/* Tri-bar illuminates outward in sequence, then holds. */
+.startup__mark { display: flex; align-items: center; gap: var(--space-4); }
+.startup__tribar { display: inline-flex; gap: 0.3rem; }
+.startup__tribar i {
+  width: 5px;
+  height: 1.9rem;
+  border-radius: 1px;
+  background: #c8253c;
+  opacity: 0;
+  animation: startup-bar 460ms var(--ease-precise) both;
+}
+.startup__tribar i:nth-child(1) { animation-delay: 1020ms; }
+.startup__tribar i:nth-child(2) { animation-delay: 1140ms; }
+.startup__tribar i:nth-child(3) { animation-delay: 1260ms; }
+@keyframes startup-bar {
+  0% { opacity: 0; transform: scaleY(0.2); }
+  60% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: 0.92; transform: scaleY(1); }
+}
+
+.startup__word {
+  font-size: 2.1rem;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.38em;
+  color: #e9e7e4;
+  opacity: 0;
+  animation: startup-word 520ms var(--ease-enter) 1280ms both;
+}
+@keyframes startup-word {
+  from { opacity: 0; letter-spacing: 0.52em; }
+  to { opacity: 1; letter-spacing: 0.38em; }
+}
+
+.startup__greeting {
+  font-size: var(--type-body-lg);
+  color: #9aa0a4;
+  opacity: 0;
+  animation: startup-greeting 520ms var(--ease-enter) 1640ms both;
+}
+@keyframes startup-greeting {
+  from { opacity: 0; transform: translateY(0.4rem); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Reduced motion keeps the sequence but removes the travel. */
+@media (prefers-reduced-motion: reduce) {
+  .startup__pony, .startup__wake { animation-duration: 1ms; }
+  .startup__tribar i, .startup__word, .startup__greeting {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
+}
