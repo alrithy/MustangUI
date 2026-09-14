@@ -194,7 +194,7 @@ final class MediaHub {
 
     private void publishUnavailable() {
         try {
-            channel.event("media", new JSONObject().put("status", "unavailable").toString());
+            channel.event("media", new JSONObject().put("status", "unavailable"));
         } catch (JSONException impossible) {
             throw new IllegalStateException(impossible);
         }
@@ -208,7 +208,7 @@ final class MediaHub {
             return;
         }
         try {
-            channel.event("media", snapshot(controller).toString());
+            channel.event("media", snapshot(controller));
         } catch (JSONException impossible) {
             throw new IllegalStateException(impossible);
         } catch (RuntimeException gone) {
@@ -244,7 +244,9 @@ final class MediaHub {
         data.put("canNext", has(actions, PlaybackState.ACTION_SKIP_TO_NEXT));
         data.put("canPrevious", has(actions, PlaybackState.ACTION_SKIP_TO_PREVIOUS));
 
-        String artwork = artworkFor(pkg + ' ' + title + ' ' + album, metadata);
+        String artwork = artworkFor(pkg + '\0'
+            + string(metadata, MediaMetadata.METADATA_KEY_MEDIA_ID)
+            + '\0' + title + '\0' + album, metadata);
         if (artwork != null) data.put("artwork", artwork);
         return data;
     }

@@ -86,7 +86,7 @@ final class SystemMonitor {
 
     void push() {
         try {
-            channel.event("system", snapshot().toString());
+            channel.event("system", snapshot());
         } catch (JSONException impossible) {
             throw new IllegalStateException(impossible);
         }

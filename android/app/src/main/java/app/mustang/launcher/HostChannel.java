@@ -14,7 +14,11 @@ interface HostChannel {
 
     /**
      * @param event channel name the web layer subscribed to
-     * @param data  JSON value (object or array) serialised as a string
+     * @param data  a JSONObject or JSONArray — never a pre-serialised
+     *              string. The envelope is built with the JSON library so
+     *              a payload cannot break out of it, which matters
+     *              because media metadata and app labels on this channel
+     *              come from third-party apps.
      */
-    void event(String event, String data);
+    void event(String event, Object data);
 }

@@ -298,7 +298,9 @@ export function reducer(s: SystemState, a: Action): SystemState {
   switch (a.type) {
     /* --- Native ingress ------------------------------------------ */
     case 'native-media': {
-      const live = a.value.status === 'live';
+      /* Total in its own right, not just because the transport filters:
+         this value originates outside the web layer. */
+      const live = !!a.value && a.value.status === 'live';
       return {
         ...s,
         sources: { ...s.sources, media: live ? 'live' : 'unavailable' },

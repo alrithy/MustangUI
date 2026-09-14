@@ -118,8 +118,16 @@ if (typeof window !== 'undefined' && window.MustangHost) {
   window.MustangHost.onmessage = ({ data }) => {
     try {
       const message = JSON.parse(data);
-      if (typeof message.event === 'string') deliver(message.event, message.data);
-      else settle(message);
+      if (typeof message.event === 'string') {
+        /* A push carrying no payload, or a primitive where a record
+           belongs, is a malformed frame. It has to be dropped here: the
+           store's handlers are typed as if the host keeps its contract,
+           and letting one through would throw inside a reducer and take
+           the whole HMI into recovery over a bad field. */
+        if (message.data !== null && typeof message.data === 'object') {
+          deliver(message.event, message.data);
+        }
+      } else settle(message);
     } catch { /* a malformed frame can never move state */ }
   };
 }

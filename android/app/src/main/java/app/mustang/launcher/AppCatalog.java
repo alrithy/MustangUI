@@ -97,7 +97,7 @@ final class AppCatalog {
 
     void push() {
         try {
-            channel.event("apps", availability().toString());
+            channel.event("apps", availability());
         } catch (JSONException impossible) {
             throw new IllegalStateException(impossible);
         }

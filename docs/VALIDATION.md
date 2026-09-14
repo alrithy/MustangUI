@@ -37,6 +37,23 @@ listed as PASS below has not been demonstrated.
   included: it reproduces the uncorrected bug (1200 px viewport,
   collapsed type scale) and calibrates the comparison threshold against
   a real regression rather than a guess.
+- **Failure paths.** `node scripts/verify-failsafe.cjs` — 12/12. A host
+  that never answers, one that replies with garbage, one that refuses an
+  action, and a bundle whose mount point is missing. Asserts the HMI
+  stays usable and navigable with the bridge dead, never fabricates
+  vehicle data or falls back to demo media, drops replies carrying an
+  unknown or absent id, surfaces a refusal in the driver's language and
+  then vacates the slot, and reports a mount failure to the host so
+  native recovery can take over rather than leaving a black screen.
+  **This suite found a real bug:** a malformed event frame threw inside
+  the reducer and took the whole HMI into recovery. Fixed at the
+  transport, with the reducer made total as well.
+- **Security review.** Independent pass over the bridge, asset serving,
+  intent construction, exported components and the media path. No
+  findings. Two non-exploitable fragilities it raised were fixed anyway:
+  the event envelope is now built with the JSON library rather than
+  string concatenation, and the artwork cache key is NUL-separated and
+  keyed on the session's media id so a player cannot collide two tracks.
 - **Screenshots.** Prototype and head-unit renders compared at 2400×900;
   the composition is unchanged. Per-density captures and the uncorrected
   control are in `/tmp/mustang-ui`.

@@ -11,7 +11,8 @@
     "typecheck": "tsc -b --noEmit false --pretty",
     "verify:state": "node scripts/verify-state.cjs",
     "verify:ui": "node scripts/verify-ui.cjs",
-    "verify:panel": "node scripts/verify-panel.cjs"
+    "verify:panel": "node scripts/verify-panel.cjs",
+    "verify:failsafe": "node scripts/verify-failsafe.cjs"
   },
   "dependencies": {
     "react": "^18.3.1",

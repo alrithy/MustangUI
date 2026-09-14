@@ -344,6 +344,7 @@ locally.
 npm run verify:state                      # reducer, both platform modes
 npm run build && npm run verify:ui        # browser, both platform modes
 npm run build && npm run verify:panel     # geometry across four densities
+npm run build && npm run verify:failsafe  # what happens when things break
 ```
 
 `verify-ui.cjs` serves `dist/` from the launcher's own origin and injects
@@ -356,4 +357,23 @@ includes a control case with the correction removed, which both
 reproduces the uncorrected bug and calibrates the comparison threshold
 against a real regression rather than a guess.
 
+`verify-failsafe.cjs` covers the paths nobody exercises by accident: a
+host that never answers, a host that replies with garbage, a host that
+refuses an action, and a bundle that cannot mount at all. A launcher that
+fails is the Home screen of a car, so these matter more than they would
+in a web app.
+
 Set `CHROMIUM_PATH` if your Chromium is not the build Playwright expects.
+
+## Bridge robustness
+
+Everything arriving from the host crosses a trust boundary — media
+metadata and app labels originate in third-party apps. Two rules hold it:
+
+- The event envelope is built with the JSON library, never by string
+  concatenation, so a payload cannot break out of its frame.
+- A push carrying no payload, or a primitive where a record belongs, is
+  dropped at the transport. The store's handlers are typed as if the host
+  keeps its contract, and letting a malformed frame through would throw
+  inside a reducer and take the whole HMI into recovery over one bad
+  field. The reducer is total in its own right as well.

@@ -229,12 +229,21 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
     /* ---------------- HostChannel ---------------- */
 
     @Override
-    public void event(String name, String data) {
+    public void event(String name, Object data) {
+        // Serialised here, off the caller's thread, with the JSON library
+        // rather than string concatenation: everything on this channel
+        // ultimately originates in another app's metadata.
+        final String frame;
+        try {
+            frame = new JSONObject().put("event", name).put("data", data).toString();
+        } catch (JSONException malformed) {
+            return;
+        }
         main.post(() -> {
             JavaScriptReplyProxy target = channel;
             if (target == null || web == null) return;
             try {
-                target.postMessage("{\"event\":\"" + name + "\",\"data\":" + data + "}");
+                target.postMessage(frame);
             } catch (RuntimeException gone) {
                 // Page torn down; the next subscribe re-establishes it.
             }
