@@ -348,9 +348,22 @@ const check = (name, fn) => checks.push([name, fn]);
     ]);
     const controlDiff = diffs[diffs.length - 1];
 
+    /*
+     * Stated as a ratio, not an absolute. The HMI picks day or night
+     * from the wall clock, and the two palettes put the absolute diff
+     * anywhere from ~17% to ~25% for the identical fault — an absolute
+     * threshold calibrated at midday quietly fails after dark. What
+     * actually matters is that a real geometry fault is an order of
+     * magnitude louder than antialiasing, which holds in both palettes.
+     */
+    const worstCorrected = Math.max(...diffs.slice(0, DENSITIES.length - 1));
+
     check('control: a wrong viewport is plainly visible in the render', () => {
       assert.ok(controlDiff !== null, 'could not decode the captures');
-      assert.ok(controlDiff > 0.2,
+      assert.ok(controlDiff > worstCorrected * 5,
+        `control differs by ${(controlDiff * 100).toFixed(2)}% but the worst correct `
+        + `render differs by ${(worstCorrected * 100).toFixed(2)}% — too close to tell apart`);
+      assert.ok(controlDiff > 0.05,
         `only ${(controlDiff * 100).toFixed(2)}% differs — the check lacks power`);
     });
 

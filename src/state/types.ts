@@ -7,6 +7,7 @@ export type ScreenId =
   | 'music'
   | 'phone'
   | 'apps'
+  | 'cast'
   | 'car'
   | 'settings';
 

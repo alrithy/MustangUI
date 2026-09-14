@@ -135,7 +135,7 @@ export const APPS: AppEntry[] = [
   { id: 'a-phone',   name: 'الهاتف',      icon: 'phone',     restricted: false, target: 'phone' },
   { id: 'a-radio',   name: 'الراديو',     icon: 'radio',     restricted: false },
   { id: 'a-podcast', name: 'البودكاست',   icon: 'podcast',   restricted: false },
-  { id: 'a-cast',    name: 'عرض الهاتف',  icon: 'cast',      restricted: false },
+  { id: 'a-cast',    name: 'عرض الهاتف',  icon: 'cast',      restricted: false, target: 'cast' },
   { id: 'a-fuel',    name: 'محطات الوقود', icon: 'fuel',      restricted: false },
   { id: 'a-bt',      name: 'البلوتوث',    icon: 'bluetooth', restricted: false },
   { id: 'a-car',     name: 'المركبة',     icon: 'car',       restricted: false, target: 'car' },
@@ -155,3 +155,76 @@ export const WEATHER = {
   lowC: 24,
   condition: 'صحو',
 };
+
+/* ---------- Phone projection ---------------------------------------
+   The paired handset and what it is currently doing. A projection
+   surface is not a mirror: the car re-renders the phone's content in
+   its own language, so each app declares what it wants shown rather
+   than handing over a bitmap. */
+
+export interface ProjectedApp {
+  id: string;
+  /** Arabic name as the app ships in the Gulf stores. */
+  name: string;
+  /** Latin mark, shown small — the brand is part of recognising it. */
+  mark: string;
+  icon: string;
+  /** Which stage composition this app drives. */
+  surface: 'media' | 'route' | 'messages' | 'call';
+  /** One line of live state, read at a glance from the shelf. */
+  status?: string;
+  /** Held back while the vehicle is moving. */
+  restricted?: boolean;
+  installed?: boolean;
+}
+
+export const PROJECTION_DEVICE = {
+  name: 'هاتف عبدالله',
+  model: 'iPhone 15 Pro',
+  batteryPct: 68,
+  charging: true,
+  /** Wi-Fi Direct carries the surface; Bluetooth carries audio + calls. */
+  link: 'Wi-Fi Direct',
+  latencyMs: 24,
+  signalBars: 4,
+  carrier: 'stc',
+};
+
+export const PROJECTED_APPS: ProjectedApp[] = [
+  { id: 'anghami', name: 'أنغامي', mark: 'Anghami', icon: 'music', surface: 'media', status: 'يشتغل' },
+  { id: 'waze', name: 'ويز', mark: 'Waze', icon: 'nav', surface: 'route', status: 'ازدحام' },
+  { id: 'whatsapp', name: 'واتساب', mark: 'WhatsApp', icon: 'person', surface: 'messages', status: '٣ رسائل' },
+  { id: 'calls', name: 'المكالمات', mark: 'Phone', icon: 'phone', surface: 'call' },
+  { id: 'maps', name: 'خرائط', mark: 'Maps', icon: 'pin', surface: 'route' },
+  { id: 'podcasts', name: 'بودكاست', mark: 'Podcasts', icon: 'podcast', surface: 'media' },
+  { id: 'youtube', name: 'يوتيوب', mark: 'YouTube', icon: 'video', surface: 'media', restricted: true },
+  { id: 'gallery', name: 'الصور', mark: 'Photos', icon: 'gallery', surface: 'media', restricted: true },
+];
+
+/** What the media surface is playing when Anghami holds the stage. */
+export const PROJECTED_TRACK = {
+  title: 'ما تشبه غيرك',
+  artist: 'عبدالمجيد عبدالله',
+  album: 'ليالي الشتاء',
+  positionSec: 97,
+  durationSec: 251,
+  /** Sampled from the cover; drives the cabin wash. */
+  ambient: '#8d2f3f',
+};
+
+/** Waze's live guidance, re-rendered rather than mirrored. */
+export const PROJECTED_ROUTE = {
+  road: 'طريق الملك فهد',
+  detail: 'ابقَ يميناً نحو مخرج ٨',
+  distanceM: 750,
+  etaMin: 14,
+  remainingKm: 11.4,
+  alert: 'ازدحام بعد ٢ كم — تأخير ٦ د',
+};
+
+/** Three threads, newest first. Read-only while moving. */
+export const PROJECTED_MESSAGES = [
+  { id: 'm1', from: 'لمى', preview: 'وصلت البيت؟', agoMin: 2, unread: true },
+  { id: 'm2', from: 'فيصل', preview: 'الاجتماع اتأجل للثنتين', agoMin: 11, unread: true },
+  { id: 'm3', from: 'الوالدة', preview: 'لا تنسى الدواء', agoMin: 34, unread: false },
+];
