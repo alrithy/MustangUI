@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Minimal wordmark bar device, matching the HMI's TriBar marker.
+     Kept as a vector so no raster density buckets are needed. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#D92332" android:pathData="M30,44h48v6h-48z" />
+    <path android:fillColor="#F2F2F2" android:pathData="M30,54h48v6h-48z" />
+    <path android:fillColor="#8A8F94" android:pathData="M30,64h30v6h-30z" />
+</vector>

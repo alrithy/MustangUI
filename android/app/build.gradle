@@ -1,0 +1,74 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'app.mustang.launcher'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.mustang.launcher'
+        // 26 is a build floor, not a claim about the TQ919. The real
+        // API level is a discovery item; see docs/DEVICE-DISCOVERY.md.
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    buildTypes {
+        debug {
+            // The HMI is the product surface; nothing is stripped from a
+            // debug build that a bench test would need.
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // The approved web build is bundled, not fetched. bundleWeb writes it
+    // into a generated assets root so `dist/` never has to live in git.
+    sourceSets.main.assets.srcDirs += [layout.buildDirectory.dir('generated/webAssets')]
+
+    lint {
+        abortOnError true
+        warningsAsErrors false
+    }
+
+    packaging {
+        // Fonts and the pony are already compressed; re-compressing them
+        // costs install size and start-up decode for nothing.
+        resources.excludes += ['META-INF/*']
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
+
+/*
+ * Copies the Vite production build into the APK. Declared with real
+ * inputs and outputs so an unchanged `dist/` does not re-run the task,
+ * and so a stale asset can never survive a rebuild.
+ */
+def webDist = rootProject.file('../dist')
+
+tasks.register('bundleWeb', Sync) {
+    description = 'Bundles the approved web HMI into the APK assets.'
+    from(webDist)
+    into(layout.buildDirectory.dir('generated/webAssets/web'))
+    doFirst {
+        if (!new File(webDist, 'index.html').exists()) {
+            throw new GradleException(
+                "No web build found at ${webDist}.\n" +
+                'Run `npm ci && npm run build` in the repository root first.')
+        }
+    }
+}
+
+tasks.named('preBuild').configure { dependsOn 'bundleWeb' }

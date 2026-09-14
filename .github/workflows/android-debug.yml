@@ -1,0 +1,71 @@
+# Manual only. Actions minutes are constrained on this repository, so
+# there is deliberately no push or pull_request trigger: an APK is built
+# when someone asks for one, not on every commit.
+name: Android debug APK (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-debug-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # The APK bundles this output; the Android build fails loudly if it
+      # is missing rather than shipping an empty shell.
+      - name: Build the web HMI
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      # Proves the APK actually contains the offline HMI — a launcher that
+      # builds but ships no bundle would install and then show recovery.
+      - name: Validate APK contents
+        run: python3 scripts/validate-apk.py android/app/build/outputs/apk/debug/app-debug.apk
+
+      # Reported, not gating: a new lint check in a future AGP should not
+      # stand between a reviewer and an installable APK.
+      - name: Lint
+        id: lint
+        continue-on-error: true
+        working-directory: android
+        run: ./gradlew --no-daemon lintDebug
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mustang-launcher-debug
+          path: |
+            android/app/build/outputs/apk/debug/app-debug.apk
+            android/app/build/reports/lint-results-debug.html
+          if-no-files-found: warn
+          retention-days: 7

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mustang</string>
+    <string name="media_access_label">Mustang media controls</string>
+
+    <!-- Recovery panel. Deliberately plain text with no HMI styling: it
+         appears precisely when the HMI could not be trusted to render. -->
+    <string name="recovery_title">تعذر تشغيل واجهة موستنج</string>
+    <string name="recovery_detail">يمكنك إعادة المحاولة، أو الرجوع إلى الشاشة الرئيسية الأصلية.</string>
+    <string name="recovery_retry">إعادة المحاولة</string>
+    <string name="recovery_home">اختيار الشاشة الرئيسية</string>
+    <string name="recovery_settings">إعدادات أندرويد</string>
+    <string name="recovery_no_settings">الإعدادات غير متاحة على هذه الوحدة</string>
+</resources>
