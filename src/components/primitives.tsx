@@ -189,14 +189,17 @@ export function ValueBlock({
   latinLabel?: string;
 }) {
   return (
+    /* Value first, qualifier second. Driving data has to be readable
+       before the word that names it is — so the number carries the
+       weight and the label sits underneath it, quiet. */
     <div className={`vblock vblock--${size} vblock--${tone}`}>
-      <div className="vblock__label t-label">
-        {label}
-        {latinLabel && <span className="vblock__latin latin">{latinLabel}</span>}
-      </div>
       <div className="vblock__value">
         <span className="n-value vblock__num">{value}</span>
         {unit && <span className="vblock__unit">{unit}</span>}
+      </div>
+      <div className="vblock__label t-label">
+        {label}
+        {latinLabel && <span className="vblock__latin latin">{latinLabel}</span>}
       </div>
     </div>
   );

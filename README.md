@@ -50,10 +50,20 @@ does not. `--touch-sm` (52dp) is reserved for parked-only surfaces.
 
 ## Startup
 
-A ~2.4s sequence from black to Home: the panel wakes, the pony crosses frame,
-the tri-bar lights outward, the wordmark and greeting settle. Skippable by
-touch and switchable off in Settings, along with the greeting and its text.
-Audio is out of scope for the web prototype — no autoplay is attempted.
+A ~2.6s sequence from black to Home: the panel wakes, the pony emerges from
+darkness under a moving specular sweep, travels a short distance and clears,
+the tri-bar strikes in sequence, then the wordmark and greeting settle.
+Skippable by touch and switchable off in Settings, along with the greeting and
+its text.
+
+The pony is `public/brand/mustang-pony.webp` — the approved emblem artwork,
+background removed and cropped, never redrawn in code. The light sweep is a
+gradient masked by that same file's alpha channel, so what moves across the
+screen is the artwork's own silhouette.
+
+Audio is out of scope for the web prototype: no autoplay is attempted. The
+`startupChime` preference exists and persists for the native Android layer to
+read — that is where the chime and the spoken greeting belong.
 
 ## Bench controls
 
@@ -61,6 +71,16 @@ Deterministic demo states for design review and QA. Press `` ` `` or `Ctrl+D`,
 or long-press the MUSTANG wordmark. Stripped from production builds.
 
 Scenarios: parked · idle · driving · navigating · incoming call.
+
+## The map
+
+`components/MapCanvas.tsx` is a prototype visualisation, not a navigation
+engine: one seeded SVG world drawn once, with arterials that drift off true,
+collector streets that run for a bay or two and stop, a block fabric
+subdivided cell by cell rather than at a fixed pitch, and a diagonal
+expressway and ring road to break the lattice. The production build will
+render through a real maps SDK; this exists so the surrounding UI can be
+judged against something that reads as a place.
 
 ## What is simulated
 

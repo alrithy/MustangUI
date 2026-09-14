@@ -72,9 +72,13 @@ export function MusicScreen() {
           </div>
         </div>
 
+        {/* Three tiers, not five equal buttons: play dominates, skip is
+            secondary, shuffle and repeat are tertiary and set apart. */}
         <div className="music__transport">
-          <IconButton icon="shuffle" label="تشغيل عشوائي" size="lg" active={media.shuffle}
-            onClick={() => dispatch({ type: 'media-shuffle' })} />
+          <div className="music__tertiary">
+            <IconButton icon="shuffle" label="تشغيل عشوائي" size="lg" active={media.shuffle}
+              onClick={() => dispatch({ type: 'media-shuffle' })} />
+          </div>
           <IconButton icon="prev" label="المقطع السابق" size="xl" variant="filled"
             onClick={() => dispatch({ type: 'media-step', delta: -1 })} />
           <button
@@ -89,11 +93,13 @@ export function MusicScreen() {
           </button>
           <IconButton icon="next" label="المقطع التالي" size="xl" variant="filled"
             onClick={() => dispatch({ type: 'media-step', delta: 1 })} />
-          <IconButton
-            icon={media.repeat === 'one' ? 'repeat-one' : 'repeat'}
-            label="إعادة التشغيل" size="lg" active={media.repeat !== 'off'}
-            onClick={() => dispatch({ type: 'media-repeat' })}
-          />
+          <div className="music__tertiary">
+            <IconButton
+              icon={media.repeat === 'one' ? 'repeat-one' : 'repeat'}
+              label="إعادة التشغيل" size="lg" active={media.repeat !== 'off'}
+              onClick={() => dispatch({ type: 'media-repeat' })}
+            />
+          </div>
         </div>
 
         <div className="music__secondary">

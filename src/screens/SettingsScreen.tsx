@@ -151,6 +151,13 @@ function DisplaySection() {
           label="رسالة الترحيب"
         />
       </Row>
+      <Row label="نغمة بدء التشغيل" hint="تُنفَّذ في نظام أندرويد الأصلي — النموذج صامت">
+        <Toggle
+          on={settings.startupChime}
+          onChange={(v) => dispatch({ type: 'set-setting', key: 'startupChime', value: v })}
+          label="نغمة بدء التشغيل"
+        />
+      </Row>
       <Row label="نص الترحيب" hint="يُنطق صوتياً في النظام النهائي">
         <input
           type="text"

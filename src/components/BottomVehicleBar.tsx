@@ -44,11 +44,11 @@ export function BottomVehicleBar() {
         </div>
         <span className="hairline-v bvb__sep" />
         <div className="bvb__range">
-          <span className="t-label">المدى</span>
-          <span className="bvb__rangepair">
+          <span className="bvb__rangeline">
             <span className="n-value bvb__rangeval">{vehicle.rangeKm}</span>
             <span className="bvb__unit">كم</span>
           </span>
+          <span className="bvb__rangelabel">المدى</span>
         </div>
       </div>
 

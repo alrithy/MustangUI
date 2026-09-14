@@ -51,16 +51,23 @@
   --call-decline: #86242c;
 
   --map-land: #090b0d;
-  --map-block: #14171a;
-  --map-block-light: #1b1f23;
-  --map-arterial: #262c31;
-  --map-road: #1a1e22;
-  --map-local: #141719;
+  --map-block: #171b1f;
+  --map-block-mid: #1d2227;
+  --map-block-light: #252b31;
+  --map-arterial: #2a3136;
+  --map-express: #2d343a;
+  --map-road: #1c2126;
+  --map-local: #16191c;
   --map-water: #0b1210;
   --map-park: #101712;
-  --map-route: #dcd9d5;
-  --map-route-halo: rgba(200, 37, 60, 0.55);
-  --map-label: #656b70;
+  --map-route: #ebe8e4;
+  --map-route-done: #2c3339;
+  --map-route-halo: rgba(200, 37, 60, 0.42);
+  --map-route-case: rgba(0, 0, 0, 0.6);
+  --map-label: #737a7f;
+  --map-label-strong: #9aa1a6;
+  --map-vehicle: #f2f0ec;
+  --map-vehicle-case: #06080a;
 }
 
 /* ---------- 2. GRAND TOURING — warm titanium, champagne, executive. */
@@ -107,16 +114,23 @@
   --call-decline: #79332c;
 
   --map-land: #0a0908;
-  --map-block: #171513;
-  --map-block-light: #1e1c17;
-  --map-arterial: #2b271f;
-  --map-road: #1c1a16;
-  --map-local: #151311;
+  --map-block: #1a1815;
+  --map-block-mid: #211e19;
+  --map-block-light: #28241c;
+  --map-arterial: #2f2b22;
+  --map-express: #332f25;
+  --map-road: #1f1c17;
+  --map-local: #171512;
   --map-water: #101310;
   --map-park: #141510;
-  --map-route: #e0d9cb;
-  --map-route-halo: rgba(201, 174, 123, 0.5);
-  --map-label: #6c665c;
+  --map-route: #efe8da;
+  --map-route-done: #312c23;
+  --map-route-halo: rgba(201, 174, 123, 0.4);
+  --map-route-case: rgba(0, 0, 0, 0.6);
+  --map-label: #7a7367;
+  --map-label-strong: #a19a8c;
+  --map-vehicle: #f3ede0;
+  --map-vehicle-case: #070605;
 }
 
 /* ---------- 3. NIGHT DRIVE — midnight graphite, ice blue, technical. */
@@ -163,16 +177,23 @@
   --call-decline: #7d363d;
 
   --map-land: #070a10;
-  --map-block: #121820;
-  --map-block-light: #18202a;
-  --map-arterial: #232d38;
-  --map-road: #161d25;
-  --map-local: #111720;
+  --map-block: #151c25;
+  --map-block-mid: #1b242e;
+  --map-block-light: #222c37;
+  --map-arterial: #27323e;
+  --map-express: #2b3743;
+  --map-road: #19212a;
+  --map-local: #131a23;
   --map-water: #091319;
   --map-park: #0c1614;
-  --map-route: #d3dee8;
-  --map-route-halo: rgba(124, 178, 220, 0.5);
-  --map-label: #5f6c78;
+  --map-route: #e3ebf2;
+  --map-route-done: #29333d;
+  --map-route-halo: rgba(124, 178, 220, 0.4);
+  --map-route-case: rgba(0, 0, 0, 0.6);
+  --map-label: #6c7a86;
+  --map-label-strong: #94a2ad;
+  --map-vehicle: #eaf1f7;
+  --map-vehicle-case: #04070b;
 }
 
 /* ============================================================
@@ -184,58 +205,71 @@
    and a single hairline, so the panel never turns into glare.
    ============================================================ */
 [data-mode='day'] {
-  --bg-primary: #dedad1;
-  --bg-secondary: #e7e4dc;
-  --bg-chrome: #d0ccc2;
+  /* One contrast step up from the first pass. The ground darkens, the
+     panels lighten, and every boundary now separates by value as well
+     as by warmth — under direct sun a 4% step simply disappears. */
+  --bg-primary: #d5d0c5;
+  --bg-secondary: #e0dcd2;
+  --bg-chrome: #c5c0b4;
 
-  --surface-primary: #ebe8e0;
-  --surface-elevated: #f4f2ec;
-  --surface-subtle: rgba(24, 26, 28, 0.05);
-  --surface-sunken: rgba(24, 26, 28, 0.11);
-  --surface-press: rgba(24, 26, 28, 0.1);
-  --surface-hover: rgba(24, 26, 28, 0.05);
+  --surface-primary: #ece9e1;
+  --surface-elevated: #f7f5f0;
+  --surface-subtle: rgba(22, 24, 26, 0.07);
+  --surface-sunken: rgba(22, 24, 26, 0.15);
+  --surface-press: rgba(22, 24, 26, 0.13);
+  --surface-hover: rgba(22, 24, 26, 0.06);
 
-  --text-primary: #191b1d;
-  --text-secondary: #4d5356;
-  --text-muted: #797f83;
-  --text-on-accent: #f7f5f2;
+  --text-primary: #14171a;
+  --text-secondary: #3f464a;
+  --text-muted: #6a7075;
+  --text-on-accent: #f9f7f4;
 
-  --border-subtle: rgba(24, 26, 28, 0.12);
-  --border-strong: rgba(24, 26, 28, 0.24);
-  --divider: rgba(24, 26, 28, 0.15);
+  --border-subtle: rgba(22, 24, 26, 0.16);
+  --border-strong: rgba(22, 24, 26, 0.32);
+  --divider: rgba(22, 24, 26, 0.2);
 
-  --shadow-soft: 0 1px 3px rgba(30, 28, 24, 0.14);
-  --shadow-lift: 0 8px 24px rgba(30, 28, 24, 0.18);
-  --scrim: rgba(228, 225, 217, 0.9);
+  --shadow-soft: 0 1px 3px rgba(28, 26, 22, 0.2);
+  --shadow-lift: 0 10px 28px rgba(28, 26, 22, 0.24);
+  --scrim: rgba(224, 220, 210, 0.92);
 
-  --status-success: #1f7a4d;
-  --status-warning: #97701c;
-  --status-danger: #b02a34;
-  --status-info: #2c6e9e;
+  --status-success: #1a6c44;
+  --status-warning: #85620f;
+  --status-danger: #a3222d;
+  --status-info: #23608c;
 
-  --surface-fade: 235, 232, 224;
-  --call-accept: #1c6a45;
-  --call-decline: #98262f;
+  --surface-fade: 236, 233, 225;
+  --call-accept: #175c3c;
+  --call-decline: #8a1f28;
 
-  --map-land: #dcd8cd;
-  --map-block: #cfcabd;
-  --map-block-light: #c6c0b1;
-  --map-arterial: #f4f1ea;
-  --map-road: #e9e5db;
-  --map-local: #e1ddd3;
-  --map-water: #d2d3c8;
-  --map-park: #d0d6c6;
-  --map-label: #6d7276;
+  /* Map in daylight: dark ground, light carriageways. The road network
+     is the brightest thing on the canvas, the built fabric the darkest,
+     and the gap between them is wide enough to survive glare. */
+  --map-land: #cfc9ba;
+  --map-block: #bcb4a1;
+  --map-block-mid: #b2a996;
+  --map-block-light: #c8c1b1;
+  --map-arterial: #fcfaf5;
+  --map-express: #fdfcf8;
+  --map-road: #efebe0;
+  --map-local: #e2ddd0;
+  --map-water: #c3c7ba;
+  --map-park: #c2cbb4;
+  --map-label: #545a5e;
+  --map-label-strong: #2d3336;
+  --map-route: #1f2326;
+  --map-route-done: #8b8880;
+  --map-route-halo: rgba(171, 23, 48, 0.4);
+  --map-route-case: rgba(255, 255, 255, 0.92);
+  --map-vehicle: #17191b;
+  --map-vehicle-case: #fbf9f4;
 }
 
 [data-mode='day'][data-theme='stealth'] {
-  --accent-primary: #ab1730;
-  --accent-dim: #d59aa4;
-  --accent-wash: rgba(171, 23, 48, 0.1);
-  --accent-glow: rgba(171, 23, 48, 0.3);
-  --accent-secondary: #5d6469;
-  --map-route: #3b3d40;
-  --map-route-halo: rgba(171, 23, 48, 0.5);
+  --accent-primary: #9d1129;
+  --accent-dim: #cf8d98;
+  --accent-wash: rgba(157, 17, 41, 0.12);
+  --accent-glow: rgba(157, 17, 41, 0.3);
+  --accent-secondary: #545b60;
 }
 
 [data-mode='day'][data-theme='gt'] {
@@ -247,22 +281,28 @@
   --text-primary: #1c1a15;
   --text-secondary: #55503f;
   --text-muted: #7f7967;
-  --accent-primary: #866125;
-  --accent-dim: #c7b48d;
-  --accent-wash: rgba(134, 97, 37, 0.11);
-  --accent-glow: rgba(134, 97, 37, 0.28);
-  --accent-secondary: #8a6e48;
-  --surface-fade: 237, 233, 221;
+  --accent-primary: #75521a;
+  --accent-dim: #bfa77a;
+  --accent-wash: rgba(117, 82, 26, 0.12);
+  --accent-glow: rgba(117, 82, 26, 0.28);
+  --accent-secondary: #7d6340;
+  --surface-fade: 238, 234, 222;
 
-  --map-land: #ded8c7;
-  --map-block: #d1cab7;
-  --map-block-light: #c8c0aa;
-  --map-arterial: #f5f1e6;
-  --map-road: #eae5d7;
-  --map-local: #e2dccc;
-  --map-park: #d3d7c2;
-  --map-route: #3d382c;
-  --map-route-halo: rgba(134, 97, 37, 0.5);
+  --map-land: #d2cab4;
+  --map-block: #bfb69d;
+  --map-block-mid: #b5ab90;
+  --map-block-light: #cac2aa;
+  --map-arterial: #fcf8ec;
+  --map-express: #fffdf5;
+  --map-road: #f0ebdb;
+  --map-local: #e3dcc9;
+  --map-park: #c6cdae;
+  --map-route: #25231c;
+  --map-route-done: #8c877a;
+  --map-route-halo: rgba(117, 82, 26, 0.4);
+  --map-route-case: rgba(255, 253, 246, 0.92);
+  --map-vehicle: #1c1a14;
+  --map-vehicle-case: #fbf8ef;
 }
 
 [data-mode='day'][data-theme='night'] {
@@ -274,23 +314,29 @@
   --text-primary: #14181c;
   --text-secondary: #47525b;
   --text-muted: #737e87;
-  --accent-primary: #1d5f8f;
-  --accent-dim: #9dbdd5;
-  --accent-wash: rgba(29, 95, 143, 0.1);
-  --accent-glow: rgba(29, 95, 143, 0.28);
-  --accent-secondary: #46627b;
-  --surface-fade: 231, 235, 238;
+  --accent-primary: #17537f;
+  --accent-dim: #92b4ce;
+  --accent-wash: rgba(23, 83, 127, 0.12);
+  --accent-glow: rgba(23, 83, 127, 0.28);
+  --accent-secondary: #3d5a72;
+  --surface-fade: 232, 236, 239;
 
-  --map-land: #d6dade;
-  --map-block: #c8ced3;
-  --map-block-light: #bfc6cc;
-  --map-arterial: #f1f4f6;
-  --map-road: #e6eaed;
-  --map-local: #dee3e7;
-  --map-water: #ccd4d3;
-  --map-park: #ccd8cd;
-  --map-route: #2f3941;
-  --map-route-halo: rgba(29, 95, 143, 0.5);
+  --map-land: #ccd2d7;
+  --map-block: #b6bec6;
+  --map-block-mid: #acb5bd;
+  --map-block-light: #c2cad1;
+  --map-arterial: #fafcfd;
+  --map-express: #ffffff;
+  --map-road: #eaeef1;
+  --map-local: #dde2e6;
+  --map-water: #bfc8c8;
+  --map-park: #bdcabf;
+  --map-route: #1b2126;
+  --map-route-done: #848d94;
+  --map-route-halo: rgba(23, 83, 127, 0.4);
+  --map-route-case: rgba(252, 253, 254, 0.92);
+  --map-vehicle: #14191d;
+  --map-vehicle-case: #f7fafb;
 }
 
 /* ============================================================

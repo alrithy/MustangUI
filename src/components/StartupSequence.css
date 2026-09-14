@@ -10,23 +10,25 @@
 }
 .startup[data-leaving='true'] { opacity: 0; pointer-events: none; }
 
-/* Low-frequency wake: one wide, dim band crossing the panel once. */
+/* Low-frequency wake: one wide, dim band crossing the panel once. It
+   never reaches the emblem's own value — the badge stays the brightest
+   thing on the panel. */
 .startup__wake {
   position: absolute;
   inset: 0;
   background: radial-gradient(
-    120% 78% at 50% 56%,
-    rgba(210, 206, 200, 0.1) 0%,
-    rgba(120, 118, 116, 0.04) 38%,
+    124% 76% at 50% 54%,
+    rgba(198, 196, 192, 0.085) 0%,
+    rgba(110, 110, 110, 0.032) 40%,
     transparent 72%
   );
   opacity: 0;
-  animation: startup-wake 1500ms var(--ease-standard) both;
+  animation: startup-wake 1700ms var(--ease-standard) both;
 }
 @keyframes startup-wake {
-  0% { opacity: 0; transform: scaleY(0.18); }
-  38% { opacity: 1; transform: scaleY(1); }
-  100% { opacity: 0.35; transform: scaleY(1); }
+  0% { opacity: 0; transform: scaleY(0.16); }
+  40% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: 0.3; transform: scaleY(1); }
 }
 
 .startup__frame {
@@ -37,85 +39,150 @@
   gap: var(--space-5);
 }
 
-/* The pony crosses the frame and leaves. It is never parked on screen. */
-.startup__pony {
+/* ---------- Pony -------------------------------------------------
+   The emblem arrives into frame, settles, and leaves. It is never
+   parked beside the wordmark. Travel and scale are transforms on the
+   stage; the reveal is opacity plus a masked specular pass — so the
+   silhouette itself is untouched artwork at every frame. */
+.startup__ponystage {
   position: absolute;
-  inset-block-start: -6rem;
-  width: 16rem;
-  height: auto;
+  inset-block-start: -9.5rem;
+  width: 40rem;
+  aspect-ratio: 1200 / 446;
+  animation: startup-pony-travel 1500ms var(--ease-precise) 120ms both;
+  will-change: transform, opacity;
+}
+.startup__pony,
+.startup__ponysweep {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+/* The badge itself: sensed in darkness first, then held at a level that
+   still reads as deep piano black rather than a lit graphic. */
+.startup__pony {
+  object-fit: contain;
   opacity: 0;
-  animation: startup-pony 1150ms var(--ease-precise) 120ms both;
-}
-.startup__ponybody { fill: #e9e7e4; }
-.startup__ponytail { fill: #e9e7e4; }
-.startup__ponyleg path {
-  fill: none;
-  stroke: #e9e7e4;
-  stroke-width: 9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.startup__ponyneck {
-  fill: none;
-  stroke: #e9e7e4;
-  stroke-width: 22;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-@keyframes startup-pony {
-  0% { opacity: 0; transform: translateX(9rem) scale(0.96); }
-  34% { opacity: 0.95; }
-  70% { opacity: 0.95; transform: translateX(0) scale(1); }
-  100% { opacity: 0; transform: translateX(-2.5rem) scale(1); }
+  animation: startup-pony-body 1400ms var(--ease-standard) 120ms both;
 }
 
-/* Tri-bar illuminates outward in sequence, then holds. */
+/* Specular pass: one narrow band of silver light travelling across the
+   badge, clipped to the badge's own alpha so only real contours catch
+   it. The band is a transform-animated child, so the sweep costs the
+   compositor a translation and nothing else. */
+.startup__ponysweep {
+  overflow: hidden;
+  -webkit-mask-image: url('/brand/mustang-pony.webp');
+  mask-image: url('/brand/mustang-pony.webp');
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  opacity: 0;
+  animation: startup-pony-spec 1250ms var(--ease-standard) 140ms both;
+}
+.startup__ponysweep::before {
+  content: '';
+  position: absolute;
+  inset-block: -30%;
+  inset-inline-start: 0;
+  width: 62%;
+  background: linear-gradient(
+    104deg,
+    transparent 0%,
+    rgba(226, 228, 232, 0.16) 26%,
+    rgba(248, 249, 250, 0.62) 48%,
+    rgba(226, 228, 232, 0.16) 70%,
+    transparent 100%
+  );
+  animation: startup-pony-band 1250ms var(--ease-precise) 140ms both;
+}
+
+@keyframes startup-pony-travel {
+  0% { transform: translate3d(7rem, 0, 0) scale(1.035); }
+  62% { transform: translate3d(0, 0, 0) scale(1); }
+  100% { transform: translate3d(-3.2rem, 0, 0) scale(1); }
+}
+@keyframes startup-pony-body {
+  0% { opacity: 0; }
+  16% { opacity: 0.3; }   /* form sensed, not read */
+  46% { opacity: 0.92; }
+  72% { opacity: 0.92; }
+  100% { opacity: 0; }
+}
+@keyframes startup-pony-spec {
+  0% { opacity: 0; }
+  12% { opacity: 1; }
+  74% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes startup-pony-band {
+  0% { transform: translateX(-105%); }
+  100% { transform: translateX(275%); }
+}
+
+/* ---------- Tri-bar ---------------------------------------------
+   Struck in sequence, mechanically, then held. */
 .startup__mark { display: flex; align-items: center; gap: var(--space-4); }
-.startup__tribar { display: inline-flex; gap: 0.3rem; }
+.startup__tribar { display: inline-flex; gap: 0.34rem; }
 .startup__tribar i {
   width: 5px;
-  height: 1.9rem;
+  height: 2.6rem;
   border-radius: 1px;
   background: #c8253c;
   opacity: 0;
-  animation: startup-bar 460ms var(--ease-precise) both;
+  animation: startup-bar 380ms var(--ease-precise) both;
 }
-.startup__tribar i:nth-child(1) { animation-delay: 1020ms; }
-.startup__tribar i:nth-child(2) { animation-delay: 1140ms; }
-.startup__tribar i:nth-child(3) { animation-delay: 1260ms; }
+.startup__tribar i:nth-child(1) { animation-delay: 1420ms; }
+.startup__tribar i:nth-child(2) { animation-delay: 1530ms; }
+.startup__tribar i:nth-child(3) { animation-delay: 1640ms; }
 @keyframes startup-bar {
-  0% { opacity: 0; transform: scaleY(0.2); }
-  60% { opacity: 1; transform: scaleY(1); }
+  0% { opacity: 0; transform: scaleY(0.16); }
+  58% { opacity: 1; transform: scaleY(1); }
   100% { opacity: 0.92; transform: scaleY(1); }
 }
 
 .startup__word {
-  font-size: 2.1rem;
+  font-size: 2.9rem;
   font-weight: var(--weight-semibold);
-  letter-spacing: 0.38em;
+  letter-spacing: 0.4em;
   color: #e9e7e4;
   opacity: 0;
-  animation: startup-word 520ms var(--ease-enter) 1280ms both;
+  animation: startup-word 520ms var(--ease-enter) 1700ms both;
 }
 @keyframes startup-word {
-  from { opacity: 0; letter-spacing: 0.52em; }
-  to { opacity: 1; letter-spacing: 0.38em; }
+  from { opacity: 0; letter-spacing: 0.54em; }
+  to { opacity: 1; letter-spacing: 0.4em; }
 }
 
+/* The greeting is secondary to the wordmark by size, weight and value. */
 .startup__greeting {
-  font-size: var(--type-body-lg);
-  color: #9aa0a4;
+  font-size: var(--type-title-sm);
+  font-weight: var(--weight-light);
+  color: #8e9497;
+  letter-spacing: 0.01em;
   opacity: 0;
-  animation: startup-greeting 520ms var(--ease-enter) 1640ms both;
+  animation: startup-greeting 480ms var(--ease-enter) 2050ms both;
 }
 @keyframes startup-greeting {
-  from { opacity: 0; transform: translateY(0.4rem); }
+  from { opacity: 0; transform: translateY(0.35rem); }
   to { opacity: 1; transform: none; }
+}
+
+@media (max-width: 1700px) {
+  .startup__ponystage { width: 32rem; inset-block-start: -8rem; }
+}
+@media (max-width: 1400px) {
+  .startup__ponystage { width: 26rem; inset-block-start: -7rem; }
+  .startup__word { font-size: 2.2rem; }
 }
 
 /* Reduced motion keeps the sequence but removes the travel. */
 @media (prefers-reduced-motion: reduce) {
-  .startup__pony, .startup__wake { animation-duration: 1ms; }
+  .startup__ponystage { animation-duration: 1ms; }
+  .startup__ponysweep::before { animation-duration: 1ms; }
+  .startup__wake { animation-duration: 1ms; }
   .startup__tribar i, .startup__word, .startup__greeting {
     animation-duration: 1ms;
     animation-delay: 0ms;

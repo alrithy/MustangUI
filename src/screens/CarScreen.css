@@ -65,9 +65,9 @@
 .car__tire--rl { grid-column: 1; grid-row: 2; align-items: flex-end; }
 .car__tire--rr { grid-column: 3; grid-row: 2; align-items: flex-start; }
 
-.car__tireval .n-value { font-size: var(--type-title); }
+.car__tireval .n-value { font-size: var(--type-num-lg); font-weight: var(--weight-semibold); }
 .car__tireval.is-warn .n-value { color: var(--status-warning); }
-.car__tiretemp { font-size: var(--type-caption); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.car__tiretemp { font-size: var(--type-meta); color: var(--text-muted); font-variant-numeric: tabular-nums; }
 
 .car__mode {
   display: flex;
@@ -90,17 +90,16 @@
 .car__group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
   min-width: 0;
   min-height: 0;
 }
-/* Titles stay at the top of their column; the values sit optically
-   centred in the space below, so the field reads as one ruled table.
-   Within a group the values and their meter stay together. */
-.car__metrics { flex: 1; min-height: 0; align-content: center; }
-.car__group--energy { justify-content: center; gap: var(--space-3); }
-.car__group--energy .car__grouptitle { margin-bottom: auto; }
-.car__group--energy > .meter { margin-top: var(--space-2); }
+/* Every group hangs from its own title. The slack in the column
+   collects once, at the bottom of the field, instead of opening a gap
+   between a heading and the numbers it belongs to. */
+.car__metrics { min-height: 0; align-content: start; }
+.car__group--energy { justify-content: flex-start; gap: var(--space-4); }
+.car__group--energy > .meter { margin-top: var(--space-3); }
 
 .car__grouptitle {
   display: flex;
@@ -110,16 +109,17 @@
   font-weight: var(--weight-medium);
   letter-spacing: var(--track-tight);
 }
-.car__tag { font-size: 0.625rem; color: var(--text-muted); }
+.car__tag { font-size: 0.75rem; color: var(--text-muted); letter-spacing: var(--track-wide); }
 .car__rule { align-self: stretch; }
 
-.car__energy { display: flex; gap: var(--space-8); flex: none; }
-.car__scale { display: flex; justify-content: space-between; font-size: 0.625rem; color: var(--text-muted); letter-spacing: 0.1em; }
+.car__energy { display: flex; gap: var(--space-10); flex: none; }
+.car__scale { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.1em; }
 
 .car__metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5) var(--space-6);
+  gap: var(--space-12) var(--space-6);
+  padding-block-start: var(--space-3);
 }
 
 /* ---------- Identity strip ----------------------------------------------- */
@@ -132,7 +132,7 @@
   border-top: 1px solid var(--divider);
 }
 .car__idcell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.car__idvalue { font-size: var(--type-body); font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; }
+.car__idvalue { font-size: var(--type-body-lg); font-weight: var(--weight-medium); font-variant-numeric: tabular-nums; }
 .car__idvalue.is-ok { color: var(--status-success); }
 .car__idsep { height: 1.75rem; }
 .car__disclaimer {

@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Mustang infotainment HMI — Android head-unit launcher prototype (1920x720)",
+  "description": "Mustang infotainment HMI — Android head-unit launcher prototype (2400x900 primary panel)",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

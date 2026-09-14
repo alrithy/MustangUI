@@ -56,15 +56,24 @@
   /* --- Type scale ------------------------------------------------
      Arabic needs more optical size than Latin at equal x-height,
      so the ramp starts higher than a typical web scale.           */
-  --type-caption: 0.8125rem;   /* unit labels, Latin micro-copy  */
-  --type-meta: 0.9375rem;      /* metadata, list secondary       */
-  --type-body: 1.0625rem;      /* default readable body          */
-  --type-body-lg: 1.25rem;     /* list primary, control labels   */
-  --type-title-sm: 1.5rem;
+  --type-caption: 0.9375rem;   /* unit labels, Latin micro-copy  */
+  --type-meta: 1.0625rem;      /* metadata, list secondary       */
+  --type-body: 1.125rem;       /* default readable body          */
+  --type-body-lg: 1.3125rem;   /* list primary, control labels   */
+  --type-title-sm: 1.5625rem;
   --type-title: 1.875rem;
-  --type-title-lg: 2.25rem;
+  --type-title-lg: 2.375rem;
   --type-display: 3rem;        /* maneuver distance, big numbers */
   --type-hero: 4.5rem;         /* home clock                     */
+
+  /* --- Numeric ramp ----------------------------------------------
+     Driving data is read, not browsed. These sizes exist so a value
+     always outranks the label beside it by at least two steps, which
+     is what makes 97 deg legible at arm's length while the words that
+     qualify it stay quiet.                                         */
+  --type-num-sm: 1.625rem;     /* dense telemetry grids           */
+  --type-num: 2.125rem;        /* primary telemetry, bottom zone  */
+  --type-num-lg: 2.75rem;      /* range, remaining distance       */
 
   --lh-tight: 1.1;
   --lh-snug: 1.3;

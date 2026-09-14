@@ -11,12 +11,12 @@
 
 .apps__head { display: flex; align-items: center; gap: var(--space-4); }
 .apps__title {
-  font-size: var(--type-title-sm);
+  font-size: var(--type-title);
   font-weight: var(--weight-medium);
   letter-spacing: var(--track-tight);
   flex: none;
 }
-.apps__tag { font-size: 0.625rem; color: var(--text-muted); flex: none; }
+.apps__tag { font-size: 0.75rem; letter-spacing: var(--track-wide); color: var(--text-muted); flex: none; }
 .apps__held {
   display: flex;
   align-items: center;
@@ -29,10 +29,14 @@
 
 /* One shared column grid across all three bands, so every tile lines up
    vertically and the screen reads as a set rather than three rows. */
+/* One shared column grid across all three bands. The tiles are
+   generous because this is the one screen a driver reads while parked
+   and the panel is 2400px wide: six columns of 76dp tiles would leave
+   the set looking like phone icons scattered on a desk. */
 .apps__row {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 /* Tiles are material, not colour: one tonal surface, one glyph, one
@@ -43,15 +47,15 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-5);
-  min-height: var(--touch-2xl);
-  padding: var(--space-4);
+  min-height: calc(var(--touch-2xl) + var(--space-4));
+  padding: var(--space-5);
   border-radius: var(--radius-md);
   background: var(--surface-primary);
   color: var(--text-primary);
   text-align: start;
 }
-.apps__icon { display: flex; font-size: var(--icon-lg); color: var(--text-secondary); }
-.apps__name { font-size: var(--type-body); font-weight: var(--weight-medium); max-width: 100%; }
+.apps__icon { display: flex; font-size: var(--icon-xl); color: var(--text-secondary); }
+.apps__name { font-size: var(--type-body-lg); font-weight: var(--weight-medium); max-width: 100%; }
 
 /* Held entries stay legible — they are unavailable, not disabled UI.
    Tapping one explains why and offers the safe alternative. */

@@ -39,9 +39,9 @@
   display: flex;
   align-items: center;
   gap: var(--space-6);
-  padding: var(--space-3) var(--space-6);
+  padding: var(--space-4) var(--space-6);
 }
-.navscreen__docksep { height: 2.25rem; align-self: center; }
+.navscreen__docksep { height: 2.75rem; align-self: center; }
 
 .navscreen__dest {
   display: grid;
@@ -52,14 +52,17 @@
   flex: 0 1 18rem;
 }
 .navscreen__desticon { grid-row: span 2; font-size: var(--icon-lg); color: var(--accent-primary); }
-.navscreen__destname { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
-.navscreen__destsub { font-size: var(--type-caption); color: var(--text-muted); }
+.navscreen__destname { font-size: var(--type-title-sm); font-weight: var(--weight-medium); }
+.navscreen__destsub { font-size: var(--type-meta); color: var(--text-muted); }
 
-.navscreen__eta { display: flex; align-items: center; gap: var(--space-5); flex: none; }
-.navscreen__etagroup { display: flex; flex-direction: column; gap: var(--space-1); }
+/* Arrival, remaining distance and remaining time are the three values
+   a driver checks without slowing down, so they are sized as data and
+   the words that name them stay underneath at label size. */
+.navscreen__eta { display: flex; align-items: center; gap: var(--space-6); flex: none; }
+.navscreen__etagroup { display: flex; flex-direction: column-reverse; gap: 0.15rem; }
 .navscreen__etaval { display: flex; align-items: baseline; gap: 0.25em; }
-.navscreen__etaval .n-value { font-size: var(--type-title-sm); }
-.navscreen__etaunit { font-size: var(--type-meta); color: var(--text-muted); }
+.navscreen__etaval .n-value { font-size: var(--type-num); font-weight: var(--weight-semibold); }
+.navscreen__etaunit { font-size: var(--type-caption); color: var(--text-muted); }
 
 .navscreen__player { flex: 0 1 20rem; min-width: 0; }
 .navscreen__dock > .tbtn { margin-inline-start: auto; }
@@ -95,7 +98,7 @@
 .navscreen__rowname { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
 .navscreen__rowsub { font-size: var(--type-meta); color: var(--text-muted); }
 .navscreen__rowmeta { display: flex; align-items: baseline; gap: 0.25em; flex: none; }
-.navscreen__rowmeta .n-value { font-size: var(--type-body-lg); }
+.navscreen__rowmeta .n-value { font-size: var(--type-num-sm); }
 .navscreen__rowunit { font-size: var(--type-caption); color: var(--text-muted); }
 
 @media (max-width: 1500px) {

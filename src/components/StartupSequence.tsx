@@ -1,19 +1,26 @@
 /* ============================================================
    STARTUP
-   Roughly 2.4s from black to Home. The pony passes through frame
-   once, the tri-bar lights outward in sequence, the wordmark settles,
-   and the shell fades up underneath. No logo bloom, no rev graphics,
-   no dwell — a driver who has seen it a thousand times should never
-   be waiting on it.
+   ~2.6s from black to Home, in eight beats:
+
+     black → pony emerges under a moving light → pony travels and
+     clears → tri-bar strikes → MUSTANG settles → greeting → Home.
+
+   The pony is the approved Mustang emblem asset, used as artwork.
+   It is never redrawn in code: the light sweep is a masked overlay
+   driven by the same asset's alpha, so the silhouette on screen is
+   the silhouette in the file.
 
    Skippable by touch, and switchable off in Settings.
+   Audio is deliberately absent — the eventual native build owns the
+   chime and the spoken greeting (see settings.startupChime).
    ============================================================ */
 
 import { useEffect, useRef, useState } from 'react';
 import { useSystem } from '../state/systemStore';
 import './StartupSequence.css';
 
-const TOTAL_MS = 2400;
+const PONY_SRC = '/brand/mustang-pony.webp';
+const TOTAL_MS = 2600;
 
 export function StartupSequence({ onDone }: { onDone: () => void }) {
   const { settings } = useSystem();
@@ -36,13 +43,18 @@ export function StartupSequence({ onDone }: { onDone: () => void }) {
       className="startup"
       data-leaving={leaving}
       role="presentation"
-      onPointerDown={() => { setLeaving(true); window.setTimeout(() => done.current(), 220); }}
+      onPointerDown={() => { setLeaving(true); window.setTimeout(() => done.current(), 200); }}
     >
       {/* A low, wide sweep — the display waking, not a light show. */}
       <span className="startup__wake" aria-hidden="true" />
 
       <div className="startup__frame">
-        <PonyMark />
+        <div className="startup__ponystage" aria-hidden="true">
+          <img className="startup__pony" src={PONY_SRC} alt="" decoding="async" />
+          {/* Specular pass: a narrow band of light travelling across the
+              badge, clipped to the badge's own alpha. */}
+          <span className="startup__ponysweep" />
+        </div>
 
         <div className="startup__mark physical">
           <span className="startup__tribar" aria-hidden="true"><i /><i /><i /></span>
@@ -54,29 +66,5 @@ export function StartupSequence({ onDone }: { onDone: () => void }) {
         )}
       </div>
     </div>
-  );
-}
-
-/* Built from separate masses rather than one outline: a single-path
-   horse is almost impossible to keep in proportion, and a pony that is
-   slightly wrong is worse than no pony at all. Drawn flat, small, and
-   gone inside a second. */
-function PonyMark() {
-  return (
-    <svg className="startup__pony" viewBox="0 0 250 145" aria-hidden="true">
-      <g className="startup__ponyleg">
-        <path d="M156 70 L190 100 L204 128" />
-        <path d="M106 68 L80 96 L52 112" />
-      </g>
-      <path className="startup__ponybody" d="M92 48 C118 41 150 42 170 53 C180 60 178 72 166 78 C142 88 112 87 96 78 C84 71 82 54 92 48 Z" />
-      <path className="startup__ponyneck" d="M100 58 C82 46 70 36 56 28" />
-      <path className="startup__ponybody" d="M64 20 L50 40 L20 51 L14 42 L33 24 L48 12 Z" />
-      <path className="startup__ponybody" d="M52 14 L54 2 L62 14 Z" />
-      <path className="startup__ponytail" d="M164 51 C190 33 214 19 242 11 C226 33 204 51 176 65 Z" />
-      <g className="startup__ponyleg">
-        <path d="M114 74 L98 106 L76 126" />
-        <path d="M158 72 L172 102 L166 130" />
-      </g>
-    </svg>
   );
 }

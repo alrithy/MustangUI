@@ -60,6 +60,7 @@ function loadSettings(): SystemState['settings'] {
     startupOn: true,
     greetingOn: true,
     greetingText: 'مرحباً حسن',
+    startupChime: true,
   };
   try {
     const raw = localStorage.getItem('mustang.settings');
@@ -96,7 +97,7 @@ export type Action =
   | { type: 'set-appearance'; appearance: Appearance }
   | { type: 'set-rail-side'; side: RailSide }
   | { type: 'set-ambient'; daylight: boolean }
-  | { type: 'set-setting'; key: 'reduceMotion' | 'driverAlerts' | 'startupOn' | 'greetingOn'; value: boolean }
+  | { type: 'set-setting'; key: 'reduceMotion' | 'driverAlerts' | 'startupOn' | 'greetingOn' | 'startupChime'; value: boolean }
   | { type: 'set-greeting-text'; value: string }
   | { type: 'set-chime'; value: number }
   | { type: 'set-drive-mode'; mode: DriveMode }

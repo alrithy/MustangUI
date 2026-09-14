@@ -169,6 +169,11 @@ export interface SettingsState {
   startupOn: boolean;
   greetingOn: boolean;
   greetingText: string;
+  /** Reserved for the native Android build: a short chime plus the
+      spoken greeting at power-on. The web prototype stays silent —
+      no autoplay workarounds — but the preference is stored so the
+      native layer has something to read on first boot. */
+  startupChime: boolean;
 }
 
 export interface SystemState {

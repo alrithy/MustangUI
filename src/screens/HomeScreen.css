@@ -32,10 +32,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-3);
   flex: 1;
   min-width: 0;
-  padding: var(--space-6);
+  padding: var(--space-5) var(--space-5) var(--space-4);
   border-radius: var(--radius-lg);
   background: var(--surface-primary);
   overflow: hidden;
@@ -48,10 +48,12 @@
 
 /* The media column hangs off the artwork: head and art at the top,
    metadata below it, and the transport anchored to the base. */
+/* Every rem the chrome gives up goes to the artwork: it is the only
+   thing in this panel that carries the track at a glance. */
 .ctx--media { gap: var(--space-3); }
-.ctx--media .ctx__meta { margin-top: var(--space-3); }
+.ctx--media .ctx__meta { margin-top: var(--space-2); }
 .ctx--media .ctx__progress { margin-top: auto; }
-.ctx--media .ctx__transport { margin-top: var(--space-2); }
+.ctx--media .ctx__transport { margin-top: var(--space-1); }
 
 /* One tensioned corner, cut on the edge that faces the canvas. */
 .ctx::after {
@@ -103,13 +105,13 @@
   height: 100%;
   width: auto;
   max-width: 100%;
-  max-height: 26rem;
+  max-height: 30rem;
   aspect-ratio: 1;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lift);
 }
 
-.ctx__meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.ctx__meta { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
 .ctx__title {
   font-size: var(--type-title);
   font-weight: var(--weight-medium);
@@ -120,7 +122,7 @@
 
 .ctx__progress { display: flex; flex-direction: column; gap: var(--space-2); }
 .ctx__times { display: flex; justify-content: space-between; }
-.ctx__time { font-size: var(--type-caption); font-weight: var(--weight-regular); color: var(--text-muted); }
+.ctx__time { font-size: var(--type-meta); font-weight: var(--weight-regular); color: var(--text-muted); }
 
 .ctx__transport {
   display: flex;
@@ -252,9 +254,9 @@
 
 .home__weather { display: flex; align-items: center; gap: var(--space-3); }
 .home__wicon { font-size: var(--icon-lg); color: var(--text-secondary); }
-.home__temp { font-size: var(--type-title-sm); }
-.home__wcond { display: flex; flex-direction: column; font-size: var(--type-meta); color: var(--text-secondary); }
-.home__wrange { font-size: var(--type-caption); color: var(--text-muted); font-weight: var(--weight-regular); }
+.home__temp { font-size: var(--type-num-sm); font-weight: var(--weight-medium); }
+.home__wcond { display: flex; flex-direction: column; font-size: var(--type-body); color: var(--text-secondary); }
+.home__wrange { font-size: var(--type-meta); color: var(--text-muted); font-weight: var(--weight-regular); }
 
 /* Saved destinations sit at the far corner, away from the route. */
 .home__saved { display: flex; gap: var(--space-3); align-self: flex-end; }
@@ -263,19 +265,19 @@
   align-items: center;
   gap: var(--space-3);
   min-height: var(--touch-lg);
-  min-width: 13rem;
-  padding-inline: var(--space-4);
+  min-width: 14rem;
+  padding-inline: var(--space-5);
   border-radius: var(--radius-md);
-  background: rgba(var(--surface-fade), 0.9);
+  background: rgba(var(--surface-fade), 0.96);
   box-shadow: var(--shadow-soft);
   text-align: start;
 }
 .home__chipicon { font-size: var(--icon-md); color: var(--text-secondary); flex: none; }
 .home__chiptext { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.home__chipname { font-size: var(--type-body); font-weight: var(--weight-medium); }
-.home__chipsub { font-size: var(--type-caption); color: var(--text-muted); }
+.home__chipname { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
+.home__chipsub { font-size: var(--type-meta); color: var(--text-muted); }
 .home__chipeta { display: flex; align-items: baseline; gap: 0.2em; flex: none; }
-.home__chipeta .n-value { font-size: var(--type-body); }
+.home__chipeta .n-value { font-size: var(--type-num-sm); }
 .home__chipunit { font-size: var(--type-caption); color: var(--text-muted); }
 
 .home__routechip {
@@ -286,11 +288,11 @@
   margin-top: auto;
   min-height: var(--touch-lg);
   max-width: 24rem;
-  padding-inline: var(--space-4);
+  padding-inline: var(--space-5);
   border-radius: var(--radius-md);
-  background: rgba(var(--surface-fade), 0.9);
+  background: rgba(var(--surface-fade), 0.96);
   box-shadow: var(--shadow-soft);
-  font-size: var(--type-body);
+  font-size: var(--type-body-lg);
   font-weight: var(--weight-medium);
 }
 .home__routeicon { font-size: var(--icon-md); color: var(--accent-primary); flex: none; }

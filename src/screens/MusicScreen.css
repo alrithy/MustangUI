@@ -11,9 +11,9 @@
 .music {
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) minmax(0, 0.86fr);
+  grid-template-columns: auto minmax(0, 0.88fr) minmax(0, 0.86fr);
   align-items: center;
-  gap: var(--space-10);
+  gap: var(--space-8);
   height: 100%;
   min-height: 0;
 }
@@ -23,11 +23,11 @@
 .music__ambient {
   position: absolute;
   inset: calc(var(--content-pad) * -1);
-  opacity: calc(0.4 * var(--ambient-strength));
+  opacity: calc(0.62 * var(--ambient-strength));
   pointer-events: none;
   transition: background-color var(--dur-panel) var(--ease-standard);
-  -webkit-mask-image: radial-gradient(120% 100% at 100% 50%, rgba(0, 0, 0, 0.85), transparent 68%);
-  mask-image: radial-gradient(120% 100% at 100% 50%, rgba(0, 0, 0, 0.85), transparent 68%);
+  -webkit-mask-image: radial-gradient(78% 110% at 100% 50%, rgba(0, 0, 0, 0.95), transparent 74%);
+  mask-image: radial-gradient(78% 110% at 100% 50%, rgba(0, 0, 0, 0.95), transparent 74%);
 }
 
 .music__stage {
@@ -42,16 +42,21 @@
   padding-block: var(--space-4);
   justify-content: center;
 }
+/* The artwork is the anchor of the composition, so it takes the full
+   height it is given rather than sitting politely inside it. */
 .music__art {
-  height: min(100%, 30rem);
+  height: min(100%, 36rem);
   width: auto;
   max-width: 100%;
   aspect-ratio: 1;
   box-shadow: var(--shadow-lift);
 }
-.music__source { color: var(--text-muted); }
+.music__source { color: var(--text-muted); font-size: var(--type-meta); }
 
 /* ---------- Deck ---------------------------------------------------- */
+/* The deck is capped and pulled toward the artwork: stretching four
+   lines of metadata across an ultra-wide column is what made the middle
+   of this screen feel empty rather than deliberately open. */
 .music__deck {
   position: relative;
   display: flex;
@@ -59,16 +64,18 @@
   justify-content: center;
   gap: var(--space-6);
   min-width: 0;
+  max-width: 33rem;
+  margin-inline: auto;
 }
-.music__meta { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.music__meta { display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
 .music__title {
   font-size: var(--type-title-lg);
   font-weight: var(--weight-medium);
   letter-spacing: var(--track-tight);
   line-height: 1.22;
 }
-.music__artist { font-size: var(--type-title-sm); color: var(--text-secondary); }
-.music__album { font-size: var(--type-meta); color: var(--text-muted); }
+.music__artist { font-size: var(--type-title); font-weight: var(--weight-light); color: var(--text-secondary); }
+.music__album { font-size: var(--type-body); color: var(--text-muted); }
 
 .music__scrubwrap { display: flex; flex-direction: column; gap: var(--space-3); }
 .music__scrub {
@@ -102,21 +109,28 @@
   pointer-events: none;
 }
 .music__times { display: flex; justify-content: space-between; }
-.music__time { font-size: var(--type-caption); font-weight: var(--weight-regular); color: var(--text-muted); }
+.music__time { font-size: var(--type-meta); font-weight: var(--weight-regular); color: var(--text-muted); }
 
-.music__transport { display: flex; align-items: center; gap: var(--space-4); }
+.music__transport { display: flex; align-items: center; gap: var(--space-5); }
+/* Tertiary controls stand off from the transport cluster and read at a
+   lower value, so the hand goes to play or skip without aiming. */
+.music__tertiary { display: flex; }
+.music__tertiary:first-child { margin-inline-end: var(--space-5); }
+.music__tertiary:last-child { margin-inline-start: var(--space-5); }
+.music__tertiary .ibtn { color: var(--text-muted); }
+.music__tertiary .ibtn.is-active { color: var(--text-primary); }
 /* The primary transport control is a raised surface, not a coloured
    blob: the accent appears only as a ring, and only while playing. */
 .music__play {
   display: grid;
   place-items: center;
-  width: 6rem;
-  height: 6rem;
+  width: var(--touch-2xl);
+  height: var(--touch-2xl);
   flex: none;
   border-radius: 50%;
   background: var(--surface-elevated);
   color: var(--text-primary);
-  font-size: 2.1rem;
+  font-size: 2.5rem;
   box-shadow: inset 0 0 0 1px var(--border-subtle), var(--shadow-soft);
   transition:
     transform var(--dur-fast) var(--ease-precise),
@@ -128,7 +142,7 @@
 @media (hover: hover) { .music__play:hover { background: var(--surface-elevated); filter: brightness(1.12); } }
 
 .music__secondary { display: flex; align-items: center; gap: var(--space-5); }
-.music__count { color: var(--text-muted); }
+.music__count { color: var(--text-muted); font-size: var(--type-meta); }
 
 /* ---------- Queue ----------------------------------------------------- */
 .music__queue {
@@ -150,23 +164,28 @@
 .music__list { flex: 1; min-height: 0; padding: var(--space-2); display: flex; flex-direction: column; gap: 1px; }
 
 .music__row { border-radius: var(--radius-sm); }
-.music__rowmark { display: flex; align-items: center; justify-content: center; width: 1.6rem; flex: none; }
-.music__rownum { font-size: var(--type-meta); color: var(--text-muted); font-weight: var(--weight-regular); }
+.music__rowmark { display: flex; align-items: center; justify-content: center; width: 1.9rem; flex: none; }
+.music__rownum { font-size: var(--type-body); color: var(--text-muted); font-weight: var(--weight-regular); }
 .music__rowtext { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.music__rowtitle { font-size: var(--type-body); font-weight: var(--weight-medium); }
-.music__rowartist { font-size: var(--type-caption); color: var(--text-muted); }
-.music__rowdur { font-size: var(--type-caption); color: var(--text-muted); font-weight: var(--weight-regular); flex: none; }
+.music__rowtitle { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
+.music__rowartist { font-size: var(--type-meta); color: var(--text-muted); }
+.music__rowdur { font-size: var(--type-meta); color: var(--text-muted); font-weight: var(--weight-regular); flex: none; }
 .music__row.is-current .music__rowtitle { color: var(--accent-primary); }
 
 @media (max-width: 1700px) {
   .music { gap: var(--space-6); }
-  .music__art { height: min(100%, 22rem); }
+  .music__art { height: min(100%, 24rem); }
+  .music__deck { max-width: 30rem; padding-inline-start: var(--space-4); }
 }
 @media (max-width: 1500px) {
   .music { gap: var(--space-5); grid-template-columns: auto minmax(0, 1.1fr) minmax(0, 0.8fr); }
-  .music__art { height: min(100%, 17rem); }
-  .music__play { width: 5rem; height: 5rem; font-size: 1.9rem; }
+  .music__art { height: min(100%, 18rem); }
+  .music__deck { max-width: none; margin-inline-start: 0; padding-inline-start: 0; }
+  .music__play { width: var(--touch-xl); height: var(--touch-xl); font-size: 2rem; }
   .music__title { font-size: var(--type-title); }
+  .music__artist { font-size: var(--type-title-sm); }
+  .music__tertiary:first-child { margin-inline-end: var(--space-2); }
+  .music__tertiary:last-child { margin-inline-start: var(--space-2); }
 }
 @media (max-width: 1180px) {
   .music { grid-template-columns: auto minmax(0, 1fr); }

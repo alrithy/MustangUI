@@ -24,9 +24,9 @@
 [data-mode='day'] .mapcanvas::before {
   background: radial-gradient(
     128% 108% at 50% 46%,
-    transparent 40%,
-    rgba(40, 38, 32, 0.07) 80%,
-    rgba(40, 38, 32, 0.13) 100%
+    transparent 42%,
+    rgba(46, 42, 33, 0.08) 82%,
+    rgba(46, 42, 33, 0.15) 100%
   );
 }
 .mapcanvas__svg { display: block; width: 100%; height: 100%; }
@@ -34,53 +34,92 @@
 
 .map-land { fill: var(--map-land); }
 .map-block { fill: var(--map-block); }
+.map-block--mid { fill: var(--map-block-mid); }
 .map-block--light { fill: var(--map-block-light); }
 .map-water { fill: var(--map-water); opacity: 0.85; }
 .map-park { fill: var(--map-park); }
 
-/* Road hierarchy is carried by width and value together. Nothing here
-   is brighter than the buildings it runs between — a bright road mesh
-   is what makes a dark map read as graph paper. */
+/* Road hierarchy is carried by width and value together, and the four
+   classes are separated by a clear step at each level so a glance can
+   tell an arterial from a residential street without reading a label. */
 .map-local line {
   stroke: var(--map-local);
-  stroke-width: 1.2;
+  stroke-width: 1.3;
+  stroke-linecap: round;
   vector-effect: non-scaling-stroke;
 }
 .map-collectors line {
   stroke: var(--map-road);
-  stroke-width: 2.6;
-  vector-effect: non-scaling-stroke;
-}
-.map-arterials line {
-  stroke: var(--map-arterial);
-  stroke-width: 6;
+  stroke-width: 3;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
+}
+.map-arterials path {
+  fill: none;
+  stroke: var(--map-arterial);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+/* Grade-separated: a cased line, so it reads as passing over rather
+   than joining the surface network. */
+.map-express path {
+  fill: none;
+  stroke: var(--map-express);
+  stroke-width: 8.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.map-express .map-express__case {
+  stroke: var(--map-land);
+  stroke-width: 15;
 }
 
 .map-labels text {
   fill: var(--map-label);
   font-family: var(--font-ui);
-  font-weight: 500;
   paint-order: stroke;
   stroke: var(--map-land);
-  stroke-width: 3.5px;
+  stroke-width: 4px;
   stroke-linejoin: round;
+}
+/* Two levels only. Districts carry the area, streets support it. */
+.map-label--district {
+  font-size: 15.5px;
+  font-weight: 500;
+  fill: var(--map-label-strong);
+  letter-spacing: 0.02em;
+}
+.map-label--street {
+  font-size: 12px;
+  font-weight: 400;
 }
 
 .map-route-probe { fill: none; stroke: none; }
+/* Four passes: a case that lifts the line off the fabric, a restrained
+   accent halo, the travelled portion in neutral, and the live core. */
+.map-route-case {
+  fill: none;
+  stroke: var(--map-route-case);
+  stroke-width: 15;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
 .map-route-halo {
   fill: none;
   stroke: var(--map-route-halo);
-  stroke-width: 10.5;
+  stroke-width: 11;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 .map-route-done {
   fill: none;
-  stroke: var(--map-arterial);
-  stroke-width: 4.5;
+  stroke: var(--map-route-done);
+  stroke-width: 5;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -88,7 +127,7 @@
 .map-route {
   fill: none;
   stroke: var(--map-route);
-  stroke-width: 4.5;
+  stroke-width: 5.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
@@ -104,15 +143,14 @@
   vector-effect: non-scaling-stroke;
 }
 
-.map-vehicle__halo { fill: var(--accent-glow); opacity: 0.13; }
+.map-vehicle__halo { fill: var(--accent-glow); opacity: 0.14; }
 .map-vehicle__arrow {
-  fill: var(--text-primary);
-  stroke: var(--map-land);
-  stroke-width: 1.5;
+  fill: var(--map-vehicle);
+  stroke: var(--map-vehicle-case);
+  stroke-width: 2;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
-
 
 /* Mini and card maps fade into their host surface instead of ending
    on a hard edge. */

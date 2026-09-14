@@ -18,9 +18,15 @@
   background: linear-gradient(to left, transparent, var(--divider) 6%, var(--divider) 94%, transparent);
 }
 
-.bvb__zone { display: flex; align-items: center; gap: var(--space-4); min-width: 0; }
-.bvb__sep { height: 1.5rem; }
-.bvb__unit { font-size: var(--type-caption); color: var(--text-muted); }
+.bvb__zone { display: flex; align-items: center; gap: var(--space-5); min-width: 0; }
+.bvb__sep { height: 1.9rem; }
+/* Units and labels stay small on purpose: the number is the message,
+   the unit only qualifies it. */
+.bvb__unit {
+  font-size: var(--type-caption);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
 
 /* ---- Drivetrain readout ------------------------------------------- */
 .bvb__drive { flex: none; }
@@ -31,7 +37,7 @@
   pointer-events: none;   /* never mistakable for a control */
 }
 .bvb__gear {
-  font-size: var(--type-body);
+  font-size: var(--type-body-lg);
   font-weight: var(--weight-medium);
   color: var(--text-muted);
   opacity: 0.36;
@@ -39,11 +45,27 @@
 }
 .bvb__gear.is-active { color: var(--text-primary); opacity: 1; font-weight: var(--weight-semibold); }
 
-.bvb__speed { display: flex; align-items: baseline; gap: 0.35em; }
-.bvb__range { display: flex; flex-direction: column; gap: 0.1rem; }
+.bvb__speed { display: flex; align-items: baseline; gap: 0.32em; }
+.bvb__range {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+}
 .bvb__rangepair { display: flex; align-items: baseline; gap: 0.3em; }
-.bvb__speedval { font-size: var(--type-title-sm); min-width: 1.9em; text-align: end; }
-.bvb__rangeval { font-size: var(--type-body-lg); color: var(--text-secondary); }
+.bvb__rangeline { display: flex; align-items: baseline; gap: 0.3em; }
+.bvb__speedval {
+  font-size: var(--type-num);
+  font-weight: var(--weight-semibold);
+  min-width: 1.9em;
+  text-align: end;
+}
+.bvb__rangelabel { font-size: var(--type-caption); color: var(--text-muted); line-height: 1; }
+.bvb__rangeval {
+  font-size: var(--type-num-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
 
 /* ---- Guidance handle (only while a route is running) --------------- */
 .bvb__guide {
@@ -58,8 +80,12 @@
   font-size: var(--type-meta);
   color: var(--text-secondary);
 }
-.bvb__guideicon { font-size: var(--icon-sm); color: var(--accent-primary); flex: none; }
-.bvb__guidekm { font-size: var(--type-body); color: var(--text-primary); }
+.bvb__guideicon { font-size: var(--icon-md); color: var(--accent-primary); flex: none; }
+.bvb__guidekm {
+  font-size: var(--type-num-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
 
 /* ---- Media handle --------------------------------------------------- */
 .bvb__media { margin-inline-start: auto; gap: var(--space-2); }
@@ -73,9 +99,9 @@
   text-align: start;
   margin-inline-end: var(--space-2);
 }
-.bvb__tracktext { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; max-width: 14rem; }
-.bvb__title { font-size: var(--type-meta); font-weight: var(--weight-medium); }
-.bvb__artist { font-size: var(--type-caption); color: var(--text-muted); }
+.bvb__tracktext { display: flex; flex-direction: column; gap: 0.12rem; min-width: 0; max-width: 15rem; }
+.bvb__title { font-size: var(--type-body); font-weight: var(--weight-medium); }
+.bvb__artist { font-size: var(--type-meta); color: var(--text-muted); }
 
 @media (max-width: 1500px) {
   .bvb { gap: var(--space-4); padding-inline: var(--space-4); }

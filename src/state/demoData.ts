@@ -94,10 +94,37 @@ export const ROUTE_STEPS: RouteStep[] = [
 ];
 
 /* Route polyline in the map's 0..1000 x 0..600 viewBox space.
-   Hand-placed to read as a real arterial route, not a smooth curve. */
-export const ROUTE_PATH =
-  'M 118 548 L 178 548 L 214 512 L 214 402 L 268 348 L 452 348 L 486 314 ' +
-  'L 486 214 L 540 160 L 706 160 L 742 196 L 742 262 L 806 262 L 862 206';
+   The demo route. Turns are filleted rather than square: a real
+   guidance line follows a carriageway through an intersection, and a
+   90-degree corner is the single strongest tell that a map is drawn
+   rather than driven. The radius is deliberately small — a wide sweep
+   reads as a racetrack, not a street. */
+const ROUTE_POINTS: Array<[number, number]> = [
+  [118, 548], [178, 548], [214, 512], [214, 402], [268, 348], [452, 348],
+  [486, 314], [486, 214], [540, 160], [742, 160], [812, 182], [862, 206],
+];
+
+function filleted(pts: Array<[number, number]>, radius: number) {
+  const d: string[] = [`M ${pts[0][0]} ${pts[0][1]}`];
+  for (let i = 1; i < pts.length - 1; i += 1) {
+    const [px, py] = pts[i - 1];
+    const [cx, cy] = pts[i];
+    const [nx, ny] = pts[i + 1];
+    const inLen = Math.hypot(cx - px, cy - py);
+    const outLen = Math.hypot(nx - cx, ny - cy);
+    const r = Math.min(radius, inLen / 2, outLen / 2);
+    const ax = cx - ((cx - px) / inLen) * r;
+    const ay = cy - ((cy - py) / inLen) * r;
+    const bx = cx + ((nx - cx) / outLen) * r;
+    const by = cy + ((ny - cy) / outLen) * r;
+    d.push(`L ${ax.toFixed(1)} ${ay.toFixed(1)}`, `Q ${cx} ${cy} ${bx.toFixed(1)} ${by.toFixed(1)}`);
+  }
+  const last = pts[pts.length - 1];
+  d.push(`L ${last[0]} ${last[1]}`);
+  return d.join(' ');
+}
+
+export const ROUTE_PATH = filleted(ROUTE_POINTS, 15);
 
 /* ---------- Apps --------------------------------------------------
    Curated, not a launcher grid dump. Video and browsing are the only
