@@ -1,0 +1,83 @@
+/* Bench instrument, not part of the HMI's visual language. It is
+   deliberately plain and high-contrast: it is read once, at arm's
+   length, while someone holds a measuring tape to the panel. */
+
+.paneldiag {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  overflow: auto;
+  background: rgba(0, 0, 0, 0.94);
+  color: #e8e8e8;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.paneldiag__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.paneldiag__title {
+  font-size: 1.1rem;
+  letter-spacing: 0.12em;
+}
+
+.paneldiag__verdict {
+  padding: 0.2em 0.7em;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+}
+.paneldiag__verdict.is-ok { background: #12401f; color: #7fe0a0; }
+.paneldiag__verdict.is-bad { background: #4a1315; color: #ff9aa2; }
+
+.paneldiag__close {
+  min-height: 3rem;
+  margin-inline-start: auto;
+  padding-inline: var(--space-5);
+  color: inherit;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+.paneldiag__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: var(--space-5);
+  align-content: start;
+}
+
+.paneldiag__grouptitle {
+  margin: 0 0 var(--space-2);
+  padding-block-end: var(--space-2);
+  border-block-end: 1px solid rgba(255, 255, 255, 0.18);
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  color: #b9b9b9;
+}
+
+.paneldiag__rows { margin: 0; }
+
+.paneldiag__row {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: space-between;
+  padding-block: 0.15em;
+}
+.paneldiag__row.is-bad .paneldiag__val { color: #ff9aa2; }
+
+.paneldiag__key { color: #9a9a9a; }
+
+.paneldiag__val {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}

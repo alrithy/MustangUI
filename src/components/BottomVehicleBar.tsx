@@ -7,7 +7,7 @@
    screens.
    ============================================================ */
 
-import { useDispatch, useSystem, useTrack } from '../state/systemStore';
+import { useDispatch, useReadout, useSystem, useTrack } from '../state/systemStore';
 import type { Gear } from '../state/types';
 import { Icon } from '../system/icons';
 import { AlbumArt } from './AlbumArt';
@@ -20,6 +20,7 @@ export function BottomVehicleBar() {
   const { vehicle, media, nav } = useSystem();
   const dispatch = useDispatch();
   const track = useTrack();
+  const readout = useReadout();
 
   return (
     <footer className="bvb">
@@ -29,23 +30,28 @@ export function BottomVehicleBar() {
         <div
           className="bvb__gears physical"
           role="img"
-          aria-label={`ناقل الحركة في الوضع ${vehicle.gear}`}
+          aria-label={readout.available
+            ? `ناقل الحركة في الوضع ${vehicle.gear}`
+            : 'وضع ناقل الحركة غير متاح'}
         >
           {GEARS.map((g) => (
-            <span key={g} className={`bvb__gear latin${g === vehicle.gear ? ' is-active' : ''}`}>
+            <span
+              key={g}
+              className={`bvb__gear latin${readout.available && g === vehicle.gear ? ' is-active' : ''}`}
+            >
               {g}
             </span>
           ))}
         </div>
         <span className="hairline-v bvb__sep" />
         <div className="bvb__speed">
-          <span className="n-value bvb__speedval">{Math.round(vehicle.speedKph)}</span>
+          <span className="n-value bvb__speedval">{readout.num(vehicle.speedKph)}</span>
           <span className="bvb__unit">كم/س</span>
         </div>
         <span className="hairline-v bvb__sep" />
         <div className="bvb__range">
           <span className="bvb__rangeline">
-            <span className="n-value bvb__rangeval">{vehicle.rangeKm}</span>
+            <span className="n-value bvb__rangeval">{readout.num(vehicle.rangeKm)}</span>
             <span className="bvb__unit">كم</span>
           </span>
           <span className="bvb__rangelabel">المدى</span>

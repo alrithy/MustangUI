@@ -3,3 +3,10 @@ dist
 .DS_Store
 *.local
 .vite
+
+# Android build output and machine-specific configuration
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+*.apk

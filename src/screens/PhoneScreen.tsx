@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { Avatar, IconButton, Segmented, Surface, TouchButton } from '../components/primitives';
+import { act } from '../platform/host';
 import { CALL_LOG, CONTACTS } from '../state/demoData';
 import { contactById, useDispatch, useSystem } from '../state/systemStore';
 import { relativeTime, timecode } from '../system/format';
@@ -24,8 +25,11 @@ const TABS = [
 const DIRECTION_ICON = { in: 'phone-in', out: 'phone-out', missed: 'phone-missed' } as const;
 
 export function PhoneScreen() {
-  const { phone } = useSystem();
-  const [tab, setTab] = useState<Tab>('recent');
+  const { phone, sources } = useSystem();
+  const demo = sources.phone === 'demo';
+  /* Without a phone source there is nothing in the lists, so the one
+     tab that still works opens first. */
+  const [tab, setTab] = useState<Tab>(demo ? 'recent' : 'keypad');
 
   if (phone.status === 'active' || phone.status === 'incoming') return <ActiveCall />;
 
@@ -35,14 +39,31 @@ export function PhoneScreen() {
         <Segmented<Tab> options={TABS} value={tab} onChange={setTab} size="lg" ariaLabel="أقسام الهاتف" />
         <span className="phone__device t-meta">
           <Icon name="bluetooth" className="phone__deviceicon" />
-          هاتف عبدالله
+          {demo ? 'هاتف عبدالله' : 'الجهاز المقترن غير معروف'}
         </span>
       </header>
 
       <div className="phone__body">
-        {tab === 'keypad' ? <Keypad /> : <PeopleList tab={tab} />}
+        {tab === 'keypad' ? <Keypad /> : demo ? <PeopleList tab={tab} /> : <NoPhoneSource tab={tab} />}
         <QuickDial />
       </div>
+    </div>
+  );
+}
+
+/* The head unit has no read access to the paired phone's log or address
+   book in V1. An empty list would imply there were no calls. */
+function NoPhoneSource({ tab }: { tab: Tab }) {
+  return (
+    <div className="phone__list phone__nosource">
+      <p className="t-meta phone__nosourcetext">
+        {tab === 'recent'
+          ? 'سجل المكالمات غير متاح من هذا المصدر.'
+          : 'جهات الاتصال غير متاحة من هذا المصدر.'}
+      </p>
+      <p className="t-meta phone__nosourcetext muted">
+        استخدم لوحة الأرقام للاتصال عبر تطبيق الهاتف في النظام.
+      </p>
     </div>
   );
 }
@@ -51,7 +72,10 @@ export function PhoneScreen() {
    tabs means the most common call never costs a navigation step. */
 function QuickDial() {
   const dispatch = useDispatch();
-  const favorites = CONTACTS.filter((c) => c.favorite).slice(0, 4);
+  const { sources } = useSystem();
+  const favorites = sources.phone === 'demo'
+    ? CONTACTS.filter((c) => c.favorite).slice(0, 4)
+    : [];
 
   return (
     <aside className="quickdial">
@@ -129,7 +153,18 @@ const KEYS = [
 function Keypad() {
   const [value, setValue] = useState('');
   const dispatch = useDispatch();
-  const match = CONTACTS.find((c) => c.phone.replace(/\s/g, '').endsWith(value)) ;
+  const { sources } = useSystem();
+  const demo = sources.phone === 'demo';
+  const match = demo
+    ? CONTACTS.find((c) => c.phone.replace(/\s/g, '').endsWith(value))
+    : undefined;
+
+  /* The HMI does not place the call itself: it hands the number to the
+     system dialer, which owns telephony and the Bluetooth HFP link. */
+  const dial = () => {
+    if (!demo) { act('dial', { number: value }); return; }
+    dispatch({ type: 'call-dial', contactId: match?.id ?? CONTACTS[0].id });
+  };
 
   return (
     <div className="phone__keypadwrap">
@@ -153,7 +188,7 @@ function Keypad() {
         <div className="phone__keyactions">
           <TouchButton
             variant="accept" size="lg" icon="phone" block disabled={value.length < 3}
-            onClick={() => dispatch({ type: 'call-dial', contactId: match?.id ?? CONTACTS[0].id })}
+            onClick={dial}
           >
             اتصال
           </TouchButton>

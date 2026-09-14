@@ -84,10 +84,16 @@ judged against something that reads as a place.
 
 ## What is simulated
 
-Everything. Navigation, media, contacts, call log and all vehicle telemetry are
-demo data driven by the tick in `systemStore.tsx`. Drivetrain state (P R N D) is
-rendered as a read-only readout with `pointer-events: none` and no handler — the
-screen never presents a safety-critical control.
+In the browser, everything. Navigation, media, contacts, call log and all
+vehicle telemetry are demo data driven by the tick in `systemStore.tsx`.
+Drivetrain state (P R N D) is rendered as a read-only readout with
+`pointer-events: none` and no handler — the screen never presents a
+safety-critical control.
+
+Inside the Android launcher the simulation does not run at all. Each region of
+the store carries a source (`demo`, `live`, `unavailable`) and the UI renders
+what it actually has: live media from MediaSession, blanks where the vehicle
+bus has no verified source yet. Nothing invented is presented as real.
 
 ## Notes for an Android Automotive port
 
@@ -98,3 +104,20 @@ screen never presents a safety-critical control.
   and the route dash offset change per tick.
 - Replace `state/demoData.ts` and the tick with the vehicle HAL, MediaSession
   and a navigation provider; the UI reads only from the store.
+
+## Android launcher
+
+`android/` is a native Android Home candidate that bundles this build and runs
+it offline in a WebView behind a narrow bridge. The visual design is unchanged;
+the launcher adds the Home intent, MediaSession, app launching, a black cold
+start and a native recovery path.
+
+- [Architecture and build](docs/ANDROID-LAUNCHER.md)
+- [Device discovery](docs/DEVICE-DISCOVERY.md) — run before installing on a unit
+- [Validation status](docs/VALIDATION.md) — what has and has not been verified
+
+```sh
+npm run verify:state                      # reducer, both platform modes
+npm run build && npm run verify:ui        # browser, both platform modes
+cd android && ./gradlew assembleDebug     # needs an Android SDK
+```

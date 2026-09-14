@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Black before anything of ours runs. windowBackground is what the
+      system paints for the starting window, so it is the first frame the
+      compositor produces for this app — before onCreate, before the
+      WebView exists, before a single byte of the bundle is read.
+
+      windowDisablePreview is deliberately NOT set: disabling the starting
+      window trades a black frame for a frozen previous app, which on a
+      head unit looks like a hang.
+    -->
+    <style name="LauncherTheme" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/black</item>
+        <item name="android:colorBackground">@color/black</item>
+        <item name="android:statusBarColor">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowContentTransitions">false</item>
+        <item name="android:windowAnimationStyle">@null</item>
+    </style>
+</resources>

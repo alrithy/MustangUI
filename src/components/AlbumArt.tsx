@@ -22,6 +22,19 @@ export function AlbumArt({
   const motif = hashIndex(track.id, MOTIFS);
   const [c1, c2] = track.art;
 
+  /* A real MediaSession cover replaces the motif inside the same frame,
+     so size, radius and the surrounding layout are untouched. */
+  if (track.artwork) {
+    return (
+      <div
+        className={`albumart albumart--${size} ${className}`}
+        style={{ ['--art-a' as string]: c1, ['--art-b' as string]: c2 }}
+      >
+        <img className="albumart__cover" src={track.artwork} alt={`غلاف ألبوم ${track.album}`} />
+      </div>
+    );
+  }
+
   return (
     <div
       className={`albumart albumart--${size} ${className}`}

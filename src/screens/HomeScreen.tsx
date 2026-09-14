@@ -121,20 +121,24 @@ function MapOverlay() {
 
 /* ---------- Context: media ------------------------------------------ */
 function MediaContext() {
-  const { media } = useSystem();
+  const { media, sources, native } = useSystem();
   const { parked } = useDerived();
   const dispatch = useDispatch();
   const track = useTrack();
-  const remaining = track.durationSec - media.positionSec;
+  const remaining = Math.max(0, track.durationSec - media.positionSec);
+
+  /* Names the real player on the head unit; the prototype's own source
+     vocabulary is only correct for the prototype. */
+  const source = sources.media === 'demo'
+    ? (media.source === 'bluetooth' ? 'بلوتوث' : media.source === 'usb' ? 'USB' : 'راديو')
+    : native.media?.appLabel || native.media?.app || 'لا يوجد مصدر';
 
   return (
     <div className="ctx ctx--media">
       <span className="ctx__ambient" style={{ background: track.ambient }} aria-hidden="true" />
 
       <header className="ctx__head">
-        <span className="t-label">
-          {media.source === 'bluetooth' ? 'بلوتوث' : media.source === 'usb' ? 'USB' : 'راديو'}
-        </span>
+        <span className="t-label truncate">{source}</span>
         <span className="ctx__eq" data-on={media.playing} aria-hidden="true"><i /><i /><i /></span>
       </header>
 
@@ -153,7 +157,10 @@ function MediaContext() {
       </div>
 
       <div className="ctx__progress">
-        <Meter ratio={media.positionSec / track.durationSec} height="sm" />
+        <Meter
+          ratio={track.durationSec > 0 ? media.positionSec / track.durationSec : 0}
+          height="sm"
+        />
         <div className="ctx__times">
           <span className="n-value ctx__time">{timecode(media.positionSec)}</span>
           <span className="n-value ctx__time">-{timecode(remaining)}</span>

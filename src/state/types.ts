@@ -58,6 +58,9 @@ export interface Track {
   durationSec: number;
   /** Two-stop hue pair used to synthesise the album artwork. */
   art: [string, string];
+  /** Real cover supplied by a native MediaSession, when there is one.
+      Absent means the synthesised motif is used, as in the prototype. */
+  artwork?: string;
   /** Ambient tint the Music screen samples from the artwork. */
   ambient: string;
 }
@@ -176,10 +179,39 @@ export interface SettingsState {
   startupChime: boolean;
 }
 
+/** Where a region of the HMI is getting its values right now.
+ *  'demo' is the browser prototype's simulation, 'live' is a real
+ *  native source, 'unavailable' is an honest blank. The UI must
+ *  never present 'unavailable' data as though it were 'live'. */
+export type Availability = 'demo' | 'live' | 'unavailable';
+
+export interface SourceState {
+  /** Connectivity: GPS provider, data link, Bluetooth adapter. */
+  system: Availability;
+  vehicle: Availability;
+  media: Availability;
+  phone: Availability;
+  nav: Availability;
+  apps: Availability;
+}
+
+/** Motion is tri-state because an unverified head unit genuinely
+ *  does not know. 'unknown' is treated as moving for anything the
+ *  driver should not be reading, and is never labelled as parked. */
+export type Motion = 'parked' | 'moving' | 'unknown';
+
 export interface SystemState {
   screen: ScreenId;
   /** Simulation clock, ticks once per second. */
   clock: number;
+  /** Provenance of each region. All 'demo' in the browser. */
+  sources: SourceState;
+  /** Live values from the Android host, when there are any. */
+  native: {
+    media: import('../platform/host').NativeMedia | null;
+    system: import('../platform/host').NativeSystem | null;
+    apps: import('../platform/host').NativeApp[];
+  };
   vehicle: VehicleState;
   climate: ClimateState;
   media: MediaState;

@@ -5,7 +5,8 @@
    ============================================================ */
 
 import { useState } from 'react';
-import { Meter, SectionHead, Segmented } from '../components/primitives';
+import { Meter, SectionHead, Segmented, TouchButton } from '../components/primitives';
+import { act } from '../platform/host';
 import { TriBar } from '../components/TriBar';
 import { useDispatch, useSystem } from '../state/systemStore';
 import type { Appearance, RailSide, ThemeName } from '../state/types';
@@ -209,7 +210,45 @@ function SoundSection() {
   );
 }
 
+/* The three Android surfaces this launcher deliberately does not
+   reimplement. Pairing, notification access and device settings belong
+   to the platform; the HMI only needs to be able to reach them. */
+function HostLinks({ ids }: { ids: Array<'bluetooth' | 'mediaAccess' | 'settings' | 'homeSettings'> }) {
+  const LABEL = {
+    bluetooth: 'إعدادات البلوتوث',
+    mediaAccess: 'الوصول للوسائط',
+    settings: 'إعدادات أندرويد',
+    homeSettings: 'الشاشة الرئيسية الافتراضية',
+  } as const;
+  const ICON = {
+    bluetooth: 'bluetooth', mediaAccess: 'music', settings: 'settings', homeSettings: 'sliders',
+  } as const;
+  return (
+    <div className="settings__hostlinks">
+      {ids.map((id) => (
+        <TouchButton key={id} variant="secondary" size="lg" icon={ICON[id]}
+          onClick={() => act('launch', { app: id })}>
+          {LABEL[id]}
+        </TouchButton>
+      ))}
+    </div>
+  );
+}
+
 function ConnectionsSection() {
+  const { sources } = useSystem();
+  if (sources.system !== 'demo') {
+    return (
+      <section className="settings__group">
+        <SectionHead title="الاتصالات" tag="ANDROID" />
+        <p className="settings__note">
+          الإقران وحالة الأجهزة يديرهما نظام أندرويد. هذه الشاشة لا تقرأ قائمة
+          الأجهزة المقترنة ولا حالة المكالمات.
+        </p>
+        <HostLinks ids={['bluetooth', 'mediaAccess']} />
+      </section>
+    );
+  }
   return (
     <>
       <section className="settings__group">
@@ -231,7 +270,7 @@ function ConnectionsSection() {
 }
 
 function VehicleSection() {
-  const { settings } = useSystem();
+  const { settings, sources } = useSystem();
   const dispatch = useDispatch();
   return (
     <>
@@ -246,8 +285,9 @@ function VehicleSection() {
         />
       </Row>
       <p className="settings__note">
-        بيانات المركبة في هذا النموذج تجريبية. لا يتم التحكم في ناقل الحركة أو أي وظيفة
-        متعلقة بالسلامة من خلال هذه الشاشة.
+        {sources.vehicle === 'demo'
+          ? 'بيانات المركبة في هذا النموذج تجريبية. لا يتم التحكم في ناقل الحركة أو أي وظيفة متعلقة بالسلامة من خلال هذه الشاشة.'
+          : 'لا يوجد مصدر معتمد لبيانات المركبة على هذه الوحدة بعد، لذلك تظهر القراءات فارغة. لا يتم التحكم في ناقل الحركة أو أي وظيفة متعلقة بالسلامة من خلال هذه الشاشة.'}
       </p>
       </section>
     </>
@@ -255,8 +295,19 @@ function VehicleSection() {
 }
 
 function SystemSection() {
+  const { sources } = useSystem();
   return (
     <>
+      {sources.system !== 'demo' && (
+        <section className="settings__group">
+          <SectionHead title="النظام المضيف" tag="ANDROID" />
+          <p className="settings__note">
+            التخزين ومعلومات الجهاز تُقرأ من إعدادات أندرويد. اختيار الشاشة
+            الرئيسية الافتراضية يبقى بيدك، ويمكن الرجوع للانشر الأصلي في أي وقت.
+          </p>
+          <HostLinks ids={['settings', 'homeSettings']} />
+        </section>
+      )}
       <section className="settings__group">
         <SectionHead title="اللغة والمنطقة" tag="LOCALE" />
         <ul className="settings__devices">
@@ -265,16 +316,21 @@ function SystemSection() {
           <DeviceRow name="المنطقة الزمنية" detail="الرياض · GMT+3" on />
         </ul>
       </section>
-      <section className="settings__group">
-      <SectionHead title="التخزين" tag="STORAGE" />
-      <div className="settings__storage">
-        <Meter ratio={0.42} height="lg" tone="neutral" />
-        <div className="settings__storagemeta">
-          <span className="t-meta">27.1 غب مستخدمة</span>
-          <span className="t-meta muted">من 64 غب</span>
+      {/* The prototype's storage figure is illustrative. On a real unit
+          the number would be wrong, so the meter is not shown at all
+          rather than shown with invented values. */}
+      {sources.system === 'demo' && (
+        <section className="settings__group">
+        <SectionHead title="التخزين" tag="STORAGE" />
+        <div className="settings__storage">
+          <Meter ratio={0.42} height="lg" tone="neutral" />
+          <div className="settings__storagemeta">
+            <span className="t-meta">27.1 غب مستخدمة</span>
+            <span className="t-meta muted">من 64 غب</span>
+          </div>
         </div>
-      </div>
-      </section>
+        </section>
+      )}
     </>
   );
 }
