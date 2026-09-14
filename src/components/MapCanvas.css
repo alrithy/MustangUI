@@ -1,0 +1,94 @@
+.mapcanvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--map-land);
+}
+.mapcanvas__svg { display: block; width: 100%; height: 100%; }
+.map-world { transition: transform var(--dur-slow) linear; }
+
+.map-land { fill: var(--map-land); }
+.map-block { fill: var(--map-block); }
+.map-water { fill: var(--map-water); opacity: 0.55; }
+
+.map-streets line {
+  stroke: var(--map-road);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+.map-arterials line {
+  stroke: var(--map-arterial);
+  stroke-width: 5.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-labels text {
+  fill: var(--map-label);
+  opacity: 0.85;
+  font-family: var(--font-ui);
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: var(--map-land);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+.map-route-probe { fill: none; stroke: none; }
+.map-route-halo {
+  fill: none;
+  stroke: var(--map-route-halo);
+  stroke-width: 13;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.map-route-done {
+  fill: none;
+  stroke: var(--map-arterial);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.map-route {
+  fill: none;
+  stroke: var(--map-route);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: stroke-dashoffset var(--dur-slow) linear;
+}
+
+.map-dest__core { fill: var(--accent-primary); }
+.map-dest__ring {
+  fill: none;
+  stroke: var(--accent-primary);
+  stroke-width: 2;
+  opacity: 0.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.map-vehicle__halo { fill: var(--accent-glow); opacity: 0.13; }
+.map-vehicle__arrow {
+  fill: var(--text-primary);
+  stroke: var(--map-land);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+
+/* Mini and card maps fade into their host surface instead of ending
+   on a hard edge. */
+.mapcanvas--mini::after,
+.mapcanvas--card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mapcanvas--card::after {
+  background: linear-gradient(to top, rgba(var(--surface-fade), 1) 0%, rgba(var(--surface-fade), 0) 55%);
+}

@@ -1,0 +1,44 @@
+.maneuver {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.maneuver__primary { display: flex; align-items: center; gap: var(--space-5); min-width: 0; }
+
+.maneuver__glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--text-primary);
+  transition: color var(--dur-base) var(--ease-standard);
+}
+.maneuver--hero .maneuver__glyph { font-size: 4.5rem; }
+.maneuver--compact .maneuver__glyph { font-size: 2.75rem; }
+
+.maneuver[data-imminent='true'] .maneuver__glyph { color: var(--accent-primary); }
+
+.maneuver__text { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.maneuver__dist { display: flex; align-items: baseline; gap: 0.25em; }
+.maneuver__distval { color: var(--text-primary); }
+.maneuver--compact .maneuver__distval { font-size: var(--type-title-lg); }
+.maneuver__distunit {
+  font-size: var(--type-body-lg);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+.maneuver--compact .maneuver__distunit { font-size: var(--type-body); }
+
+.maneuver__road {
+  font-size: var(--type-title-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+.maneuver--compact .maneuver__road { font-size: var(--type-body-lg); }
+.maneuver__detail { font-size: var(--type-meta); color: var(--text-muted); }
+
+.maneuver__rule { margin-block: calc(var(--space-1) * -1); }
+.maneuver__next { display: flex; align-items: center; gap: var(--space-3); min-width: 0; color: var(--text-secondary); }
+.maneuver__nexticon { font-size: var(--icon-md); flex: none; }
+.maneuver__nextroad { font-size: var(--type-body); min-width: 0; }

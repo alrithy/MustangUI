@@ -1,0 +1,96 @@
+.car { display: flex; flex-direction: column; gap: var(--space-4); height: 100%; min-height: 0; }
+
+.car__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex: none;
+}
+.car__mode { display: flex; flex-direction: column; gap: var(--space-3); }
+.car__disclaimer { display: flex; align-items: center; gap: var(--space-2); color: var(--text-muted); }
+.car__discicon { font-size: var(--icon-xs); }
+
+/* One row of four. The whole vehicle overview has to fit a 720px
+   panel without scrolling — a driver should never hunt for a value. */
+.car__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: var(--space-4);
+  flex: 1;
+  min-height: 0;
+}
+.car__card { display: flex; flex-direction: column; min-height: 0; }
+
+/* ---------- Tyres ------------------------------------------------------
+   direction:ltr — the schematic maps to the physical car, so it must
+   not mirror with the interface. */
+.car__tires {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-2) var(--space-3);
+  flex: 1;
+  min-height: 0;
+  direction: ltr;
+}
+.car__diagram { grid-column: 2; grid-row: 1 / span 2; display: flex; justify-content: center; min-height: 0; }
+.car__tire { display: flex; flex-direction: column; gap: var(--space-1); justify-content: center; direction: rtl; }
+.car__tire--fl { grid-column: 1; grid-row: 1; align-items: flex-end; }
+.car__tire--fr { grid-column: 3; grid-row: 1; align-items: flex-start; }
+.car__tire--rl { grid-column: 1; grid-row: 2; align-items: flex-end; }
+.car__tire--rr { grid-column: 3; grid-row: 2; align-items: flex-start; }
+
+.car__tireval { display: flex; align-items: baseline; gap: 0.25em; }
+.car__tireval .n-value { font-size: var(--type-title-sm); }
+.car__tireval.is-warn .n-value { color: var(--status-warning); }
+.car__tireunit { font-size: 0.625rem; color: var(--text-muted); }
+.car__tiretemp { font-size: var(--type-caption); color: var(--text-muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- Energy ------------------------------------------------------ */
+.car__stack { display: flex; flex-direction: column; justify-content: center; gap: var(--space-4); flex: 1; min-height: 0; }
+.car__fuel { display: flex; gap: var(--space-8); }
+.car__scale { display: flex; justify-content: space-between; font-size: 0.625rem; color: var(--text-muted); letter-spacing: 0.1em; }
+
+/* ---------- Metric grids -------------------------------------------------- */
+.car__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: space-evenly;
+  gap: var(--space-4) var(--space-5);
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---------- Identity strip -------------------------------------------------- */
+.car__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex: none;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--divider);
+}
+.car__idcell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.car__idvalue { font-size: var(--type-body); font-weight: var(--weight-medium); }
+.car__idvalue.is-ok { color: var(--status-success); }
+.car__infolatin { font-variant-numeric: tabular-nums; }
+.car__idsep { height: 1.75rem; }
+
+/* A taller panel gets two rows of larger cards rather than one row of
+   four stretched ones. */
+@media (min-height: 900px) {
+  .car__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .car__tires { gap: var(--space-4) var(--space-6); }
+}
+
+@media (max-width: 1500px) {
+  .car__grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr); }
+  .car__grid > .car__card:nth-child(4) { display: none; }
+  .car__metrics { gap: var(--space-3); }
+}
+@media (max-width: 1180px) {
+  .car__grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .car__grid > .car__card:nth-child(3) { display: none; }
+  .car__identity > *:nth-child(n + 5) { display: none; }
+}

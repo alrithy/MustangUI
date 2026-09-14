@@ -1,0 +1,43 @@
+/* Bench tooling. Intentionally plain — it must never be mistaken
+   for part of the product surface. */
+.devpanel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 60;
+  width: 22rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  overflow-y: auto;
+  background: #0b0b0c;
+  color: #d6d6d8;
+  box-shadow: -12px 0 40px rgba(0, 0, 0, 0.6);
+  direction: ltr;
+  text-align: left;
+  animation: devpanel-in var(--dur-base) var(--ease-enter) both;
+}
+@keyframes devpanel-in { from { transform: translateX(-8%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.devpanel__head { display: flex; align-items: center; justify-content: space-between; }
+.devpanel__title { font-size: 0.6875rem; color: #7d7d82; }
+.devpanel__close { width: 2rem; height: 2rem; display: grid; place-items: center; color: #9a9aa0; }
+
+.devpanel__group { display: flex; flex-direction: column; gap: var(--space-2); }
+.devpanel__label {
+  font-size: 0.625rem;
+  color: #6c6c72;
+  letter-spacing: 0.12em;
+}
+.devpanel__chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.devpanel__chip {
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  background: #17171a;
+  color: #b6b6bb;
+  border: 1px solid #232327;
+}
+.devpanel__chip.is-on { background: #2a2024; color: #f0dfe2; border-color: #4a2f36; }
+.devpanel__hint { margin-top: auto; font-size: 0.625rem; color: #5d5d63; letter-spacing: 0.06em; }

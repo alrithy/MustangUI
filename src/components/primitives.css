@@ -1,0 +1,280 @@
+/* ---------- Surface ---------------------------------------------- */
+.surface { position: relative; min-width: 0; }
+.surface--base { background: var(--surface-primary); }
+.surface--elevated { background: var(--surface-elevated); box-shadow: var(--shadow-soft); }
+.surface--sunken { background: var(--surface-sunken); }
+.surface--bare { background: transparent; }
+
+.surface--r-none { border-radius: 0; }
+.surface--r-sm { border-radius: var(--radius-sm); }
+.surface--r-md { border-radius: var(--radius-md); }
+.surface--r-lg { border-radius: var(--radius-lg); }
+
+.surface--p-none { padding: 0; }
+.surface--p-sm { padding: var(--space-3); }
+.surface--p-md { padding: var(--space-5); }
+.surface--p-lg { padding: var(--space-6) var(--space-8); }
+
+/* Mustang cut corner — always the top outer corner, never rounded. */
+.surface--chamfer {
+  border-radius: var(--radius-md);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--chamfer)) 0,
+    100% var(--chamfer),
+    100% 100%,
+    0 100%
+  );
+}
+[dir='rtl'] .surface--chamfer {
+  clip-path: polygon(
+    var(--chamfer) 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 var(--chamfer)
+  );
+}
+
+/* ---------- Section head ------------------------------------------ */
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.section-head__title { color: var(--text-primary); }
+.section-head__tag { color: var(--text-muted); padding-top: 0.2em; }
+.section-head__rule { flex: 1 1 auto; min-width: var(--space-6); }
+
+/* ---------- TouchButton -------------------------------------------- */
+.tbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.tbtn--sm { min-height: var(--touch-sm); font-size: var(--type-body); padding-inline: var(--space-4); }
+.tbtn--md { min-height: var(--touch-md); font-size: var(--type-body); }
+.tbtn--lg { min-height: var(--touch-lg); font-size: var(--type-body-lg); padding-inline: var(--space-6); }
+.tbtn--xl { min-height: var(--touch-xl); font-size: var(--type-body-lg); padding-inline: var(--space-8); }
+
+.tbtn__icon { font-size: var(--icon-md); flex: none; }
+.tbtn--lg .tbtn__icon, .tbtn--xl .tbtn__icon { font-size: var(--icon-lg); }
+.tbtn__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.tbtn--block { width: 100%; }
+
+.tbtn--secondary { background: var(--surface-subtle); }
+.tbtn--ghost { background: transparent; color: var(--text-secondary); }
+.tbtn--ghost:active { color: var(--text-primary); }
+.tbtn--primary {
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-weight: var(--weight-semibold);
+}
+.tbtn--primary:active { background: var(--accent-primary); filter: brightness(0.9); }
+/* Call actions are deep and matte, not signal-bright: they must be
+   unmistakable at a glance without lighting up the cabin. */
+.tbtn--danger {
+  background: var(--call-decline);
+  color: #fdf1f2;
+  font-weight: var(--weight-semibold);
+}
+.tbtn--accept {
+  background: var(--call-accept);
+  color: #f0f8f3;
+  font-weight: var(--weight-semibold);
+}
+.tbtn.is-active { background: var(--surface-elevated); color: var(--text-primary); }
+
+/* Hover on filled buttons must not flip to the neutral hover wash. */
+@media (hover: hover) {
+  .tbtn--primary:hover, .tbtn--danger:hover, .tbtn--accept:hover {
+    background-color: currentColor;
+    filter: brightness(1.08);
+  }
+  .tbtn--primary:hover { background-color: var(--accent-primary); }
+  .tbtn--danger:hover { background-color: var(--call-decline); }
+  .tbtn--accept:hover { background-color: var(--call-accept); }
+}
+
+/* ---------- IconButton ---------------------------------------------- */
+.ibtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+}
+.ibtn--sm { width: var(--touch-sm); height: var(--touch-sm); }
+.ibtn--md { width: var(--touch-md); height: var(--touch-md); }
+.ibtn--lg { width: var(--touch-lg); height: var(--touch-lg); }
+.ibtn--xl { width: var(--touch-xl); height: var(--touch-xl); border-radius: var(--radius-lg); }
+
+.ibtn__icon { font-size: var(--icon-md); }
+.ibtn--lg .ibtn__icon { font-size: var(--icon-lg); }
+.ibtn--xl .ibtn__icon { font-size: var(--icon-xl); }
+
+.ibtn--filled { background: var(--surface-subtle); color: var(--text-primary); }
+.ibtn--accent { background: var(--accent-primary); color: var(--text-on-accent); }
+.ibtn--danger { background: var(--status-danger); color: #fff; }
+.ibtn--accept { background: var(--status-success); color: #fff; }
+/* An "on" control reads as raised and bright, not coloured. Accent
+   is reserved for the few places where red carries meaning, and is
+   opted into with .ibtn--tone-accent. */
+.ibtn.is-active { color: var(--text-primary); background: var(--surface-subtle); }
+.ibtn--tone-accent.is-active { color: var(--accent-primary); background: transparent; }
+
+@media (hover: hover) {
+  .ibtn--accent:hover { background-color: var(--accent-primary); filter: brightness(1.1); }
+  .ibtn--danger:hover { background-color: var(--status-danger); filter: brightness(1.1); }
+  .ibtn--accept:hover { background-color: var(--status-success); filter: brightness(1.1); }
+}
+
+.ibtn__badge {
+  position: absolute;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  font-size: 0.625rem;
+  color: var(--accent-primary);
+}
+
+/* ---------- Segmented ------------------------------------------------ */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+}
+.segmented--block { display: flex; width: 100%; }
+.segmented--block .segmented__item { flex: 1; }
+
+.segmented__item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-5);
+  border-radius: calc(var(--radius-md) - 2px);
+  color: var(--text-muted);
+  font-size: var(--type-body);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-base) var(--ease-standard),
+    color var(--dur-base) var(--ease-standard);
+}
+.segmented--md .segmented__item { min-height: calc(var(--touch-sm) - 6px); }
+.segmented--lg .segmented__item { min-height: calc(var(--touch-lg) - 6px); font-size: var(--type-body-lg); }
+
+.segmented__item.is-selected {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
+}
+.segmented__icon { font-size: var(--icon-sm); }
+.segmented--lg .segmented__icon { font-size: var(--icon-md); }
+.segmented__tag { color: var(--text-muted); font-size: 0.6875rem; }
+.segmented__item.is-selected .segmented__tag { color: var(--accent-primary); }
+
+/* ---------- ValueBlock ------------------------------------------------ */
+.vblock { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.vblock__label { display: flex; align-items: baseline; gap: var(--space-2); }
+.vblock__latin { color: var(--text-muted); opacity: 0.7; font-size: 0.6875rem; }
+.vblock__value { display: flex; align-items: baseline; gap: 0.3em; }
+.vblock__num { color: var(--text-primary); }
+.vblock__unit {
+  font-size: var(--type-meta);
+  font-weight: var(--weight-regular);
+  color: var(--text-muted);
+}
+.vblock--sm .vblock__num { font-size: var(--type-body-lg); }
+.vblock--lg .vblock__num { font-size: var(--type-title); }
+.vblock--accent .vblock__num { color: var(--accent-primary); }
+.vblock--warning .vblock__num { color: var(--status-warning); }
+.vblock--danger .vblock__num { color: var(--status-danger); }
+.vblock--success .vblock__num { color: var(--status-success); }
+
+/* ---------- Meter ------------------------------------------------------ */
+.meter {
+  position: relative;
+  width: 100%;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+.meter--sm { height: 3px; }
+.meter--md { height: 6px; }
+.meter--lg { height: 10px; border-radius: var(--radius-sm); }
+
+.meter__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-primary);
+  transition: width var(--dur-slow) var(--ease-precise);
+}
+.meter--neutral .meter__fill { background: var(--text-secondary); }
+.meter--warning .meter__fill { background: var(--status-warning); }
+.meter--danger .meter__fill { background: var(--status-danger); }
+.meter--success .meter__fill { background: var(--status-success); }
+
+.meter__ticks { position: absolute; inset: 0; pointer-events: none; }
+.meter__ticks span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--bg-primary);
+  opacity: 0.55;
+}
+
+/* ---------- Avatar ------------------------------------------------------ */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  background: var(--surface-subtle);
+  line-height: 1;
+}
+.avatar--sm { width: 2.5rem; height: 2.5rem; font-size: var(--type-meta); }
+.avatar--md { width: 3.25rem; height: 3.25rem; font-size: var(--type-body); }
+.avatar--lg { width: 5.5rem; height: 5.5rem; font-size: var(--type-title); border-radius: var(--radius-lg); }
+
+/* Five muted tones keyed off the contact id — identity, not decoration. */
+/* One material, four luminance steps. Contacts stay distinguishable
+   without importing a second colour system into the interface. */
+.avatar { color: var(--text-secondary); }
+.avatar[data-tone='0'] { background: var(--surface-elevated); }
+.avatar[data-tone='1'] { background: var(--surface-subtle); }
+.avatar[data-tone='2'] { background: var(--surface-elevated); color: var(--text-primary); }
+.avatar[data-tone='3'] { background: var(--surface-sunken); }
+.avatar[data-tone='4'] { background: var(--surface-subtle); color: var(--text-primary); }
+
+/* ---------- Row --------------------------------------------------------
+   Every scrollable list in the system composes this, so touch height,
+   hit area and press feedback are identical across Phone, Media,
+   Navigation, Apps and Settings. Screens override content, not geometry. */
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: var(--touch-lg);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  text-align: start;
+  color: var(--text-primary);
+}
+.row--compact { min-height: var(--touch-sm); gap: var(--space-3); }

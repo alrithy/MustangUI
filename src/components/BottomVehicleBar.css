@@ -1,0 +1,125 @@
+.bvb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: var(--bottombar-h);
+  flex: none;
+  padding-inline: var(--space-5);
+  background: var(--bg-chrome);
+  position: relative;
+  z-index: 3;
+}
+.bvb::before {
+  content: '';
+  position: absolute;
+  inset-inline: var(--space-5);
+  top: 0;
+  height: 1px;
+  background: linear-gradient(to left, transparent, var(--divider) 6%, var(--divider) 94%, transparent);
+}
+
+.bvb__zone { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.bvb__sep { height: 45%; opacity: 0.8; }
+.bvb__unit { font-size: var(--type-caption); color: var(--text-muted); }
+
+/* ---- Drivetrain (read-only) ------------------------------------- */
+.bvb__drive { gap: var(--space-5); }
+.bvb__gears {
+  display: flex;
+  gap: var(--space-3);
+  padding-inline: var(--space-1);
+  cursor: default;
+  pointer-events: none;   /* never mistakable for a control */
+}
+.bvb__gear {
+  font-size: var(--type-body);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+  opacity: 0.4;
+  transition: opacity var(--dur-base) var(--ease-standard), color var(--dur-base) var(--ease-standard);
+}
+.bvb__gear.is-active {
+  color: var(--text-primary);
+  opacity: 1;
+  font-weight: var(--weight-semibold);
+}
+.bvb__speed { display: flex; align-items: baseline; gap: 0.3em; }
+.bvb__speedval { font-size: var(--type-title-sm); min-width: 1.9em; text-align: end; }
+
+/* ---- Climate ------------------------------------------------------ */
+.bvb__climate { gap: var(--space-4); }
+.bvb__temp { display: flex; align-items: center; gap: var(--space-1); }
+.bvb__tempval {
+  display: flex;
+  align-items: baseline;
+  min-width: 3.4em;
+  justify-content: center;
+  font-size: var(--type-body-lg);
+}
+.bvb__climate-mid { display: flex; align-items: center; gap: var(--space-1); }
+
+.bvb__fan {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--touch-sm);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+}
+.bvb__fanicon { font-size: var(--icon-md); }
+.bvb__fanbars { display: flex; align-items: flex-end; gap: 2px; height: 1rem; }
+.bvb__fanbars span {
+  width: 3px;
+  background: var(--text-muted);
+  opacity: 0.28;
+  border-radius: 1px;
+  transition: opacity var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard);
+}
+.bvb__fanbars span:nth-child(1) { height: 30%; }
+.bvb__fanbars span:nth-child(2) { height: 42%; }
+.bvb__fanbars span:nth-child(3) { height: 54%; }
+.bvb__fanbars span:nth-child(4) { height: 66%; }
+.bvb__fanbars span:nth-child(5) { height: 78%; }
+.bvb__fanbars span:nth-child(6) { height: 89%; }
+.bvb__fanbars span:nth-child(7) { height: 100%; }
+.bvb__fanbars span[data-on='true'] { background: var(--text-primary); opacity: 1; }
+
+/* ---- Media -------------------------------------------------------- */
+.bvb__media { flex: 1; justify-content: center; gap: var(--space-3); }
+.bvb__track { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 0 1 12rem; }
+.bvb__title { font-size: var(--type-meta); font-weight: var(--weight-medium); }
+.bvb__artist { font-size: var(--type-caption); color: var(--text-muted); }
+
+/* ---- Volume -------------------------------------------------------- */
+.bvb__volume { gap: var(--space-1); }
+.bvb__vol { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; min-width: 3rem; }
+.bvb__volval { font-size: var(--type-body); }
+.bvb__volbar {
+  display: block;
+  width: 2.75rem;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+.bvb__volbar > span {
+  display: block;
+  height: 100%;
+  background: var(--text-secondary);
+  transition: width var(--dur-fast) var(--ease-precise);
+}
+
+/* ---- Narrow panels: shed the least critical controls first ------- */
+@media (max-width: 1600px) {
+  .bvb__track { max-width: 10rem; }
+}
+@media (max-width: 1400px) {
+  .bvb { gap: var(--space-3); padding-inline: var(--space-3); }
+  .bvb__temp--passenger { display: none; }
+  .bvb__track { display: none; }
+}
+@media (max-width: 1180px) {
+  .bvb__climate-mid .ibtn:nth-child(4) { display: none; }
+  .bvb__speed { display: none; }
+}

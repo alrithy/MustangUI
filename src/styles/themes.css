@@ -1,0 +1,290 @@
+/* ============================================================
+   MUSTANG HMI — SEMANTIC THEME TOKENS
+   Themes change tokens. Themes never change layout.
+
+   Axis 1  data-theme : stealth | gt | night
+   Axis 2  data-mode  : night  | day
+   ============================================================ */
+
+/* ---------- 1. STEALTH — default. Graphite, smoked metal, held-back red. */
+:root,
+[data-theme='stealth'] {
+  --bg-primary: #07080a;
+  --bg-secondary: #0b0d0f;
+  --bg-chrome: #050607;
+
+  --surface-primary: #121416;
+  --surface-elevated: #1a1d20;
+  --surface-subtle: rgba(255, 255, 255, 0.045);
+  --surface-sunken: rgba(0, 0, 0, 0.4);
+  --surface-press: rgba(255, 255, 255, 0.09);
+  --surface-hover: rgba(255, 255, 255, 0.05);
+
+  --text-primary: #e9e7e4;
+  --text-secondary: #a5aaae;
+  --text-muted: #6c7277;
+  --text-on-accent: #fbf7f7;
+
+  --accent-primary: #c8253c;
+  --accent-dim: #7e1826;
+  --accent-wash: rgba(200, 37, 60, 0.13);
+  --accent-glow: rgba(214, 48, 70, 0.45);
+  --accent-secondary: #8b9299;
+
+  --status-success: #37a26e;
+  --status-warning: #d3a03f;
+  --status-danger: #d8404c;
+  --status-info: #5090c6;
+
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.15);
+  --divider: rgba(255, 255, 255, 0.09);
+
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.4);
+  --shadow-lift: 0 10px 34px rgba(0, 0, 0, 0.55);
+  --scrim: rgba(4, 5, 6, 0.86);
+
+  /* Explicit rgba fades: color-mix() is not available on older
+     Automotive WebViews, so gradients never depend on it. */
+  --surface-fade: 18, 20, 22;
+  --call-accept: #2c7350;
+  --call-decline: #9c2f39;
+
+  --map-land: #0c0e10;
+  --map-block: #15181b;
+  --map-arterial: #2b3033;
+  --map-road: #1c2023;
+  --map-water: #0e1a22;
+  --map-route: #dcd9d5;
+  --map-route-halo: rgba(200, 37, 60, 0.55);
+  --map-label: #656b70;
+}
+
+/* ---------- 2. GRAND TOURING — warm titanium, champagne, executive. */
+[data-theme='gt'] {
+  --bg-primary: #080807;
+  --bg-secondary: #0d0c0a;
+  --bg-chrome: #050504;
+
+  --surface-primary: #141311;
+  --surface-elevated: #1d1b17;
+  --surface-subtle: rgba(246, 235, 215, 0.05);
+  --surface-sunken: rgba(0, 0, 0, 0.42);
+  --surface-press: rgba(246, 235, 215, 0.1);
+  --surface-hover: rgba(246, 235, 215, 0.055);
+
+  --text-primary: #ece6db;
+  --text-secondary: #aba498;
+  --text-muted: #756f65;
+  --text-on-accent: #15130f;
+
+  --accent-primary: #c9ae7b;
+  --accent-dim: #8a7350;
+  --accent-wash: rgba(201, 174, 123, 0.12);
+  --accent-glow: rgba(214, 189, 140, 0.4);
+  --accent-secondary: #8a6e48;
+
+  --status-success: #6f9a63;
+  --status-warning: #c9973f;
+  --status-danger: #c0564c;
+  --status-info: #6d8fa3;
+
+  --border-subtle: rgba(240, 228, 205, 0.075);
+  --border-strong: rgba(240, 228, 205, 0.16);
+  --divider: rgba(240, 228, 205, 0.095);
+
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.42);
+  --shadow-lift: 0 10px 34px rgba(0, 0, 0, 0.55);
+  --scrim: rgba(6, 5, 4, 0.87);
+
+  /* Explicit rgba fades: color-mix() is not available on older
+     Automotive WebViews, so gradients never depend on it. */
+  --surface-fade: 20, 19, 17;
+  --call-accept: #4c6b46;
+  --call-decline: #8f4038;
+
+  --map-land: #0d0c0a;
+  --map-block: #171613;
+  --map-arterial: #322e26;
+  --map-road: #201e19;
+  --map-water: #16170f;
+  --map-route: #e0d9cb;
+  --map-route-halo: rgba(201, 174, 123, 0.5);
+  --map-label: #6c665c;
+}
+
+/* ---------- 3. NIGHT DRIVE — midnight graphite, ice blue, technical. */
+[data-theme='night'] {
+  --bg-primary: #05070b;
+  --bg-secondary: #090c12;
+  --bg-chrome: #030509;
+
+  --surface-primary: #10151d;
+  --surface-elevated: #172029;
+  --surface-subtle: rgba(205, 226, 245, 0.05);
+  --surface-sunken: rgba(0, 0, 0, 0.4);
+  --surface-press: rgba(205, 226, 245, 0.1);
+  --surface-hover: rgba(205, 226, 245, 0.055);
+
+  --text-primary: #dee6ed;
+  --text-secondary: #93a1ae;
+  --text-muted: #5f6d7a;
+  --text-on-accent: #06131c;
+
+  --accent-primary: #7cb2dc;
+  --accent-dim: #46708e;
+  --accent-wash: rgba(124, 178, 220, 0.12);
+  --accent-glow: rgba(140, 194, 235, 0.4);
+  --accent-secondary: #46627b;
+
+  --status-success: #4ea587;
+  --status-warning: #c9a355;
+  --status-danger: #cf5a63;
+  --status-info: #7cb2dc;
+
+  --border-subtle: rgba(190, 215, 240, 0.075);
+  --border-strong: rgba(190, 215, 240, 0.16);
+  --divider: rgba(190, 215, 240, 0.095);
+
+  --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.42);
+  --shadow-lift: 0 10px 34px rgba(0, 0, 0, 0.58);
+  --scrim: rgba(4, 6, 10, 0.87);
+
+  /* Explicit rgba fades: color-mix() is not available on older
+     Automotive WebViews, so gradients never depend on it. */
+  --surface-fade: 16, 21, 29;
+  --call-accept: #2f7461;
+  --call-decline: #96434b;
+
+  --map-land: #080c12;
+  --map-block: #12181f;
+  --map-arterial: #28323d;
+  --map-road: #1a222b;
+  --map-water: #0b1a26;
+  --map-route: #d3dee8;
+  --map-route-halo: rgba(124, 178, 220, 0.5);
+  --map-label: #5f6c78;
+}
+
+/* ============================================================
+   DAY MODE
+   Not an inversion. A separate mineral / porcelain material set
+   tuned for direct Gulf daylight: no pure white, no pure black,
+   accents darkened so they still carry meaning at high ambient
+   brightness. Surfaces stay close in value and separate by warmth
+   and a single hairline, so the panel never turns into glare.
+   ============================================================ */
+[data-mode='day'] {
+  --bg-primary: #dedad1;
+  --bg-secondary: #e7e4dc;
+  --bg-chrome: #d0ccc2;
+
+  --surface-primary: #f2f0ea;
+  --surface-elevated: #f8f6f1;
+  --surface-subtle: rgba(24, 26, 28, 0.05);
+  --surface-sunken: rgba(24, 26, 28, 0.11);
+  --surface-press: rgba(24, 26, 28, 0.1);
+  --surface-hover: rgba(24, 26, 28, 0.05);
+
+  --text-primary: #191b1d;
+  --text-secondary: #4d5356;
+  --text-muted: #797f83;
+  --text-on-accent: #f7f5f2;
+
+  --border-subtle: rgba(24, 26, 28, 0.12);
+  --border-strong: rgba(24, 26, 28, 0.24);
+  --divider: rgba(24, 26, 28, 0.15);
+
+  --shadow-soft: 0 1px 3px rgba(30, 28, 24, 0.14);
+  --shadow-lift: 0 8px 24px rgba(30, 28, 24, 0.18);
+  --scrim: rgba(228, 225, 217, 0.9);
+
+  --status-success: #1f7a4d;
+  --status-warning: #97701c;
+  --status-danger: #b02a34;
+  --status-info: #2c6e9e;
+
+  --surface-fade: 242, 240, 234;
+  --call-accept: #1c6a45;
+  --call-decline: #98262f;
+
+  --map-land: #e0ddd4;
+  --map-block: #e9e6dd;
+  --map-arterial: #c2beb2;
+  --map-road: #d5d1c7;
+  --map-water: #cdd8dc;
+  --map-label: #6d7276;
+}
+
+[data-mode='day'][data-theme='stealth'] {
+  --accent-primary: #ab1730;
+  --accent-dim: #d59aa4;
+  --accent-wash: rgba(171, 23, 48, 0.1);
+  --accent-glow: rgba(171, 23, 48, 0.3);
+  --accent-secondary: #5d6469;
+  --map-route: #3b3d40;
+  --map-route-halo: rgba(171, 23, 48, 0.5);
+}
+
+[data-mode='day'][data-theme='gt'] {
+  --bg-primary: #e0dacb;
+  --bg-secondary: #e9e4d6;
+  --bg-chrome: #d2ccbb;
+  --surface-primary: #f4f0e6;
+  --surface-elevated: #faf7ef;
+  --text-primary: #1c1a15;
+  --text-secondary: #55503f;
+  --text-muted: #7f7967;
+  --accent-primary: #866125;
+  --accent-dim: #c7b48d;
+  --accent-wash: rgba(134, 97, 37, 0.11);
+  --accent-glow: rgba(134, 97, 37, 0.28);
+  --accent-secondary: #8a6e48;
+  --surface-fade: 244, 240, 230;
+
+  --map-land: #e2ddce;
+  --map-block: #ebe6d8;
+  --map-arterial: #c4bda8;
+  --map-road: #d7d1c0;
+  --map-route: #3d382c;
+  --map-route-halo: rgba(134, 97, 37, 0.5);
+}
+
+[data-mode='day'][data-theme='night'] {
+  --bg-primary: #d8dcdf;
+  --bg-secondary: #e3e6e9;
+  --bg-chrome: #cad0d4;
+  --surface-primary: #eef1f3;
+  --surface-elevated: #f5f7f8;
+  --text-primary: #14181c;
+  --text-secondary: #47525b;
+  --text-muted: #737e87;
+  --accent-primary: #1d5f8f;
+  --accent-dim: #9dbdd5;
+  --accent-wash: rgba(29, 95, 143, 0.1);
+  --accent-glow: rgba(29, 95, 143, 0.28);
+  --accent-secondary: #46627b;
+  --surface-fade: 238, 241, 243;
+
+  --map-land: #dbdfe2;
+  --map-block: #e6e9eb;
+  --map-arterial: #bcc3c8;
+  --map-road: #d0d5d9;
+  --map-water: #c6d6de;
+  --map-route: #2f3941;
+  --map-route-halo: rgba(29, 95, 143, 0.5);
+}
+
+/* ============================================================
+   DRIVE MODE ATMOSPHERE
+   Small, deliberate shifts only. The layout, hierarchy and
+   type never change with drive mode.
+   ============================================================ */
+[data-drive='sport'] { --accent-glow: rgba(224, 58, 78, 0.55); }
+[data-drive='track'] { --accent-glow: rgba(232, 62, 80, 0.7); }
+[data-drive='wet']   { --accent-glow: rgba(96, 152, 200, 0.5); }
+
+[data-theme='gt'][data-drive='sport'] { --accent-glow: rgba(224, 198, 145, 0.5); }
+[data-theme='gt'][data-drive='track'] { --accent-glow: rgba(230, 205, 152, 0.62); }
+[data-theme='night'][data-drive='sport'] { --accent-glow: rgba(150, 202, 240, 0.5); }
+[data-theme='night'][data-drive='track'] { --accent-glow: rgba(160, 210, 245, 0.62); }

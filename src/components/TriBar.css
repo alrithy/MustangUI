@@ -1,0 +1,66 @@
+.tribar {
+  display: flex;
+  flex: none;
+  pointer-events: none;
+}
+.tribar--vertical { flex-direction: column; gap: 0.22rem; }
+.tribar--horizontal { flex-direction: row; gap: 0.22rem; }
+
+.tribar__seg {
+  display: block;
+  border-radius: 1px;
+  background: var(--text-muted);
+  opacity: 0.32;
+  transition:
+    background-color var(--dur-base) var(--ease-standard),
+    opacity var(--dur-base) var(--ease-standard),
+    box-shadow var(--dur-base) var(--ease-standard);
+}
+
+/* --- Segment geometry -------------------------------------------
+   Horizontal: three upright bars side by side — the lamp itself.
+   Vertical:   the same set rotated a quarter turn for the rail. */
+.tribar--horizontal.tribar--sm .tribar__seg { width: 2px; height: 0.62rem; }
+.tribar--horizontal.tribar--md .tribar__seg { width: 3px; height: 0.85rem; }
+.tribar--horizontal.tribar--lg .tribar__seg { width: 3px; height: 1.2rem; }
+
+.tribar--vertical.tribar--sm .tribar__seg { height: 2px; width: 0.62rem; }
+.tribar--vertical.tribar--md .tribar__seg { height: 3px; width: 0.85rem; }
+.tribar--vertical.tribar--lg .tribar__seg { height: 3px; width: 1.2rem; }
+
+/* --- Marker: dark until selected, then lights as one unit with the
+       centre segment carrying the glow. ------------------------------ */
+.tribar--marker[data-active='false'] .tribar__seg { opacity: 0; }
+.tribar--marker[data-active='true'] .tribar__seg {
+  background: var(--accent-primary);
+  opacity: 1;
+}
+.tribar--marker[data-active='true'] .tribar__seg:nth-child(2) {
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* --- Step: determinate 3-stage confirmation ---------------------- */
+.tribar--step .tribar__seg[data-lit='true'] {
+  background: var(--accent-primary);
+  opacity: 1;
+}
+
+/* --- Sequential: outward sweep, then a held pause ----------------
+   One 1.5s cycle with 62% dwell so it never reads as decoration.   */
+@keyframes tribar-sweep {
+  0%, 8%    { opacity: 0.28; background-color: var(--text-muted); }
+  16%, 46%  { opacity: 1; background-color: var(--accent-primary); }
+  62%, 100% { opacity: 0.28; background-color: var(--text-muted); }
+}
+.tribar--sequential .tribar__seg {
+  animation: tribar-sweep 1.5s var(--ease-standard) infinite;
+  animation-delay: calc(var(--i) * 130ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tribar--sequential .tribar__seg {
+    animation: none;
+    background: var(--accent-primary);
+    opacity: 0.7;
+  }
+}

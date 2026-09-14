@@ -1,0 +1,188 @@
+.settings {
+  display: grid;
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  gap: var(--space-8);
+  height: 100%;
+  min-height: 0;
+}
+
+.settings__nav { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.settings__navitem {
+  min-height: var(--touch-md);
+  padding-inline: var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--type-body-lg);
+}
+.settings__navitem span.truncate { flex: 1; min-width: 0; }
+.settings__navicon { font-size: var(--icon-md); flex: none; }
+.settings__navitem.is-active { background: var(--surface-primary); color: var(--text-primary); }
+
+/* Two columns of groups: short sections then fit the panel without
+   scrolling, and the pane stops being a narrow strip on a wide screen. */
+.settings__pane {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: var(--space-6) var(--space-10);
+  min-height: 0;
+  padding-inline-end: var(--space-4);
+}
+.settings__group { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+
+/* ---------- Theme picker ------------------------------------------------ */
+.settings__themes { display: flex; flex-direction: column; gap: var(--space-2); }
+.settings__theme {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--touch-lg);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface-primary);
+  text-align: start;
+}
+.settings__theme.is-active { box-shadow: inset 0 0 0 1px var(--accent-dim); }
+
+/* The swatch previews the real token trio of each theme. */
+.settings__swatch {
+  display: flex;
+  gap: 3px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  flex: none;
+}
+.settings__swatch i { width: 0.8rem; height: 1.8rem; border-radius: 2px; }
+.settings__swatch--stealth { background: #07080a; }
+.settings__swatch--stealth i:nth-child(1) { background: #121416; }
+.settings__swatch--stealth i:nth-child(2) { background: #2a2e31; }
+.settings__swatch--stealth i:nth-child(3) { background: #c8253c; }
+.settings__swatch--gt { background: #080807; }
+.settings__swatch--gt i:nth-child(1) { background: #141311; }
+.settings__swatch--gt i:nth-child(2) { background: #322e26; }
+.settings__swatch--gt i:nth-child(3) { background: #c9ae7b; }
+.settings__swatch--night { background: #05070b; }
+.settings__swatch--night i:nth-child(1) { background: #10151d; }
+.settings__swatch--night i:nth-child(2) { background: #28323d; }
+.settings__swatch--night i:nth-child(3) { background: #7cb2dc; }
+
+.settings__themetext {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  justify-content: start;
+  gap: 0 var(--space-3);
+  min-width: 0;
+  flex: 1;
+}
+.settings__themename { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
+.settings__themetag { font-size: 0.625rem; color: var(--text-muted); }
+.settings__themedesc { grid-column: 1 / -1; font-size: var(--type-meta); color: var(--text-muted); }
+.settings__check { font-size: var(--icon-md); color: var(--accent-primary); flex: none; }
+
+/* ---------- Rows -------------------------------------------------------- */
+.settings__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-6);
+  min-height: var(--touch-md);
+  padding-block: var(--space-2);
+}
+.settings__rowtext { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1 1 11rem; }
+.settings__rowlabel { font-size: var(--type-body-lg); }
+.settings__rowhint { font-size: var(--type-meta); color: var(--text-muted); }
+
+.toggle {
+  position: relative;
+  width: 4rem;
+  height: 2.25rem;
+  flex: none;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+  transition: background-color var(--dur-base) var(--ease-standard);
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  inset: -0.75rem;   /* 56dp hit area around a 36px control */
+}
+.toggle__knob {
+  position: absolute;
+  top: 0.3rem;
+  inset-inline-start: 0.3rem;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 50%;
+  background: var(--text-muted);
+  transition: inset-inline-start var(--dur-base) var(--ease-precise), background-color var(--dur-base) var(--ease-standard);
+}
+.toggle.is-on { background: var(--accent-wash); box-shadow: inset 0 0 0 1px var(--accent-dim); }
+.toggle.is-on .toggle__knob { inset-inline-start: 2.05rem; background: var(--accent-primary); }
+
+/* ---------- Levels ------------------------------------------------------- */
+.settings__level {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  min-height: var(--touch-md);
+}
+.settings__level .settings__rowlabel { flex: 0 0 8rem; }
+.settings__levelbar { display: flex; gap: 2px; flex: 1 1 10rem; height: var(--touch-sm); align-items: center; }
+.settings__levelseg {
+  flex: 1;
+  height: 1.5rem;
+  border-radius: 2px;
+  background: var(--surface-sunken);
+  transition: background-color var(--dur-fast) var(--ease-standard);
+}
+.settings__levelseg.is-on { background: var(--accent-primary); opacity: 0.85; }
+.settings__levelval { width: 2rem; text-align: end; font-size: var(--type-body-lg); }
+
+/* ---------- Device lists --------------------------------------------------- */
+.settings__devices { display: flex; flex-direction: column; }
+.settings__device {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--touch-md);
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--divider);
+}
+.settings__device:last-child { border-bottom: 0; }
+.settings__devicetext { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.settings__devicename { font-size: var(--type-body-lg); }
+.settings__devicedetail { font-size: var(--type-meta); color: var(--text-muted); }
+.settings__devicedot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--text-muted);
+  opacity: 0.35;
+}
+.settings__devicedot.is-on { background: var(--status-success); opacity: 1; }
+
+.settings__storage { display: flex; flex-direction: column; gap: var(--space-2); }
+.settings__storagemeta { display: flex; justify-content: space-between; }
+
+.settings__note {
+  font-size: var(--type-meta);
+  line-height: var(--lh-normal);
+  color: var(--text-muted);
+  max-width: 46rem;
+  margin-top: var(--space-4);
+}
+
+@media (max-width: 1400px) {
+  .settings { grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); gap: var(--space-5); }
+  .settings__pane { gap: var(--space-5) var(--space-6); }
+}
+@media (max-width: 1180px) {
+  .settings__pane { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+}
+
+.settings__mark { margin-inline-start: auto; }

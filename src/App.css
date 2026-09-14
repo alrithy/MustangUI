@@ -1,0 +1,41 @@
+.shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.shell__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* dir=rtl puts the first flex child on the right; order flips the
+   rail to the driver's side of the panel. */
+[data-rail='left'] .rail { order: 2; }
+[data-rail='left'] .shell__content { order: 1; }
+[data-rail='right'] .rail { order: 1; }
+[data-rail='right'] .shell__content { order: 2; }
+
+.shell__content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--content-pad);
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+.shell__screen { flex: 1; min-height: 0; min-width: 0; }
+
+/* Reduce-motion is a user setting here, not only a media query. */
+[data-motion='reduced'] { --motion-scale: 0.01; }

@@ -1,0 +1,173 @@
+.phone { display: flex; flex-direction: column; gap: var(--space-5); height: 100%; min-height: 0; }
+
+.phone__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+.phone__device { display: flex; align-items: center; gap: var(--space-2); color: var(--text-muted); }
+.phone__deviceicon { font-size: var(--icon-sm); }
+
+.phone__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 21rem);
+  gap: var(--space-8);
+  flex: 1;
+  min-height: 0;
+}
+
+/* Two columns keep rows at full touch height without a 1800px line. */
+.phone__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: min-content;
+  gap: var(--space-1) var(--space-6);
+  grid-auto-rows: min-content;
+  align-content: start;
+  min-height: 0;
+  padding-inline-end: var(--space-2);
+}
+
+.phone__rowtext { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; flex: 1; }
+.phone__rowname { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
+.phone__rowsub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--type-meta);
+  color: var(--text-muted);
+}
+.phone__diricon { font-size: var(--icon-xs); }
+.phone__rowdur { font-size: var(--type-caption); font-weight: var(--weight-regular); }
+.phone__rowdur::before { content: '·'; margin-inline-end: 0.4em; }
+.phone__diricon.is-missed { color: var(--status-danger); }
+.phone__rowmeta {
+  flex: none;
+  font-size: var(--type-meta);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Keypad ---------------------------------------------------- */
+.phone__keypadwrap { min-height: 0; display: flex; align-items: center; justify-content: center; }
+.phone__keypad {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: min(28rem, 100%);
+  max-height: 100%;
+}
+.phone__display {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 2.75rem;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--divider);
+}
+.phone__number { font-size: var(--type-title-sm); letter-spacing: 0.08em; }
+.phone__placeholder { font-size: var(--type-body); color: var(--text-muted); }
+.phone__match { font-size: var(--type-meta); color: var(--text-muted); }
+
+.phone__keys {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.phone__key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  min-height: var(--touch-md);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+.phone__keynum { font-size: var(--type-title-sm); }
+.phone__keysub { font-size: 0.5625rem; color: var(--text-muted); letter-spacing: 0.14em; }
+
+.phone__keyactions { display: flex; gap: var(--space-2); }
+
+/* ---------- Active call ------------------------------------------------ */
+.phone--call { align-items: center; justify-content: center; gap: var(--space-8); }
+.phone__callbody { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+.phone__callstate { color: var(--accent-primary); margin-top: var(--space-3); }
+.phone__callname { font-size: var(--type-title-lg); font-weight: var(--weight-medium); }
+.phone__callnum {
+  font-size: var(--type-body);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: isolate;
+}
+.phone__calltime { font-size: var(--type-title-sm); color: var(--text-secondary); margin-top: var(--space-3); }
+
+.phone__callactions { display: flex; align-items: center; gap: var(--space-5); }
+.phone__callactions .tbtn { min-width: 11rem; }
+
+.phone__navstrip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-sm);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  font-size: var(--type-meta);
+  max-width: 40rem;
+}
+.phone__navicon { font-size: var(--icon-sm); color: var(--accent-primary); flex: none; }
+.phone__navkm { font-size: var(--type-body); color: var(--text-primary); }
+.phone__navunit { font-size: var(--type-caption); color: var(--text-muted); }
+
+@media (max-width: 1400px) {
+  .phone__callactions .tbtn { min-width: 8.5rem; }
+}
+
+
+/* ---------- Quick dial ---------------------------------------------------- */
+.quickdial {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  padding-inline-start: var(--space-6);
+  border-inline-start: 1px solid var(--divider);
+}
+.quickdial__head { flex: none; }
+.quickdial__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(8rem, auto);
+  align-content: start;
+  gap: var(--space-3);
+  min-height: 0;
+}
+.quickdial__item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch-xl);
+  padding: var(--space-3);
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--surface-primary);
+  text-align: start;
+}
+.quickdial__name { font-size: var(--type-body); font-weight: var(--weight-medium); max-width: 100%; }
+.quickdial__rel { font-size: var(--type-caption); color: var(--text-muted); max-width: 100%; }
+
+@media (max-width: 1400px) {
+  .phone__body { grid-template-columns: minmax(0, 1fr) minmax(0, 17rem); gap: var(--space-5); }
+  .quickdial__grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }
+  .quickdial__item { flex-direction: row; align-items: center; min-height: var(--touch-md); }
+  .quickdial__rel { display: none; }
+}
+@media (max-width: 1180px) {
+  .quickdial { display: none; }
+}

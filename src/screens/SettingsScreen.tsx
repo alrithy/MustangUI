@@ -1,0 +1,315 @@
+/* ============================================================
+   SETTINGS
+   Two panes so nothing nests and nothing scrolls unexpectedly.
+   Settings is intentionally the quietest screen in the system.
+   ============================================================ */
+
+import { useState } from 'react';
+import { Meter, SectionHead, Segmented } from '../components/primitives';
+import { TriBar } from '../components/TriBar';
+import { useDispatch, useSystem } from '../state/systemStore';
+import type { Appearance, RailSide, ThemeName } from '../state/types';
+import { Icon } from '../system/icons';
+import './SettingsScreen.css';
+
+type SectionId = 'display' | 'sound' | 'connections' | 'vehicle' | 'system' | 'about';
+
+const SECTIONS: Array<{ id: SectionId; label: string; icon: string }> = [
+  { id: 'display', label: 'العرض والسمة', icon: 'brightness' },
+  { id: 'sound', label: 'الصوت', icon: 'volume' },
+  { id: 'connections', label: 'الاتصالات', icon: 'bluetooth' },
+  { id: 'vehicle', label: 'المركبة', icon: 'car' },
+  { id: 'system', label: 'النظام', icon: 'sliders' },
+  { id: 'about', label: 'حول', icon: 'info' },
+];
+
+const THEMES: Array<{ id: ThemeName; name: string; tag: string; desc: string }> = [
+  { id: 'stealth', name: 'ستيلث', tag: 'STEALTH', desc: 'أسود عميق وجرافيت مع أحمر متحفّظ' },
+  { id: 'gt', name: 'جراند تورينج', tag: 'GRAND TOURING', desc: 'تيتانيوم دافئ ولمسة شامبانيا' },
+  { id: 'night', name: 'نايت درايف', tag: 'NIGHT DRIVE', desc: 'جرافيت ليلي مع أزرق ثلجي هادئ' },
+];
+
+const APPEARANCE: Array<{ id: Appearance; label: string }> = [
+  { id: 'auto', label: 'تلقائي' },
+  { id: 'day', label: 'نهاري' },
+  { id: 'night', label: 'ليلي' },
+];
+
+const RAIL: Array<{ id: RailSide; label: string }> = [
+  { id: 'left', label: 'يسار (جهة السائق)' },
+  { id: 'right', label: 'يمين' },
+];
+
+export function SettingsScreen() {
+  const [section, setSection] = useState<SectionId>('display');
+
+  return (
+    <div className="screen settings">
+      <nav className="settings__nav" aria-label="أقسام الإعدادات">
+        {SECTIONS.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            aria-current={section === s.id ? 'true' : undefined}
+            className={`row settings__navitem pressable${section === s.id ? ' is-active' : ''}`}
+            onClick={() => setSection(s.id)}
+          >
+            <Icon name={s.icon} className="settings__navicon" />
+            <span className="truncate">{s.label}</span>
+            {section === s.id && (
+              <TriBar variant="marker" orientation="horizontal" size="sm" active className="settings__mark" />
+            )}
+          </button>
+        ))}
+      </nav>
+
+      <div className="settings__pane scroll-y">
+        {section === 'display' && <DisplaySection />}
+        {section === 'sound' && <SoundSection />}
+        {section === 'connections' && <ConnectionsSection />}
+        {section === 'vehicle' && <VehicleSection />}
+        {section === 'system' && <SystemSection />}
+        {section === 'about' && <AboutSection />}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Sections ------------------------------------------------- */
+function DisplaySection() {
+  const { settings } = useSystem();
+  const dispatch = useDispatch();
+
+  return (
+    <>
+      <section className="settings__group">
+      <SectionHead title="السمة" tag="THEME" />
+      <div className="settings__themes">
+        {THEMES.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            data-scale="true"
+            className={`settings__theme pressable${settings.theme === t.id ? ' is-active' : ''}`}
+            onClick={() => dispatch({ type: 'set-theme', theme: t.id })}
+            aria-pressed={settings.theme === t.id}
+          >
+            <span className={`settings__swatch settings__swatch--${t.id}`} aria-hidden="true">
+              <i /><i /><i />
+            </span>
+            <span className="settings__themetext">
+              <span className="settings__themename">{t.name}</span>
+              <span className="latin settings__themetag">{t.tag}</span>
+              <span className="settings__themedesc">{t.desc}</span>
+            </span>
+            {settings.theme === t.id && <Icon name="check" className="settings__check" />}
+          </button>
+        ))}
+      </div>
+      </section>
+
+      <section className="settings__group">
+      <SectionHead title="المظهر" tag="APPEARANCE" />
+      <Row label="وضع النهار والليل" hint="التلقائي يتبع مستشعر الإضاءة الخارجية">
+        <Segmented<Appearance>
+          options={APPEARANCE}
+          value={settings.appearance}
+          onChange={(a) => dispatch({ type: 'set-appearance', appearance: a })}
+          ariaLabel="المظهر"
+        />
+      </Row>
+      <Row label="موضع شريط التنقل" hint="يُفضّل وضعه في الجهة الأقرب للسائق">
+        <Segmented<RailSide>
+          options={RAIL}
+          value={settings.railSide}
+          onChange={(side) => dispatch({ type: 'set-rail-side', side })}
+          ariaLabel="موضع شريط التنقل"
+        />
+      </Row>
+      <Row label="تقليل الحركة" hint="يوقف الانتقالات غير الضرورية">
+        <Toggle
+          on={settings.reduceMotion}
+          onChange={(v) => dispatch({ type: 'set-setting', key: 'reduceMotion', value: v })}
+          label="تقليل الحركة"
+        />
+      </Row>
+      </section>
+    </>
+  );
+}
+
+function SoundSection() {
+  const { media, settings } = useSystem();
+  const dispatch = useDispatch();
+  return (
+    <>
+      <section className="settings__group">
+      <SectionHead title="مستويات الصوت" tag="LEVELS" />
+      <Level label="الوسائط" value={media.volume} max={30}
+        onChange={(v) => dispatch({ type: 'media-set-volume', value: v })} />
+      <Level label="نغمات النظام" value={settings.chimeVolume} max={7}
+        onChange={(v) => dispatch({ type: 'set-chime', value: v })} />
+      </section>
+
+      <section className="settings__group">
+      <SectionHead title="التنبيهات" tag="ALERTS" />
+      <Row label="تنبيهات السائق" hint="تنبيهات ضغط الإطارات ومستوى الوقود">
+        <Toggle
+          on={settings.driverAlerts}
+          onChange={(v) => dispatch({ type: 'set-setting', key: 'driverAlerts', value: v })}
+          label="تنبيهات السائق"
+        />
+      </Row>
+      </section>
+    </>
+  );
+}
+
+function ConnectionsSection() {
+  return (
+    <>
+      <section className="settings__group">
+        <SectionHead title="الأجهزة المقترنة" tag="PAIRED" />
+        <ul className="settings__devices">
+          <DeviceRow name="هاتف عبدالله" detail="متصل · الوسائط والهاتف" on />
+          <DeviceRow name="سماعة الرأس" detail="غير متصل" />
+        </ul>
+      </section>
+      <section className="settings__group">
+        <SectionHead title="الشبكة" tag="NETWORK" />
+        <ul className="settings__devices">
+          <DeviceRow name="بيانات المركبة" detail="LTE · قوة ممتازة" on />
+          <DeviceRow name="نقطة اتصال Wi-Fi" detail="متوقفة" />
+        </ul>
+      </section>
+    </>
+  );
+}
+
+function VehicleSection() {
+  const { settings } = useSystem();
+  const dispatch = useDispatch();
+  return (
+    <>
+      <section className="settings__group">
+      <SectionHead title="إعدادات القيادة" tag="DRIVING" />
+      <Row label="محاكاة الإضاءة الخارجية" hint="للاختبار على المنضدة فقط">
+        <Segmented
+          options={[{ id: 'day', label: 'نهار' }, { id: 'night', label: 'ليل' }]}
+          value={settings.ambientDaylight ? 'day' : 'night'}
+          onChange={(v) => dispatch({ type: 'set-ambient', daylight: v === 'day' })}
+          ariaLabel="مستشعر الإضاءة"
+        />
+      </Row>
+      <p className="settings__note">
+        بيانات المركبة في هذا النموذج تجريبية. لا يتم التحكم في ناقل الحركة أو أي وظيفة
+        متعلقة بالسلامة من خلال هذه الشاشة.
+      </p>
+      </section>
+    </>
+  );
+}
+
+function SystemSection() {
+  return (
+    <>
+      <section className="settings__group">
+        <SectionHead title="اللغة والمنطقة" tag="LOCALE" />
+        <ul className="settings__devices">
+          <DeviceRow name="لغة الواجهة" detail="العربية" on />
+          <DeviceRow name="الوحدات" detail="متري · كم · مئوية" on />
+          <DeviceRow name="المنطقة الزمنية" detail="الرياض · GMT+3" on />
+        </ul>
+      </section>
+      <section className="settings__group">
+      <SectionHead title="التخزين" tag="STORAGE" />
+      <div className="settings__storage">
+        <Meter ratio={0.42} height="lg" tone="neutral" />
+        <div className="settings__storagemeta">
+          <span className="t-meta">27.1 غب مستخدمة</span>
+          <span className="t-meta muted">من 64 غب</span>
+        </div>
+      </div>
+      </section>
+    </>
+  );
+}
+
+function AboutSection() {
+  return (
+    <>
+      <section className="settings__group">
+      <SectionHead title="حول النظام" tag="ABOUT" />
+      <ul className="settings__devices">
+        <DeviceRow name="إصدار النظام" detail="1.0.0 (bench)" on />
+        <DeviceRow name="خرائط" detail="الرياض · بيانات عرض" />
+        <DeviceRow name="آخر تحديث" detail="غير متوفر في هذا النموذج" />
+      </ul>
+      <p className="settings__note">
+        نموذج واجهة تفاعلي. جميع البيانات المعروضة — الملاحة والوسائط والاتصالات
+        وقياسات المركبة — بيانات تجريبية ولا تعكس حالة مركبة حقيقية.
+      </p>
+      </section>
+    </>
+  );
+}
+
+/* ---------- Section building blocks ------------------------------------ */
+function Row({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+  return (
+    <div className="settings__row">
+      <span className="settings__rowtext">
+        <span className="settings__rowlabel">{label}</span>
+        {hint && <span className="settings__rowhint">{hint}</span>}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+      className={`toggle${on ? ' is-on' : ''}`}
+      onClick={() => onChange(!on)}
+    >
+      <span className="toggle__knob" />
+    </button>
+  );
+}
+
+function Level({ label, value, max, onChange }: { label: string; value: number; max: number; onChange: (v: number) => void }) {
+  return (
+    <div className="settings__level">
+      <span className="settings__rowlabel">{label}</span>
+      <div className="settings__levelbar">
+        {Array.from({ length: max }, (_, i) => (
+          <button
+            key={i}
+            type="button"
+            aria-label={`${label} ${i + 1}`}
+            className={`settings__levelseg${i < value ? ' is-on' : ''}`}
+            onClick={() => onChange(i + 1)}
+          />
+        ))}
+      </div>
+      <span className="n-value settings__levelval">{value}</span>
+    </div>
+  );
+}
+
+function DeviceRow({ name, detail, on = false }: { name: string; detail: string; on?: boolean }) {
+  return (
+    <li className="settings__device">
+      <span className="settings__devicetext">
+        <span className="settings__devicename">{name}</span>
+        <span className="settings__devicedetail">{detail}</span>
+      </span>
+      <span className={`settings__devicedot${on ? ' is-on' : ''}`} aria-hidden="true" />
+    </li>
+  );
+}

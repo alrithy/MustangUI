@@ -1,0 +1,261 @@
+/* ============================================================
+   MUSTANG HMI — BASE LAYER
+   Reset, typography classes, and the shared material primitives
+   (hairline, chamfer, press feedback) used across the system.
+   ============================================================ */
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body, #hmi-root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-weight: var(--weight-regular);
+  font-size: var(--type-body);
+  line-height: var(--lh-normal);
+  color: var(--text-primary);
+  background: var(--bg-chrome);
+  overflow: hidden;                 /* a head unit never scrolls the shell */
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Colour changes are the only thing that crossfades on theme switch. */
+  transition: background-color var(--dur-slow) var(--ease-standard);
+}
+
+/* No text selection or long-press callout in a vehicle. */
+body, button {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+ul, ol { margin: 0; padding: 0; list-style: none; }
+h1, h2, h3, h4, p { margin: 0; font-weight: inherit; }
+
+/* Focus is for bench testing and rotary/steering-wheel controllers. */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Scroll surfaces -------------------------------------
+   Lists do scroll, with momentum and no visible browser furniture. */
+.scroll-y {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scroll-y::-webkit-scrollbar { width: 0; height: 0; }
+
+/* ============================================================
+   TYPOGRAPHY
+   One ramp. Numeric styles force tabular, lining figures so
+   values never jitter as they tick.
+   ============================================================ */
+.t-caption {
+  font-size: var(--type-caption);
+  line-height: var(--lh-snug);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+.t-label {
+  font-size: var(--type-caption);
+  line-height: 1;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.t-meta {
+  font-size: var(--type-meta);
+  line-height: var(--lh-snug);
+  color: var(--text-secondary);
+}
+.t-body { font-size: var(--type-body); line-height: var(--lh-normal); }
+.t-body-lg {
+  font-size: var(--type-body-lg);
+  line-height: var(--lh-snug);
+  font-weight: var(--weight-medium);
+}
+.t-title-sm {
+  font-size: var(--type-title-sm);
+  line-height: var(--lh-snug);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--track-tight);
+}
+.t-title {
+  font-size: var(--type-title);
+  line-height: var(--lh-snug);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--track-tight);
+}
+.t-title-lg {
+  font-size: var(--type-title-lg);
+  line-height: var(--lh-tight);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--track-tight);
+}
+
+/* Numeric ramp — every driving-relevant value uses one of these. */
+.n-value,
+.n-display,
+.n-hero {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+.n-value {
+  font-size: var(--type-title-sm);
+  font-weight: var(--weight-medium);
+  line-height: 1;
+  letter-spacing: var(--track-tight);
+}
+.n-display {
+  font-size: var(--type-display);
+  font-weight: var(--weight-medium);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+.n-hero {
+  font-size: var(--type-hero);
+  font-weight: var(--weight-light);
+  line-height: 0.9;
+  letter-spacing: -0.025em;
+}
+
+/* Latin technical wordmarks: MUSTANG, GT, TRACK, RPM, PSI. */
+.latin {
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--track-wide);
+  text-transform: uppercase;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.dim { color: var(--text-secondary); }
+.muted { color: var(--text-muted); }
+
+/* ============================================================
+   MATERIAL PRIMITIVES
+   ============================================================ */
+
+/* Shoulder line — a hairline that fades at both ends instead of
+   boxing content in. The system's only structural rule element.
+   It stretches when used as a rule inside a row, so it must not
+   declare a flex basis of its own. */
+.hairline {
+  height: 1px;
+  align-self: center;
+  background: linear-gradient(
+    to left,
+    transparent 0%,
+    var(--divider) 8%,
+    var(--divider) 92%,
+    transparent 100%
+  );
+}
+.hairline-v {
+  width: 1px;
+  flex: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--divider) 10%,
+    var(--divider) 90%,
+    transparent 100%
+  );
+}
+
+/* Physical controls do not mirror: a minus/plus rocker, a gear
+   readout and a Latin wordmark keep their real-world order in RTL
+   exactly as they do on the hardware around the screen. */
+.physical {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Single cut corner. Used only on hero-level surfaces. */
+.chamfer-start {
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--chamfer)) 0,
+    100% var(--chamfer),
+    100% 100%,
+    0 100%
+  );
+}
+
+/* Press feedback: fast in, slower out, no bounce, no scale on
+   anything larger than a control. */
+.pressable {
+  position: relative;
+  transition:
+    background-color var(--dur-fast) var(--ease-standard),
+    transform var(--dur-fast) var(--ease-precise),
+    opacity var(--dur-fast) var(--ease-standard);
+}
+.pressable:active { background-color: var(--surface-press); }
+.pressable[data-scale='true']:active { transform: scale(0.972); }
+.pressable[aria-disabled='true'],
+.pressable:disabled {
+  opacity: var(--opacity-disabled);
+  pointer-events: none;
+}
+
+@media (hover: hover) {
+  .pressable:hover { background-color: var(--surface-hover); }
+}
+
+/* Screen enter transition — content settles forward, chrome holds. */
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(0.75rem); }
+  to   { opacity: 1; transform: none; }
+}
+.screen {
+  height: 100%;
+  min-height: 0;
+  animation: screen-in var(--dur-panel) var(--ease-enter) both;
+}

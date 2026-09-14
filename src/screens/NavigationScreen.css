@@ -1,0 +1,98 @@
+.navscreen { position: relative; height: 100%; min-height: 0; }
+
+.navscreen__map {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Guidance panel sits against the reading edge, clear of the map's
+   busiest quadrant, and never spans the full width. */
+.navscreen__guidance {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: min(30rem, 42%);
+}
+
+.navscreen__tools {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.navscreen__dock {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+}
+.navscreen__docksep { height: 2.25rem; align-self: center; }
+
+.navscreen__dest {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0 var(--space-3);
+  min-width: 0;
+  flex: 0 1 18rem;
+}
+.navscreen__desticon { grid-row: span 2; font-size: var(--icon-lg); color: var(--accent-primary); }
+.navscreen__destname { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
+.navscreen__destsub { font-size: var(--type-caption); color: var(--text-muted); }
+
+.navscreen__eta { display: flex; align-items: center; gap: var(--space-5); flex: none; }
+.navscreen__etagroup { display: flex; flex-direction: column; gap: var(--space-1); }
+.navscreen__etaval { display: flex; align-items: baseline; gap: 0.25em; }
+.navscreen__etaval .n-value { font-size: var(--type-title-sm); }
+.navscreen__etaunit { font-size: var(--type-meta); color: var(--text-muted); }
+
+.navscreen__player { flex: 0 1 20rem; min-width: 0; }
+.navscreen__dock > .tbtn { margin-inline-start: auto; }
+
+/* ---------- Destination picker (guidance off) ------------------------ */
+.navscreen__picker {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: min(30rem, 40%);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.navscreen__pickerhead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-6) var(--space-4);
+}
+.navscreen__pickerhead .t-meta { color: var(--text-muted); }
+.navscreen__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 var(--space-3) var(--space-3);
+  min-height: 0;
+}
+
+.navscreen__rowicon { display: flex; flex: none; font-size: var(--icon-md); color: var(--text-secondary); }
+.navscreen__rowtext { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.navscreen__rowname { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
+.navscreen__rowsub { font-size: var(--type-meta); color: var(--text-muted); }
+.navscreen__rowmeta { display: flex; align-items: baseline; gap: 0.25em; flex: none; }
+.navscreen__rowmeta .n-value { font-size: var(--type-body-lg); }
+.navscreen__rowunit { font-size: var(--type-caption); color: var(--text-muted); }
+
+@media (max-width: 1400px) {
+  .navscreen__player { display: none; }
+  .navscreen__guidance { width: min(26rem, 46%); }
+  .navscreen__picker { width: min(26rem, 46%); }
+}

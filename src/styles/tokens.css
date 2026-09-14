@@ -1,0 +1,135 @@
+/* ============================================================
+   MUSTANG HMI — PRIMITIVE TOKENS
+   Resolution-independent scale. Nothing here is themed.
+   Every component consumes these; no raw values in components.
+   ============================================================ */
+
+:root {
+  /* --- Root scale ------------------------------------------------
+     The head unit is a fixed-size physical panel. We derive one
+     scale unit from the smaller of the two axes so the layout keeps
+     its proportions across 1280x720 -> 1920x1080 without reflowing
+     into a "responsive website".                                  */
+  font-size: clamp(13px, min(2.2vh, 0.9vw), 17px);
+
+  /* --- Spacing rhythm (4pt) -------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* --- Radius ----------------------------------------------------
+     Deliberately small set. Most surfaces separate tonally, not by
+     rounding. Pill is reserved for tracks and sliders only.       */
+  --radius-sm: 5px;
+  --radius-md: 9px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+  --chamfer: 18px; /* Mustang signature: single cut corner on hero surfaces */
+
+  /* --- Touch geometry (automotive minimums) ---------------------- */
+  --touch-sm: 3.5rem;   /* 56dp — absolute floor           */
+  --touch-md: 4rem;     /* 64dp — standard control         */
+  --touch-lg: 4.5rem;   /* 72dp — frequent / primary       */
+  --touch-xl: 5.5rem;   /* 88dp — call answer, transport   */
+
+  /* --- Icon sizing ----------------------------------------------- */
+  --icon-xs: 1rem;
+  --icon-sm: 1.25rem;
+  --icon-md: 1.5rem;
+  --icon-lg: 2rem;
+  --icon-xl: 2.5rem;
+  --icon-stroke: 1.6;
+
+  /* --- Type scale ------------------------------------------------
+     Arabic needs more optical size than Latin at equal x-height,
+     so the ramp starts higher than a typical web scale.           */
+  --type-caption: 0.8125rem;   /* unit labels, Latin micro-copy  */
+  --type-meta: 0.9375rem;      /* metadata, list secondary       */
+  --type-body: 1.0625rem;      /* default readable body          */
+  --type-body-lg: 1.25rem;     /* list primary, control labels   */
+  --type-title-sm: 1.5rem;
+  --type-title: 1.875rem;
+  --type-title-lg: 2.25rem;
+  --type-display: 3rem;        /* maneuver distance, big numbers */
+  --type-hero: 4.5rem;         /* home clock                     */
+
+  --lh-tight: 1.1;
+  --lh-snug: 1.3;
+  --lh-normal: 1.55;
+
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --track-wide: 0.14em;   /* Latin uppercase labels */
+  --track-tight: -0.015em;
+
+  --font-ui: 'IBM Plex Sans Arabic', 'Noto Sans Arabic', 'Segoe UI', system-ui, sans-serif;
+
+  /* --- Motion ----------------------------------------------------
+     Mechanical, decelerating, never elastic.
+     --motion-scale is re-declared by drive mode (Track tightens).  */
+  --motion-scale: 1;
+  --dur-instant: calc(90ms * var(--motion-scale));
+  --dur-fast: calc(160ms * var(--motion-scale));
+  --dur-base: calc(220ms * var(--motion-scale));
+  --dur-slow: calc(300ms * var(--motion-scale));
+  --dur-panel: calc(380ms * var(--motion-scale));
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-precise: cubic-bezier(0.2, 0.8, 0.25, 1);
+
+  /* --- Opacity ---------------------------------------------------- */
+  --opacity-disabled: 0.34;
+  --opacity-press: 0.72;
+  --opacity-scrim: 0.86;
+
+  /* --- Layout chrome --------------------------------------------- */
+  --rail-w: 5.5rem;
+  --statusbar-h: 3rem;
+  --bottombar-h: 4.75rem;
+  --content-pad: var(--space-6);
+}
+
+/* Narrow head units: reclaim horizontal space from chrome. */
+@media (max-width: 1400px) {
+  :root {
+    --rail-w: 5rem;
+    --content-pad: var(--space-4);
+  }
+}
+
+/* Taller panels (1920x1080): the chrome breathes and every touch target
+   grows with it, so lists fill the panel instead of stretching a 720
+   layout over it. Type scale is unchanged — reading distance has not. */
+@media (min-height: 900px) {
+  :root {
+    --statusbar-h: 3.5rem;
+    --bottombar-h: 5.25rem;
+    --content-pad: var(--space-8);
+    --touch-sm: 3.75rem;
+    --touch-md: 4.375rem;
+    --touch-lg: 5rem;
+    --touch-xl: 6rem;
+  }
+}
+
+/* Drive-mode motion profile. Track sharpens response; Wet softens it. */
+[data-drive='sport'] { --motion-scale: 0.9; }
+[data-drive='track'] { --motion-scale: 0.78; }
+[data-drive='wet']   { --motion-scale: 1.08; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion-scale: 0.01; }
+}
