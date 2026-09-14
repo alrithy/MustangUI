@@ -295,12 +295,31 @@
 
 /* ============================================================
    DRIVE MODE ATMOSPHERE
-   Small, deliberate shifts only. The layout, hierarchy and
-   type never change with drive mode.
+   Small, deliberate shifts only. The layout, hierarchy and type
+   never change with drive mode — these are not skins.
+
+     Normal  neutral
+     Sport   a little more accent presence
+     Track   decoration stands down, data contrast rises
+     Wet     the guidance cue turns cool; nothing else shouts
    ============================================================ */
+:root { --ambient-strength: 1; --guidance-cue: var(--accent-primary); }
 [data-drive='sport'] { --accent-glow: rgba(224, 58, 78, 0.55); }
-[data-drive='track'] { --accent-glow: rgba(232, 62, 80, 0.7); }
-[data-drive='wet']   { --accent-glow: rgba(96, 152, 200, 0.5); }
+
+/* Track: album tint and other atmosphere drop out, and secondary text
+   moves toward primary so the numbers carry the screen. */
+[data-drive='track'] {
+  --accent-glow: rgba(232, 62, 80, 0.7);
+  --ambient-strength: 0;
+  --text-secondary: #c9c6c2;
+}
+
+/* Wet: the imminent-maneuver cue goes cool. Red stays reserved for
+   what is actually urgent. */
+[data-drive='wet'] {
+  --accent-glow: rgba(96, 152, 200, 0.5);
+  --guidance-cue: var(--status-info);
+}
 
 [data-theme='gt'][data-drive='sport'] { --accent-glow: rgba(224, 198, 145, 0.5); }
 [data-theme='gt'][data-drive='track'] { --accent-glow: rgba(230, 205, 152, 0.62); }

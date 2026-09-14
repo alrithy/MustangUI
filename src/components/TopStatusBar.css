@@ -45,8 +45,8 @@
   font-size: 0.6875rem;
   padding: 0.25rem var(--space-3);
   border-radius: var(--radius-sm);
-  color: var(--accent-primary);
-  background: var(--accent-wash);
+  color: var(--guidance-cue);
+  background: var(--surface-subtle);
   animation: statusbar-chip var(--dur-base) var(--ease-enter) both;
 }
 @keyframes statusbar-chip {

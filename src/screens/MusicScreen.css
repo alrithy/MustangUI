@@ -1,3 +1,13 @@
+/* Media is always entered from a small piece of artwork — the context
+   panel on Home, or the handle in the bottom zone. The screen expands
+   from that size instead of arriving as a new page. */
+@keyframes music-expand {
+  from { opacity: 0; transform: scale(0.9) translateY(1.25rem); }
+  to { opacity: 1; transform: none; }
+}
+.music__stage { animation: music-expand var(--dur-context) var(--ease-enter) both; }
+.music__deck, .music__queue { animation: music-expand var(--dur-panel) var(--ease-enter) 60ms both; }
+
 .music {
   position: relative;
   display: grid;
@@ -13,7 +23,7 @@
 .music__ambient {
   position: absolute;
   inset: calc(var(--content-pad) * -1);
-  opacity: 0.4;
+  opacity: calc(0.4 * var(--ambient-strength));
   pointer-events: none;
   transition: background-color var(--dur-panel) var(--ease-standard);
   -webkit-mask-image: radial-gradient(120% 100% at 100% 50%, rgba(0, 0, 0, 0.85), transparent 68%);
@@ -22,6 +32,7 @@
 
 .music__stage {
   position: relative;
+  transform-origin: 50% 100%;
   display: flex;
   flex-direction: column;
   align-items: center;

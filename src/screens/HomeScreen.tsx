@@ -14,7 +14,7 @@
 
 import { useEffect, useState } from 'react';
 import { AlbumArt } from '../components/AlbumArt';
-import { MANEUVER_GLYPH, ManeuverPanel } from '../components/ManeuverPanel';
+import { ManeuverPanel } from '../components/ManeuverPanel';
 import { MiniPlayer } from '../components/MiniPlayer';
 import { IconButton, Meter, TouchButton } from '../components/primitives';
 import { DESTINATIONS, TRACKS, WEATHER } from '../state/demoData';
@@ -232,7 +232,7 @@ function GuidanceContext() {
         <EtaCell label="المدة" value={dur.value} unit={dur.unit} />
       </div>
 
-      <RouteAhead />
+      <span className="ctx__spacer" />
 
       <MiniPlayer />
 
@@ -240,35 +240,6 @@ function GuidanceContext() {
         onClick={() => dispatch({ type: 'nav-end' })}>
         إنهاء التوجيه
       </TouchButton>
-    </div>
-  );
-}
-
-/* The maneuver card covers the next two turns. This is the shape of the
-   rest of the drive — read once when it appears, not while moving. */
-function RouteAhead() {
-  const { nav } = useSystem();
-  const rest = nav.steps.slice(nav.stepIndex + 2);
-
-  return (
-    <div className="ctx__ahead">
-      <span className="t-label">بقية المسار</span>
-      <ul className="ctx__aheadlist">
-        {rest.length === 0 && <li className="ctx__aheadempty t-meta">اقتربت من الوجهة</li>}
-        {rest.slice(0, 4).map((st) => {
-          const d = distanceKm(st.distanceM / 1000);
-          return (
-            <li key={st.id} className="ctx__aheaditem">
-              <Icon name={MANEUVER_GLYPH[st.kind]} className="ctx__aheadicon" />
-              <span className="truncate ctx__aheadroad">{st.road}</span>
-              <span className="ctx__aheaddist">
-                <span className="n-value">{d.value}</span>
-                <span className="ctx__aheadunit">{d.unit}</span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
     </div>
   );
 }
