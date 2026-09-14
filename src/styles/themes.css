@@ -213,6 +213,11 @@
    and a single hairline, so the panel never turns into glare.
    ============================================================ */
 [data-mode='day'] {
+  /* The bootstrap scheme is dark (see index.html), which is correct for
+     the black startup and for every dark theme. Day Mode hands the UA
+     back a light scheme so native controls render for daylight. */
+  color-scheme: light;
+
   /* One contrast step up from the first pass. The ground darkens, the
      panels lighten, and every boundary now separates by value as well
      as by warmth — under direct sun a 4% step simply disappears. */
