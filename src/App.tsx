@@ -20,6 +20,7 @@ import { MusicScreen } from './screens/MusicScreen';
 import { NavigationScreen } from './screens/NavigationScreen';
 import { PhoneScreen } from './screens/PhoneScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
+import { isAndroid } from './platform/host';
 import { useDerived, useSystem } from './state/systemStore';
 import type { ScreenId } from './state/types';
 import './App.css';
@@ -66,7 +67,9 @@ export default function App() {
         </main>
       </div>
       <BottomVehicleBar />
-      <DevPanel />
+      {/* The bench panel drives the simulation. There is no simulation
+          to drive on the head unit, so it is not built there. */}
+      {!isAndroid && <DevPanel />}
       {booting && <StartupSequence onDone={() => setBooting(false)} />}
     </div>
   );

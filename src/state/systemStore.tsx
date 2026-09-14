@@ -6,15 +6,19 @@
    ============================================================ */
 
 import {
-  createContext, useContext, useEffect, useMemo, useReducer, useRef,
+  createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef,
   type Dispatch, type ReactNode,
 } from 'react';
+import {
+  act, isAndroid, notify, on, request,
+  type NativeApp, type NativeMedia, type NativeSystem,
+} from '../platform/host';
 import {
   CONTACTS, DESTINATIONS, INCOMING_CONTACT_ID, ROUTE_STEPS, TRACKS,
 } from './demoData';
 import type {
-  Appearance, ColorMode, Destination, DriveMode, Gear, RailSide,
-  ScreenId, SystemState, ThemeName,
+  Appearance, ColorMode, Destination, DriveMode, Gear, Motion, RailSide,
+  ScreenId, SourceState, SystemState, ThemeName, Track,
 } from './types';
 
 /* ---------- Demo scenarios ---------------------------------------
@@ -70,13 +74,23 @@ function loadSettings(): SystemState['settings'] {
   }
 }
 
+/* On device nothing is simulated. Vehicle, phone and guidance have no
+   verified source in V1 and say so; media becomes 'live' the moment a
+   MediaSession is readable. The browser prototype stays fully 'demo'. */
+const initialSources = (): SourceState => (isAndroid
+  ? { system: 'live', vehicle: 'unavailable', media: 'unavailable', phone: 'unavailable', nav: 'unavailable', apps: 'live' }
+  : { system: 'demo', vehicle: 'demo', media: 'demo', phone: 'demo', nav: 'demo', apps: 'demo' });
+
 export const initialState: SystemState = {
   screen: 'home',
   clock: 0,
+  sources: initialSources(),
+  native: { media: null, system: null, apps: [] },
   vehicle: initialVehicle(),
   climate: { driverC: 21.5, passengerC: 22, fan: 3, sync: true, ac: true, seatHeatDriver: 0 },
   media: {
-    playing: true, trackIndex: 0, positionSec: 74, shuffle: false, repeat: 'all',
+    playing: !isAndroid, trackIndex: 0, positionSec: isAndroid ? 0 : 74,
+    shuffle: false, repeat: 'all',
     volume: 14, muted: false, favorites: ['tr-01', 'tr-05'], source: 'bluetooth',
   },
   nav: {
@@ -93,6 +107,9 @@ export const initialState: SystemState = {
 export type Action =
   | { type: 'navigate'; screen: ScreenId }
   | { type: 'tick' }
+  | { type: 'native-media'; value: NativeMedia }
+  | { type: 'native-system'; value: NativeSystem }
+  | { type: 'native-apps'; value: NativeApp[] }
   | { type: 'set-theme'; theme: ThemeName }
   | { type: 'set-appearance'; appearance: Appearance }
   | { type: 'set-rail-side'; side: RailSide }
@@ -261,8 +278,41 @@ function applyScenario(s: SystemState, id: ScenarioId): SystemState {
   }
 }
 
+/* Actions that exist only to drive the browser simulation. On the head
+   unit there is no simulation to drive, so they are inert at the
+   reducer — not merely unreachable from the UI. An explicit set beats
+   a prefix test: a future action name cannot silently join the list. */
+const SIMULATION_ONLY: ReadonlySet<Action['type']> = new Set<Action['type']>([
+  'tick', 'scenario', 'set-gear', 'set-drive-mode',
+  'climate-temp', 'climate-fan', 'climate-toggle', 'climate-seat',
+  'call-incoming', 'call-accept', 'call-decline', 'call-dial', 'call-end',
+  'call-mute', 'call-speaker',
+  'nav-start', 'nav-end', 'nav-advance',
+  'media-toggle', 'media-step', 'media-select', 'media-seek',
+  'media-volume', 'media-set-volume', 'media-mute', 'media-shuffle', 'media-repeat',
+]);
+
 export function reducer(s: SystemState, a: Action): SystemState {
+  if (isAndroid && SIMULATION_ONLY.has(a.type)) return s;
+
   switch (a.type) {
+    /* --- Native ingress ------------------------------------------ */
+    case 'native-media': {
+      const live = a.value.status === 'live';
+      return {
+        ...s,
+        sources: { ...s.sources, media: live ? 'live' : 'unavailable' },
+        native: { ...s.native, media: live ? a.value : null },
+        media: {
+          ...s.media,
+          playing: live && !!a.value.playing,
+          positionSec: live ? Math.max(0, a.value.positionSec ?? 0) : 0,
+        },
+      };
+    }
+    case 'native-system': return { ...s, native: { ...s.native, system: a.value } };
+    case 'native-apps': return { ...s, native: { ...s.native, apps: a.value } };
+
     case 'tick': return tick(s);
     case 'navigate': return s.screen === a.screen ? s : { ...s, screen: a.screen, blockedApp: null };
 
@@ -389,13 +439,71 @@ const StateContext = createContext<SystemState>(initialState);
 const DispatchContext = createContext<Dispatch<Action>>(() => undefined);
 
 export function SystemProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, rawDispatch] = useReducer(reducer, initialState);
   const settingsRef = useRef(state.settings);
   settingsRef.current = state.settings;
+  const playingRef = useRef(state.media.playing);
+  playingRef.current = state.media.playing;
 
-  /* Single 1 Hz simulation clock for the whole system. */
+  /* On device a few domain actions are requests to Android rather than
+     state changes. Translating here keeps every screen writing the same
+     dispatch it always did — no screen learns what platform it is on. */
+  const dispatch: Dispatch<Action> = useCallback((action: Action) => {
+    if (isAndroid) {
+      switch (action.type) {
+        case 'media-toggle':
+          act('mediaControl', { command: playingRef.current ? 'pause' : 'play' });
+          return;
+        case 'media-step':
+          act('mediaControl', { command: action.delta === 1 ? 'next' : 'previous' });
+          return;
+        case 'nav-start':
+          act('launch', { app: 'maps' });
+          return;
+        case 'call-dial':
+          act('launch', { app: 'phone' });
+          return;
+        default:
+          if (SIMULATION_ONLY.has(action.type)) {
+            notify('غير متاح من المصدر الحالي');
+            return;
+          }
+      }
+    }
+    rawDispatch(action);
+  }, []);
+
+  /* Native ingress. Android pushes; the web layer does not poll it.
+     Media and connectivity both have real callbacks on the platform,
+     so a foreground timer would only cost wakes on a QCM6125. */
   useEffect(() => {
-    const id = window.setInterval(() => dispatch({ type: 'tick' }), 1000);
+    if (!isAndroid) return undefined;
+    const offMedia = on<NativeMedia>('media', (value) => rawDispatch({ type: 'native-media', value }));
+    const offSystem = on<NativeSystem>('system', (value) => rawDispatch({ type: 'native-system', value }));
+    const offApps = on<NativeApp[]>('apps', (value) => rawDispatch({ type: 'native-apps', value }));
+    const home = () => rawDispatch({ type: 'navigate', screen: 'home' });
+    window.addEventListener('mustang:home', home);
+
+    /* One handshake: stops the launcher's recovery watchdog and opens
+       the push channel. Failure here means the host is gone, not that
+       the UI should invent values. */
+    void request('subscribe').catch(() => {
+      rawDispatch({ type: 'native-media', value: { status: 'unavailable' } });
+    });
+
+    return () => {
+      offMedia(); offSystem(); offApps();
+      window.removeEventListener('mustang:home', home);
+    };
+  }, []);
+
+  /* Single 1 Hz simulation clock for the whole system. Never started on
+     the head unit: there is nothing there to simulate. */
+  useEffect(() => {
+    if (isAndroid) return undefined;
+    const id = window.setInterval(() => {
+      if (!document.hidden) rawDispatch({ type: 'tick' });
+    }, 1000);
     return () => window.clearInterval(id);
   }, []);
 
@@ -431,8 +539,13 @@ export const useDispatch = () => useContext(DispatchContext);
 export function useDerived() {
   const s = useSystem();
   return useMemo(() => {
-    const parked = s.vehicle.gear === 'P';
-    const moving = !parked && s.vehicle.speedKph > 3;
+    const known = s.sources.vehicle !== 'unavailable';
+    const parked = known && s.vehicle.gear === 'P';
+    /* Unknown motion counts as moving. Parked-only content stays held
+       rather than being released on an assumption the head unit has
+       given us no way to check. */
+    const moving = known ? (!parked && s.vehicle.speedKph > 3) : true;
+    const motion: Motion = !known ? 'unknown' : parked ? 'parked' : 'moving';
     const colorMode: ColorMode =
       s.settings.appearance === 'auto'
         ? (s.settings.ambientDaylight ? 'day' : 'night')
@@ -441,13 +554,59 @@ export function useDerived() {
        guidance stays on screen exactly as it was. */
     const homeContext: 'nav' | 'parked' | 'idle' =
       s.nav.active ? 'nav' : parked ? 'parked' : 'idle';
-    return { parked, moving, colorMode, homeContext };
-  }, [s.vehicle.gear, s.vehicle.speedKph, s.settings.appearance, s.settings.ambientDaylight, s.nav.active]);
+    return { parked, moving, motion, colorMode, homeContext };
+  }, [
+    s.sources.vehicle, s.vehicle.gear, s.vehicle.speedKph,
+    s.settings.appearance, s.settings.ambientDaylight, s.nav.active,
+  ]);
 }
 
-export const useTrack = () => {
-  const { media } = useSystem();
-  return TRACKS[media.trackIndex];
+/* A value the current source cannot supply. One glyph, used everywhere,
+   so an absent reading never looks like a zero reading. */
+const NO_READING = '—';
+
+/** The single accessor for a vehicle number. Returns the blank glyph
+ *  whenever the vehicle source is unavailable, so no screen has to ask
+ *  what platform it is running on to know whether to trust a field. */
+export function useReadout() {
+  const { sources } = useSystem();
+  const available = sources.vehicle !== 'unavailable';
+  return useMemo(() => ({
+    available,
+    num: (value: number, format: (v: number) => string | number = Math.round) =>
+      (available ? String(format(value)) : NO_READING),
+  }), [available]);
+}
+
+const NO_MEDIA: Track = {
+  id: 'native-idle',
+  title: 'لا يوجد مصدر وسائط',
+  artist: '',
+  album: '',
+  durationSec: 0,
+  art: ['#1a1a1a', '#0d0d0d'],
+  ambient: '#111111',
+};
+
+export const useTrack = (): Track => {
+  const { media, sources, native } = useSystem();
+  return useMemo(() => {
+    if (sources.media === 'demo') return TRACKS[media.trackIndex];
+    const n = native.media;
+    if (!n) return NO_MEDIA;
+    return {
+      /* Identity follows the metadata, so artwork and the queue marker
+         change exactly when the track does — not on every push. */
+      id: `native:${n.app ?? ''}:${n.title ?? ''}`,
+      title: n.title || 'مقطع غير معروف',
+      artist: n.artist || '',
+      album: n.album || n.appLabel || '',
+      durationSec: Math.max(0, n.durationSec ?? 0),
+      art: ['#1a1a1a', '#0d0d0d'],
+      ambient: '#111111',
+      artwork: n.artwork,
+    };
+  }, [sources.media, media.trackIndex, native.media]);
 };
 
 export const contactById = (id: string | null) =>

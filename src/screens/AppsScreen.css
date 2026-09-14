@@ -79,3 +79,19 @@
   .apps__tile { gap: var(--space-3); padding: var(--space-3); min-height: var(--touch-xl); }
   .apps { gap: var(--space-4); }
 }
+
+/* A curated tile with no package behind it on this unit. Quieter than
+   the held state and inert, so the grid keeps its shape without
+   offering something that cannot open. */
+.apps__tile.is-missing {
+  cursor: default;
+  background: transparent;
+}
+.apps__tile.is-missing .apps__icon { opacity: 0.22; }
+.apps__tile.is-missing .apps__name { color: var(--text-muted); }
+.apps__state {
+  position: absolute;
+  inset-block-end: var(--space-2);
+  inset-inline-end: var(--space-3);
+  color: var(--text-muted);
+}

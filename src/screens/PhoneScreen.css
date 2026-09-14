@@ -164,3 +164,18 @@
 @media (max-width: 1180px) {
   .quickdial { display: none; }
 }
+
+/* Lists the head unit has no source for. Same column box as the real
+   list so the keypad and quick-dial keep their positions. */
+.phone__nosource {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+}
+.phone__nosourcetext {
+  margin: 0;
+  max-width: 36ch;
+  line-height: 1.7;
+}

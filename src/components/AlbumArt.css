@@ -27,3 +27,14 @@
   inset: 0;
   background: linear-gradient(200deg, rgba(255, 255, 255, 0.09) 0%, transparent 42%);
 }
+
+/* Native cover art. Fills the same frame the motif occupies, so a live
+   MediaSession bitmap inherits the size and radius already in place. */
+.albumart__cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}

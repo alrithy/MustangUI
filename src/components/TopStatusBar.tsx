@@ -6,7 +6,8 @@
    ============================================================ */
 
 import { useEffect, useRef, useState } from 'react';
-import { useDispatch, useDerived, useSystem } from '../state/systemStore';
+import { onNotice } from '../platform/host';
+import { useDispatch, useDerived, useReadout, useSystem } from '../state/systemStore';
 import { clockTime, temperature } from '../system/format';
 import { Icon } from '../system/icons';
 import { TriBar } from './TriBar';
@@ -20,11 +21,13 @@ const DRIVE_LABEL: Record<string, { ar: string; tag: string }> = {
 };
 
 export function TopStatusBar() {
-  const { vehicle, nav, settings } = useSystem();
+  const { vehicle, nav, settings, sources, native } = useSystem();
   const { moving } = useDerived();
   const dispatch = useDispatch();
+  const readout = useReadout();
   const [now, setNow] = useState(() => clockTime());
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const lastMode = useRef(vehicle.driveMode);
   const holdTimer = useRef<number | null>(null);
 
@@ -32,6 +35,16 @@ export function TopStatusBar() {
     const id = window.setInterval(() => setNow(clockTime()), 15_000);
     return () => window.clearInterval(id);
   }, []);
+
+  /* The centre slot already exists to confirm a state change and then
+     vacate. A host action that could not be carried out is exactly that
+     kind of message, so it lands here rather than in new chrome. */
+  useEffect(() => onNotice(setNotice), []);
+  useEffect(() => {
+    if (!notice) return undefined;
+    const id = window.setTimeout(() => setNotice(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [notice]);
 
   /* Drive-mode change is confirmed here and nowhere else, so the
      screens themselves never have to host a toast layer. */
@@ -53,6 +66,17 @@ export function TopStatusBar() {
   };
 
   const mode = DRIVE_LABEL[vehicle.driveMode];
+
+  /* The prototype shows the connected state it was designed around.
+     A real host reports each link, and an unreported link reads as off
+     rather than inheriting the prototype's optimism. */
+  const link = sources.system === 'demo'
+    ? { gps: true, signal: true, bluetooth: true }
+    : {
+      gps: native.system?.gpsEnabled === true,
+      signal: native.system?.network === true,
+      bluetooth: native.system?.bluetooth === 'on',
+    };
 
   return (
     <header className="statusbar">
@@ -77,7 +101,9 @@ export function TopStatusBar() {
       </div>
 
       <div className="statusbar__center" aria-live="polite">
-        {confirm ? (
+        {notice ? (
+          <span className="statusbar__route t-meta truncate">{notice}</span>
+        ) : confirm ? (
           <span className="statusbar__confirm">
             <TriBar variant="sequential" orientation="horizontal" size="sm" />
             <span className="t-meta">{DRIVE_LABEL[confirm].ar}</span>
@@ -91,13 +117,15 @@ export function TopStatusBar() {
 
       <div className="statusbar__status">
         <span className="statusbar__temp">
-          <span className="n-value statusbar__tempval">{temperature(vehicle.outsideC)}</span>
+          <span className="n-value statusbar__tempval">
+            {readout.num(vehicle.outsideC, temperature)}
+          </span>
           <span className="t-label statusbar__templabel">خارجي</span>
         </span>
         <span className="statusbar__icons">
-          <Icon name="gps" className="statusbar__icon is-on" />
-          <Icon name="signal" className="statusbar__icon is-on" />
-          <Icon name="bluetooth" className="statusbar__icon is-on" />
+          <Icon name="gps" className={`statusbar__icon${link.gps ? ' is-on' : ''}`} />
+          <Icon name="signal" className={`statusbar__icon${link.signal ? ' is-on' : ''}`} />
+          <Icon name="bluetooth" className={`statusbar__icon${link.bluetooth ? ' is-on' : ''}`} />
           {settings.appearance === 'auto' && (
             <Icon
               name={settings.ambientDaylight ? 'sun' : 'moon'}

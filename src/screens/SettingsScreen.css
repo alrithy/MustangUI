@@ -226,3 +226,12 @@
   color: var(--text-secondary);
 }
 .settings__replay svg { font-size: var(--icon-sm); }
+
+/* Links out to platform surfaces. Same rhythm as a settings row group,
+   wrapping rather than shrinking below the touch minimum. */
+.settings__hostlinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}

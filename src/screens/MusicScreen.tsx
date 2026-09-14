@@ -8,7 +8,8 @@
 import type { PointerEvent } from 'react';
 import { AlbumArt } from '../components/AlbumArt';
 import { TriBar } from '../components/TriBar';
-import { IconButton, Surface } from '../components/primitives';
+import { IconButton, Surface, TouchButton } from '../components/primitives';
+import { act } from '../platform/host';
 import { TRACKS } from '../state/demoData';
 import { useDispatch, useSystem, useTrack } from '../state/systemStore';
 import { timecode } from '../system/format';
@@ -21,12 +22,31 @@ const SOURCE_LABEL: Record<string, string> = {
   radio: 'راديو FM',
 };
 
+/* Provenance, stated plainly. The driver should be able to tell a real
+   player from the bench demo without guessing. */
+const SOURCE_TAG: Record<string, string> = {
+  demo: 'عرض تجريبي',
+  live: 'مصدر مباشر',
+  unavailable: 'لا يوجد مصدر',
+};
+
 export function MusicScreen() {
-  const { media } = useSystem();
+  const { media, sources, native } = useSystem();
   const dispatch = useDispatch();
   const track = useTrack();
-  const ratio = media.positionSec / track.durationSec;
+  const demo = sources.media === 'demo';
+  /* A live session may report no duration at all; the scrub must not
+     inherit a NaN width from a track that never declared a length. */
+  const ratio = track.durationSec > 0
+    ? Math.min(1, Math.max(0, media.positionSec / track.durationSec))
+    : 0;
   const favorite = media.favorites.includes(track.id);
+
+  /* The source line names where the audio actually comes from. On the
+     head unit that is the owning Android player, never a demo label. */
+  const source = demo
+    ? SOURCE_LABEL[media.source]
+    : native.media?.appLabel || native.media?.app || 'لا يوجد مصدر وسائط';
 
   /* RTL scrub: progress grows from the inline start, i.e. the right. */
   const seek = (e: PointerEvent<HTMLDivElement>) => {
@@ -40,7 +60,7 @@ export function MusicScreen() {
 
       <section className="music__stage">
         <AlbumArt track={track} size="xl" className="music__art" />
-        <span className="t-label music__source">{SOURCE_LABEL[media.source]}</span>
+        <span className="t-label music__source">{source}</span>
       </section>
 
       <section className="music__deck">
@@ -109,7 +129,7 @@ export function MusicScreen() {
             onClick={() => dispatch({ type: 'media-favorite', id: track.id })}
           />
           <span className="t-meta music__count">
-            {media.trackIndex + 1} من {TRACKS.length}
+            {demo ? `${media.trackIndex + 1} من ${TRACKS.length}` : SOURCE_TAG[sources.media]}
           </span>
         </div>
       </section>
@@ -119,8 +139,30 @@ export function MusicScreen() {
           <Icon name="queue" className="music__queueicon" />
           <span className="t-label">قائمة التشغيل</span>
         </header>
+        {!demo && (
+          /* Android exposes transport and metadata, not another app's
+             queue. Saying so beats showing an empty list or, worse,
+             the prototype's tracks beside a live player. */
+          <div className="music__empty">
+            <p className="t-meta music__emptytext">
+              {sources.media === 'live'
+                ? 'قائمة التشغيل تُدار من التطبيق المشغِّل'
+                : 'لا يوجد مشغّل نشط. فعّل الوصول للوسائط ثم شغّل مقطعاً من أي تطبيق.'}
+            </p>
+            {sources.media !== 'live' && (
+              <TouchButton
+                variant="secondary"
+                size="lg"
+                icon="settings"
+                onClick={() => act('launch', { app: 'mediaAccess' })}
+              >
+                الوصول للوسائط
+              </TouchButton>
+            )}
+          </div>
+        )}
         <ul className="music__list scroll-y">
-          {TRACKS.map((t, i) => {
+          {(demo ? TRACKS : []).map((t, i) => {
             const current = i === media.trackIndex;
             return (
               <li key={t.id}>

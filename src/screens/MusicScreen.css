@@ -191,3 +191,18 @@
   .music { grid-template-columns: auto minmax(0, 1fr); }
   .music__queue { display: none; }
 }
+
+/* Queue band with no queue to show. Uses the band's own padding scale
+   so the empty state sits where the first row would have. */
+.music__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+.music__emptytext {
+  margin: 0;
+  max-width: 34ch;
+  line-height: 1.6;
+}
