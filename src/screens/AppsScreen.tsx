@@ -1,14 +1,17 @@
 /* ============================================================
    APPS
-   Secondary by construction: three labelled bands on the background,
-   no card chrome, no colour. Entries that demand sustained attention
-   are held back while the vehicle moves and release themselves when
-   it stops — the driver is never asked to dismiss anything.
+   The complete index of what this panel can open: the car's own
+   surfaces and the paired phone's, in labelled bands on the
+   background — no card chrome, no colour. The phone stage keeps a
+   short most-used shelf; everything the screen has lives here.
+   Entries that demand sustained attention are held back while the
+   vehicle moves and release themselves when it stops — the driver
+   is never asked to dismiss anything.
    ============================================================ */
 
 import { act } from '../platform/host';
 import { DEMO_ONLY, NATIVE_APP, NATIVE_LABEL } from '../platform/appMap';
-import { APPS } from '../state/demoData';
+import { APPS, PROJECTED_APPS } from '../state/demoData';
 import { useDerived, useDispatch, useSystem } from '../state/systemStore';
 import { Icon } from '../system/icons';
 import './AppsScreen.css';
@@ -62,10 +65,18 @@ export function AppsScreen() {
     if (app.target && app.target !== screen) dispatch({ type: 'navigate', screen: app.target });
   };
 
+  /* Held apps still announce themselves the same way the car's own
+     restricted tiles do, instead of silently doing nothing. */
+  const openProjected = (id: string, held: boolean) => {
+    if (held) { dispatch({ type: 'block-app', id }); return; }
+    dispatch({ type: 'cast-open', id });
+    dispatch({ type: 'navigate', screen: 'cast' });
+  };
+
   return (
     <div className="screen apps">
       {BANDS.map((band) => (
-        <section key={band.key} className="apps__band">
+        <section key={band.key} className={`apps__band apps__band--${band.key}`}>
           <header className="apps__head">
             <h2 className="apps__title">{band.title}</h2>
             <span className="latin apps__tag">{band.tag}</span>
@@ -104,6 +115,43 @@ export function AppsScreen() {
           </ul>
         </section>
       ))}
+
+      {/* The phone's apps are part of what this screen can open, so
+          they belong in the index. Each one hands the stage a
+          destination rather than mirroring a handset. */}
+      <section className="apps__band apps__band--phone">
+        <header className="apps__head">
+          <h2 className="apps__title">من الهاتف</h2>
+          <span className="latin apps__tag">PROJECTED</span>
+          {moving && (
+            <span className="apps__held t-meta">
+              <Icon name="lock" />
+              {motion === 'unknown' ? ' حالة الوقوف غير متاحة' : ' بعضها عند التوقف'}
+            </span>
+          )}
+          <span className="hairline apps__rule" />
+        </header>
+
+        <ul className="apps__row">
+          {PROJECTED_APPS.map((app) => {
+            const held = !!app.restricted && moving;
+            return (
+              <li key={app.id}>
+                <button
+                  type="button"
+                  data-scale="true"
+                  className={`apps__tile pressable${held ? ' is-held' : ''}`}
+                  onClick={() => openProjected(app.id, held)}
+                >
+                  <span className="apps__icon"><Icon name={app.icon} /></span>
+                  <span className="apps__name truncate">{app.name}</span>
+                  {held && <Icon name="lock" className="apps__lock" />}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     </div>
   );
 }

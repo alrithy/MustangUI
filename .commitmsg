@@ -1,0 +1,35 @@
+Split the apps surfaces: a most-used shelf, a complete index
+
+The phone stage's shelf and the Apps screen were doing overlapping
+jobs. They now do different ones.
+
+The shelf is a most-used row. Use counts live in the store and are
+recorded on every open — on the head unit too, where the rest of the
+simulation is inert — so the ordering is real rather than an editorial
+guess. It is seeded with the prototype's own history so the row is
+ordered from the first frame. Ties fall back to catalogue order and
+the sort is memoised on the counts, so one press never reshuffles a
+shelf the driver is reading.
+
+The Apps screen becomes the complete index of what the panel can open:
+the car's three bands plus the phone's projected apps. Pressing one
+hands the stage a destination, which meant lifting the active app out
+of CastScreen and into the store. Held entries announce themselves
+through the same safety state the car's own restricted tiles use.
+
+Four bands do not fit the 900px panel at the old proportions, so the
+screen now divides the height it has instead of overflowing it: each
+band takes an equal share and its tiles fill that share. Band labels
+drop to body size and the tile padding tightens; the height that gives
+back goes to the hit targets, which stay at 107px, well past the 76dp
+floor. Measured, not estimated — the index now fits exactly.
+
+Tests: three reducer checks on the use counts, four UI checks covering
+the index contents, that no band is pushed off the glass, the
+index-to-stage route, and that the shelf reorders by use without
+churning on a single press. verify-ui located the parked band as "the
+last band", which the new band broke; bands now carry their own
+modifier so the test names what it means.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01Jsyv7WWmsCSJ4L8HAKEcVZ

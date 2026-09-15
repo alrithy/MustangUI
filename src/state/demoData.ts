@@ -201,6 +201,20 @@ export const PROJECTED_APPS: ProjectedApp[] = [
   { id: 'gallery', name: 'الصور', mark: 'Photos', icon: 'gallery', surface: 'media', restricted: true },
 ];
 
+/** Opens recorded before this session — the shelf has to be ordered
+ *  by use from the first frame, not only after the driver taps. The
+ *  counts are the prototype's; on device they accumulate for real. */
+export const PROJECTED_USAGE: Record<string, number> = {
+  anghami: 41,
+  waze: 33,
+  whatsapp: 26,
+  calls: 18,
+  maps: 12,
+  podcasts: 7,
+  youtube: 3,
+  gallery: 1,
+};
+
 /** What the media surface is playing when Anghami holds the stage. */
 export const PROJECTED_TRACK = {
   title: 'ما تشبه غيرك',

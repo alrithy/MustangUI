@@ -21,7 +21,7 @@
    consistent with every other shadow in the system.
    ============================================================ */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { AlbumArt } from '../components/AlbumArt';
 import { ManeuverPanel } from '../components/ManeuverPanel';
 import { TriBar } from '../components/TriBar';
@@ -30,18 +30,31 @@ import {
   PROJECTED_APPS, PROJECTED_MESSAGES, PROJECTED_ROUTE, PROJECTED_TRACK,
   PROJECTION_DEVICE, type ProjectedApp,
 } from '../state/demoData';
-import { useDerived, useDispatch } from '../state/systemStore';
+import { useDerived, useDispatch, useSystem } from '../state/systemStore';
 import { relativeTime, timecode } from '../system/format';
 import { Icon } from '../system/icons';
 import './CastScreen.css';
 
 export function CastScreen() {
   const { moving } = useDerived();
-  const [activeId, setActiveId] = useState('anghami');
+  const { castApp, usage } = useSystem();
+  const dispatch = useDispatch();
   const [playing, setPlaying] = useState(true);
   const [onPanel, setOnPanel] = useState(true);
 
-  const active = PROJECTED_APPS.find((a) => a.id === activeId) ?? PROJECTED_APPS[0];
+  const active = PROJECTED_APPS.find((a) => a.id === castApp) ?? PROJECTED_APPS[0];
+
+  /* The shelf is a most-used row, so the order is the use count —
+     descending, with the catalogue order breaking ties so it never
+     reshuffles on its own. Recomputed only when a count changes,
+     because tiles moving mid-glance is worse than a stale order. */
+  const shelf = useMemo(
+    () => PROJECTED_APPS
+      .map((app, index) => ({ app, index, count: usage[app.id] ?? 0 }))
+      .sort((a, b) => b.count - a.count || a.index - b.index)
+      .map((entry) => entry.app),
+    [usage],
+  );
 
   /* Everything that is not the stage takes its colour from the stage.
      Declared once here so the wash, the rim on the shelf and the
@@ -50,7 +63,7 @@ export function CastScreen() {
 
   const open = (app: ProjectedApp) => {
     if (app.restricted && moving) return;
-    setActiveId(app.id);
+    dispatch({ type: 'cast-open', id: app.id });
   };
 
   return (
@@ -70,7 +83,7 @@ export function CastScreen() {
           projecting={onPanel}
           moving={moving}
         />
-        <Shelf active={active.id} moving={moving} onOpen={open} />
+        <Shelf apps={shelf} active={active.id} moving={moving} onOpen={open} />
       </section>
 
       <Spine
@@ -264,18 +277,20 @@ function HeldSurface() {
    back, and anything held while moving reads as inert rather than
    missing. Depth carries the hierarchy so colour does not have to. */
 function Shelf({
-  active, moving, onOpen,
+  apps, active, moving, onOpen,
 }: {
+  apps: ProjectedApp[];
   active: string;
   moving: boolean;
   onOpen: (app: ProjectedApp) => void;
 }) {
   return (
-    /* Every app is on the panel at once. A shelf that scrolls would
-       ask a driver to hunt while moving, and would hide exactly the
-       tiles that are held — the behaviour most worth seeing. */
+    /* Every app is on the panel at once, most-used first. A shelf
+       that scrolls would ask a driver to hunt while moving, and would
+       hide exactly the tiles that are held — the behaviour most worth
+       seeing. The full index lives on the Apps screen. */
     <ul className="shelf">
-      {PROJECTED_APPS.map((app) => {
+      {apps.map((app) => {
         const isActive = app.id === active;
         const held = !!app.restricted && moving;
         return (

@@ -6,7 +6,7 @@
    ============================================================ */
 
 import { useDispatch, useSystem } from '../state/systemStore';
-import { APPS } from '../state/demoData';
+import { APPS, PROJECTED_APPS } from '../state/demoData';
 import { TriBar } from './TriBar';
 import { TouchButton } from './primitives';
 import './SafetyOverlay.css';
@@ -15,7 +15,10 @@ export function SafetyOverlay() {
   const { blockedApp } = useSystem();
   const dispatch = useDispatch();
   if (!blockedApp) return null;
-  const app = APPS.find((a) => a.id === blockedApp);
+  /* Either catalogue can raise this — the car's own tiles and the
+     phone's projected apps are both openable from the index. */
+  const app = APPS.find((a) => a.id === blockedApp)
+    ?? PROJECTED_APPS.find((a) => a.id === blockedApp);
 
   return (
     <div className="safety" role="alertdialog" aria-label="غير متاح أثناء القيادة">

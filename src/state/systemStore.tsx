@@ -14,7 +14,8 @@ import {
   type NativeApp, type NativeMedia, type NativeSystem,
 } from '../platform/host';
 import {
-  CONTACTS, DESTINATIONS, INCOMING_CONTACT_ID, ROUTE_STEPS, TRACKS,
+  CONTACTS, DESTINATIONS, INCOMING_CONTACT_ID, PROJECTED_USAGE,
+  ROUTE_STEPS, TRACKS,
 } from './demoData';
 import type {
   Appearance, ColorMode, Destination, DriveMode, Gear, Motion, RailSide,
@@ -102,6 +103,8 @@ export const initialState: SystemState = {
   settings: loadSettings(),
   blockedApp: null,
   devPanelOpen: false,
+  castApp: 'anghami',
+  usage: { ...PROJECTED_USAGE },
 };
 
 export type Action =
@@ -110,6 +113,7 @@ export type Action =
   | { type: 'native-media'; value: NativeMedia }
   | { type: 'native-system'; value: NativeSystem }
   | { type: 'native-apps'; value: NativeApp[] }
+  | { type: 'cast-open'; id: string }
   | { type: 'set-theme'; theme: ThemeName }
   | { type: 'set-appearance'; appearance: Appearance }
   | { type: 'set-rail-side'; side: RailSide }
@@ -429,6 +433,14 @@ export function reducer(s: SystemState, a: Action): SystemState {
       return { ...s, climate: { ...s.climate, seatHeatDriver: ((s.climate.seatHeatDriver + 1) % 4) as 0 | 1 | 2 | 3 } };
 
     /* Safety + dev */
+    /* Opening a projected app is a real interaction, not part of the
+       simulation, so it counts on device exactly as it does here. */
+    case 'cast-open':
+      return {
+        ...s,
+        castApp: a.id,
+        usage: { ...s.usage, [a.id]: (s.usage[a.id] ?? 0) + 1 },
+      };
     case 'block-app': return { ...s, blockedApp: a.id };
     case 'clear-block': return { ...s, blockedApp: null };
     case 'dev-toggle': return { ...s, devPanelOpen: !s.devPanelOpen };

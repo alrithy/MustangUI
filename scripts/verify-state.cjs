@@ -200,6 +200,32 @@ check('the simulation tick still advances the prototype vehicle', () => {
   assert.equal(after.clock, driving.clock + 1);
 });
 
+/* The most-used shelf is only honest if the counts are real, so the
+   reducer has to record them — on the head unit too, where the rest of
+   the simulation is inert. */
+check('opening a projected app records the use and moves the stage', () => {
+  const before = web.initialState.usage.podcasts;
+  const once = web.reducer(web.initialState, { type: 'cast-open', id: 'podcasts' });
+  assert.equal(once.castApp, 'podcasts');
+  assert.equal(once.usage.podcasts, before + 1);
+
+  const twice = web.reducer(once, { type: 'cast-open', id: 'podcasts' });
+  assert.equal(twice.usage.podcasts, before + 2);
+  // No other count moves.
+  assert.equal(twice.usage.anghami, web.initialState.usage.anghami);
+});
+
+check('use counts are recorded on the head unit, not simulated away', () => {
+  const opened = android.reducer(android.initialState, { type: 'cast-open', id: 'waze' });
+  assert.equal(opened.castApp, 'waze');
+  assert.equal(opened.usage.waze, (android.initialState.usage.waze ?? 0) + 1);
+});
+
+check('an app with no recorded history still counts from its first open', () => {
+  const opened = web.reducer(web.initialState, { type: 'cast-open', id: 'unheard-of' });
+  assert.equal(opened.usage['unheard-of'], 1);
+});
+
 /* ---------------- run ---------------- */
 
 let failed = 0;
