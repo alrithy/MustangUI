@@ -14,6 +14,7 @@ import { SafetyOverlay } from './components/SafetyOverlay';
 import { StartupSequence } from './components/StartupSequence';
 import { TopStatusBar } from './components/TopStatusBar';
 import { AppsScreen } from './screens/AppsScreen';
+import { CastScreen } from './screens/CastScreen';
 import { CarScreen } from './screens/CarScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { MusicScreen } from './screens/MusicScreen';
@@ -32,6 +33,7 @@ const SCREENS: Record<ScreenId, () => JSX.Element> = {
   music: MusicScreen,
   phone: PhoneScreen,
   apps: AppsScreen,
+  cast: CastScreen,
   car: CarScreen,
   settings: SettingsScreen,
 };

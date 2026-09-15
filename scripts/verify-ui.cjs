@@ -166,6 +166,55 @@ const check = (name, fn) => checks.push([name, fn]);
       assert.equal(await web.locator('.bvb__gear.is-active').count(), 1);
     });
 
+    /* The index is the complete list of what this panel can open, and
+       the phone stage's shelf is the short most-used row. Each has to
+       hold its own job: neither is a copy of the other. */
+    check('the apps index lists every app the panel can open', async () => {
+      await web.getByRole('button', { name: 'التطبيقات', exact: true }).first().click();
+      await web.waitForTimeout(500);
+      await web.screenshot({ path: path.join(OUT, 'prototype-apps.png') });
+
+      const index = await web.locator('.apps').innerText();
+      for (const name of ['الخرائط', 'الوسائط', 'الإعدادات', 'الفيديو']) {
+        assert.match(index, new RegExp(name), `the car's ${name} is missing from the index`);
+      }
+      for (const name of ['أنغامي', 'ويز', 'واتساب', 'المكالمات', 'بودكاست', 'يوتيوب']) {
+        assert.match(index, new RegExp(name), `the phone's ${name} is missing from the index`);
+      }
+      assert.equal(await web.locator('.apps__band--phone .apps__tile').count(), 8);
+    });
+
+    check('the index fits the panel — no band is pushed off the glass', async () => {
+      const fits = await web.evaluate(() => {
+        const apps = document.querySelector('.apps');
+        return apps.scrollHeight <= Math.ceil(apps.getBoundingClientRect().height);
+      });
+      assert.ok(fits, 'the apps index must not overflow the 900px panel');
+    });
+
+    check('a phone app opens the stage on that app', async () => {
+      await web.locator('.apps__band--phone .apps__tile', { hasText: 'ويز' }).first().click();
+      await web.waitForTimeout(700);
+      assert.equal(await web.locator('.stage').count(), 1, 'the phone stage must open');
+      const source = await web.locator('.stage__source').innerText();
+      assert.match(source, /ويز/, 'the stage must show the app that was pressed');
+    });
+
+    check('the shelf is ordered by use, most used first', async () => {
+      const names = () => web.$$eval('.shelf__name', (n) => n.map((x) => x.textContent.trim()));
+      const before = await names();
+      // One press must not reshuffle a shelf the driver is reading.
+      await web.locator('.shelf__tile', { hasText: 'بودكاست' }).first().click();
+      await web.waitForTimeout(300);
+      assert.deepEqual(await names(), before, 'a single open must not churn the order');
+
+      for (let i = 0; i < 45; i += 1) {
+        await web.locator('.shelf__tile', { hasText: 'بودكاست' }).first().click();
+      }
+      await web.waitForTimeout(300);
+      assert.equal((await names())[0], 'بودكاست', 'the most-used app must lead the shelf');
+    });
+
     check('prototype raises no page errors', async () => {
       assert.deepEqual(webErrors, []);
     });
@@ -234,7 +283,7 @@ const check = (name, fn) => checks.push([name, fn]);
     });
 
     check('parked-only content stays held while motion is unverified', async () => {
-      const parked = live.page.locator('.apps__band').last();
+      const parked = live.page.locator('.apps__band--parked');
       assert.match(await parked.innerText(), /حالة الوقوف غير متاحة/);
       const video = parked.locator('.apps__tile', { hasText: 'الفيديو' }).first();
       assert.ok(await video.isDisabled() || await video.locator('.apps__lock').count() > 0);

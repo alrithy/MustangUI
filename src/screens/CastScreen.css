@@ -1,0 +1,600 @@
+/* ============================================================
+   PHONE STAGE — عرض الهاتف
+
+   Two unequal planes on one continuous ground. Nothing is boxed
+   into a mirror's aspect ratio, so the 2400x900 panel is used as
+   one surface rather than a frame around a phone.
+
+   Light has a single origin: --lit, set by whatever holds the
+   stage. The wash, the rim on the shelf and the spine's inner edge
+   all resolve from it, so the cabin reads as lit by the content
+   instead of decorated with colour.
+   ============================================================ */
+
+.stage {
+  position: relative;
+  display: flex;
+  gap: var(--gutter);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* The wash. Two offset radials rather than one centred glow: a real
+   source is never dead centre, and an off-axis falloff is what stops
+   this reading as a screensaver. */
+.stage__wash {
+  position: absolute;
+  inset: -34% -16%;
+  z-index: 0;
+  pointer-events: none;
+  /* The slab sits on the driver's side, so the source is off-axis at
+     roughly a fifth across. A centred glow would read as decoration;
+     an off-centre falloff reads as something actually emitting. */
+  background:
+    radial-gradient(42% 58% at 21% 30%, var(--lit) 0%, transparent 66%),
+    radial-gradient(30% 42% at 7% 86%, var(--lit) 0%, transparent 74%);
+  opacity: 0.5;
+  filter: blur(56px);
+  mix-blend-mode: screen;
+  transition: opacity var(--dur-context) var(--ease-standard),
+              background var(--dur-context) var(--ease-standard);
+}
+.stage[data-projecting='false'] .stage__wash { opacity: 0.14; }
+/* Screen does nothing against a bright ground; daylight needs the
+   opposite operator to read as the same light. */
+[data-mode='day'] .stage__wash {
+  mix-blend-mode: multiply;
+  opacity: 0.16;
+  filter: blur(64px);
+}
+
+/* --- Main plane: stage slab over the shelf ------------------------ */
+.stage__main {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter);
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  /* Driver side. The rail already owns the far edge, so the stage
+     takes the next-nearest position rather than the centre. */
+  order: 2;
+}
+
+.stage__slab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-6) var(--space-8);
+  background:
+    linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.045) 0%,
+      transparent 34%
+    ),
+    var(--surface-elevated);
+  box-shadow:
+    var(--shadow-lift),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* The milled edge. A single hairline that catches the same light the
+   wash comes from, so the slab reads as a machined part rather than a
+   div with a border. */
+.stage__slab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: linear-gradient(
+    200deg,
+    var(--lit) 0%,
+    transparent 30%
+  );
+  opacity: 0.22;
+  mix-blend-mode: screen;
+}
+[data-mode='day'] .stage__slab::after { mix-blend-mode: multiply; opacity: 0.1; }
+
+.stage__slabhead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex: none;
+  margin-block-end: var(--space-5);
+}
+
+.stage__source {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.stage__sourceicon {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  color: var(--lit);
+  flex: none;
+}
+.stage__mark {
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-wide);
+  color: var(--text-muted);
+}
+.stage__paused {
+  margin-inline-start: auto;
+  color: var(--text-muted);
+}
+
+.stage__body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  transition: opacity var(--dur-base) var(--ease-standard);
+}
+.stage__body[data-dimmed='true'] { opacity: 0.38; }
+
+/* --- Projected surfaces ------------------------------------------- */
+.proj {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Media across a 3:1 slab.
+   A centred player is the shape every mirror already produces, and on
+   this aspect it leaves half the glass dead. So the three things a
+   driver uses are pushed to their own ends — cover and title where
+   reading starts, transport at the far reach, and the scrub spanning
+   the whole width beneath both, which is the one element that actually
+   wants 1400px. */
+.proj--media {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-10);
+  row-gap: var(--space-6);
+}
+.proj__art {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: center;
+  height: 100%;
+  width: auto;
+  aspect-ratio: 1;
+  max-height: 20rem;
+  flex: none;
+  box-shadow: var(--shadow-lift);
+}
+.proj__meta {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.proj__title {
+  margin: 0;
+  font-size: var(--type-display);
+  font-weight: var(--weight-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--track-tight);
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+.proj__artist {
+  margin: 0;
+  font-size: var(--type-title-sm);
+  color: var(--text-secondary);
+}
+.proj__album {
+  margin: 0;
+  margin-block-start: var(--space-2);
+  font-size: var(--type-meta);
+  color: var(--text-muted);
+}
+
+.proj__scrub {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.proj__times {
+  display: flex;
+  justify-content: space-between;
+}
+.proj__time {
+  font-size: var(--type-meta);
+  color: var(--text-muted);
+}
+
+.proj__transport {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+.proj__play {
+  display: grid;
+  place-items: center;
+  width: var(--touch-2xl);
+  height: var(--touch-2xl);
+  flex: none;
+  color: var(--bg-primary);
+  background: var(--text-primary);
+  border: none;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-lift);
+}
+.proj__play svg { width: var(--icon-2xl); height: var(--icon-2xl); }
+
+/* Route: the car's own maneuver panel, unmodified. That is the whole
+   argument of this screen in one component. */
+ /* Three zones, read in order: what to do, what is ahead, when you
+   arrive. The alert earns the middle band rather than leaving it
+   empty — it is the one thing the phone knows that the car does not. */
+.proj--route {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-8);
+}
+.proj--route .maneuver { grid-column: 1; }
+
+.proj__routestats {
+  grid-column: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: flex-end;
+  padding-inline-start: var(--space-8);
+}
+.proj__routesep { align-self: stretch; width: 100%; }
+.proj__routestat {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+.proj__routeval {
+  font-size: var(--type-num-lg);
+  color: var(--text-primary);
+}
+.proj__routeunit {
+  font-size: var(--type-meta);
+  color: var(--text-secondary);
+}
+.proj__routelabel {
+  margin-inline-start: var(--space-2);
+  color: var(--text-muted);
+}
+.proj__alert {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  justify-self: center;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--type-meta);
+  color: var(--status-warning);
+  background: var(--surface-subtle);
+  border-radius: var(--radius-sm);
+}
+.proj__alerticon { width: var(--icon-sm); height: var(--icon-sm); flex: none; }
+
+/* Messages: a list the driver reads, not a chat they type in. */
+.proj--messages {
+  flex-direction: column;
+  gap: var(--space-4);
+  justify-content: center;
+}
+.proj__threads {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.proj__thread {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--touch-lg);
+  padding-inline: var(--space-4);
+  background: var(--surface-subtle);
+  border-radius: var(--radius-md);
+}
+.proj__thread[data-unread='false'] { opacity: 0.62; background: transparent; }
+.proj__threadmark { width: 1.5rem; flex: none; }
+.proj__threadtext {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  min-width: 0;
+  flex: 1;
+}
+.proj__threadfrom {
+  font-size: var(--type-body-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+  flex: none;
+}
+.proj__threadpreview {
+  font-size: var(--type-body);
+  color: var(--text-secondary);
+  min-width: 0;
+}
+.proj__threadago { color: var(--text-muted); flex: none; }
+
+.proj__reply {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--type-meta);
+  color: var(--text-muted);
+}
+.proj__replyicon { width: var(--icon-sm); height: var(--icon-sm); }
+
+.proj--call,
+.proj--held {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+.proj__callhint { color: var(--text-muted); margin: 0; }
+.proj__callbody {
+  margin: 0;
+  max-width: 34ch;
+  font-size: var(--type-body);
+  line-height: var(--lh-normal);
+  color: var(--text-secondary);
+}
+.proj__heldicon { width: var(--icon-xl); height: var(--icon-xl); color: var(--text-muted); }
+.proj__heldtext { margin: 0; font-size: var(--type-body-lg); color: var(--text-secondary); }
+
+/* --- Shelf --------------------------------------------------------
+   Depth, not colour, carries which app is live. The raised tile also
+   takes a rim from --lit, so the stage appears to illuminate it. */
+.shelf {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  flex: none;
+  margin: 0;
+  /* Room for the raised tile's lift and its shadow. */
+  padding: var(--space-2) 0;
+  list-style: none;
+}
+/* The li is the grid item; without this it takes its min-content width
+   and the columns stop being equal. */
+.shelf > li { display: flex; min-width: 0; }
+
+.shelf__tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  min-height: var(--touch-lg);
+  padding: var(--space-3) var(--space-4);
+  text-align: start;
+  color: var(--text-secondary);
+  background: var(--surface-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  transition:
+    transform var(--dur-fast) var(--ease-precise),
+    background var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard);
+}
+
+.shelf__tile[data-active='true'] {
+  color: var(--text-primary);
+  background: var(--surface-elevated);
+  transform: translateY(-4px);
+  box-shadow:
+    var(--shadow-lift),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+/* The rim. Only on the live tile, and only from the stage's side. */
+.shelf__tile[data-active='true'] .shelf__icon {
+  color: var(--lit);
+  background: var(--surface-subtle);
+}
+
+.shelf__tile.is-held { opacity: var(--opacity-disabled); cursor: default; }
+
+.shelf__icon {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border-radius: var(--radius-sm);
+  transition: color var(--dur-fast) var(--ease-standard);
+}
+.shelf__icon svg { width: var(--icon-md); height: var(--icon-md); }
+
+.shelf__text { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.shelf__name {
+  font-size: var(--type-body);
+  font-weight: var(--weight-medium);
+  color: inherit;
+}
+.shelf__status {
+  font-size: var(--type-caption);
+  color: var(--text-muted);
+}
+.shelf__mark {
+  position: absolute;
+  inset-block-start: var(--space-2);
+  inset-inline-end: var(--space-2);
+}
+
+/* --- Spine --------------------------------------------------------
+   Belongs to the car, so it keeps the car's ground rather than the
+   stage's. It sits on the passenger side and never changes with the
+   app: that permanence is the point. */
+.spine {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 23rem;
+  flex: none;
+  order: 1;
+  padding: var(--space-6);
+  background: var(--surface-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.spine__device {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.spine__avatar {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
+  color: var(--text-secondary);
+  background: var(--surface-subtle);
+  border-radius: var(--radius-md);
+}
+.spine__avatar svg { width: var(--icon-md); height: var(--icon-md); }
+.spine__id { display: flex; flex-direction: column; min-width: 0; }
+.spine__name {
+  font-size: var(--type-body-lg);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+.spine__model {
+  font-size: var(--type-caption);
+  letter-spacing: var(--track-wide);
+  color: var(--text-muted);
+}
+
+.spine__battery { display: flex; flex-direction: column; gap: var(--space-2); }
+.spine__batteryhead { display: flex; align-items: baseline; gap: var(--space-1); }
+.spine__batteryval { font-size: var(--type-num-sm); color: var(--text-primary); }
+.spine__batteryunit { font-size: var(--type-meta); color: var(--text-secondary); }
+.spine__charging {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  margin-inline-start: auto;
+  align-self: center;
+  color: var(--status-success);
+}
+
+.spine__rule { flex: none; }
+
+.spine__link { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; }
+.spine__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); }
+.spine__rowlabel { font-size: var(--type-meta); color: var(--text-muted); }
+.spine__rowvalue {
+  margin: 0;
+  font-size: var(--type-meta);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.spine__handoff { display: flex; flex-direction: column; gap: var(--space-3); }
+.spine__handofflabel { color: var(--text-muted); }
+.spine__toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+}
+.spine__choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch-md);
+  font: inherit;
+  font-size: var(--type-meta);
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--dur-fast) var(--ease-standard),
+    background var(--dur-fast) var(--ease-standard);
+}
+.spine__choice svg { width: var(--icon-sm); height: var(--icon-sm); }
+.spine__choice.is-on {
+  color: var(--text-primary);
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-soft);
+}
+
+.spine__note {
+  margin: 0;
+  font-size: var(--type-caption);
+  line-height: var(--lh-normal);
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.spine__disconnect {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--touch-md);
+  margin-block-start: auto;
+  padding-inline: var(--space-4);
+  font: inherit;
+  font-size: var(--type-meta);
+  color: var(--text-secondary);
+  background: var(--surface-subtle);
+  border: none;
+  border-radius: var(--radius-md);
+}
+.spine__disconnecticon { width: var(--icon-sm); height: var(--icon-sm); flex: none; }
+
+/* --- Compatibility panels ----------------------------------------- */
+@media (max-width: 1700px) {
+  .spine { width: 20rem; }
+  .shelf__tile { width: 13rem; }
+  .proj--media { gap: var(--space-6); }
+}
+
+@media (max-width: 1400px) {
+  .spine { width: 17rem; padding: var(--space-4); }
+  .proj__title { font-size: var(--type-title); }
+}
+
+/* A short panel loses the shelf's second line before it loses height
+   from the stage: the stage is what the driver is actually reading. */
+@media (max-height: 740px) {
+  .shelf__tile { min-height: var(--touch-md); }
+  .shelf__status { display: none; }
+}

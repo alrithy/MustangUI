@@ -7,6 +7,7 @@ export type ScreenId =
   | 'music'
   | 'phone'
   | 'apps'
+  | 'cast'
   | 'car'
   | 'settings';
 
@@ -217,6 +218,12 @@ export interface SystemState {
   media: MediaState;
   nav: NavState;
   phone: PhoneState;
+  /** Which projected app holds the phone stage. Lifted out of the
+   *  screen so the Apps index can hand the stage a destination. */
+  castApp: string;
+  /** How often each projected app has been opened. Ordering the
+   *  shelf by real use is the only honest definition of "most used". */
+  usage: Record<string, number>;
   settings: SettingsState;
   /** App the user tried to open while moving; drives the safety state. */
   blockedApp: string | null;
