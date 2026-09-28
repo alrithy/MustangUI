@@ -38,6 +38,14 @@ final class NativeBridge {
 
         /** Opens Android's own screen for granting that permission. */
         void requestHomeButton();
+
+        /** Gathers the system report off the main thread and pushes it
+         *  as a "systemReport" event. Driver-initiated only. */
+        void collectReport();
+
+        /** Saves the last collected report to Downloads; with share, also
+         *  opens the share sheet. Returns where it was written. */
+        String saveReport(boolean share) throws Exception;
     }
 
     private final Host host;
@@ -129,6 +137,20 @@ final class NativeBridge {
             case "mediaResume":
                 media.resume();
                 return true;
+
+            case "systemReport":
+                host.collectReport();
+                return true;
+
+            case "saveReport":
+                try {
+                    return new JSONObject().put("path",
+                        host.saveReport(args != null && args.optBoolean("share")));
+                } catch (IllegalStateException | SecurityException known) {
+                    throw known;
+                } catch (Exception failed) {
+                    throw new IllegalStateException("unavailable");
+                }
 
             case "homeButton": {
                 // Reports, or with {request:true} asks for, the overlay

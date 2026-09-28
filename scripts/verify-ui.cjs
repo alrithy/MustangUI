@@ -115,6 +115,31 @@ const NATIVE_HOST = ({ mediaLive, lastApp }) => {
         }
         return;
       }
+      if (request.method === 'systemReport') {
+        reply({ id: request.id, ok: true, data: true });
+        reply({
+          event: 'systemReport',
+          data: {
+            findings: {
+              panel: '2400x900 px, densityDpi 240, 1600x600 dp',
+              android: '12 (SDK 32)',
+              webview: '120.0.6099.230',
+              temperatureSensors: [],
+              vendorPackages: ['com.syu.ms', 'com.syu.canbus'],
+              vehicleHints: ['property persist.syu.outtemp = 34'],
+            },
+            packages: { count: 212 },
+            sensors: [{}, {}],
+            properties: { a: 1 },
+            settings: { system: { a: 1 }, global: {}, secure: {} },
+          },
+        });
+        return;
+      }
+      if (request.method === 'saveReport') {
+        reply({ id: request.id, ok: true, data: { path: 'Download/mustang-report-test.json' } });
+        return;
+      }
       reply({ id: request.id, ok: true, data: true });
     },
   };
@@ -251,6 +276,20 @@ const check = (name, fn) => checks.push([name, fn]);
       await live.page.getByRole('button', { name: /إخفاء من القائمة/ }).click();
       assert.equal(await live.page.locator('.apptile--grid').count(), 4);
       await live.page.screenshot({ path: path.join(OUT, 'native-apps.png') });
+    });
+
+    check('the system report collects, shows findings and saves', async () => {
+      await live.page.locator('.apps__sys', { hasText: 'تقرير النظام' }).click();
+      await live.page.waitForSelector('.report__facts');
+      const text = await live.page.locator('.report').innerText();
+      assert.match(text, /2400x900/);
+      assert.match(text, /com\.syu\.canbus/);
+      await live.page.screenshot({ path: path.join(OUT, 'native-report.png') });
+      await live.page.getByRole('button', { name: /حفظ ومشاركة/ }).click();
+      await live.page.waitForSelector('.report__saved');
+      const call = await live.page.evaluate(() => window.__calls.find((c) => c.method === 'saveReport'));
+      assert.equal(call.args.share, true);
+      await live.page.getByRole('button', { name: 'إغلاق' }).click();
     });
 
     check('the Home intent returns the HMI to Home', async () => {

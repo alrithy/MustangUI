@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--
       No INTERNET permission. The HMI is served from the APK and must keep
@@ -11,6 +12,11 @@
     <!-- The floating Home button over other apps. Granted by the user in
          Android's own settings; without it the button simply never shows. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- The driver-initiated system report lists vendor packages (MCU,
+         CAN, climate services) that have no launcher entry, which the
+         <queries> block below cannot reach. Sideloaded, never on a store. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
 
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />

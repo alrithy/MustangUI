@@ -1,5 +1,13 @@
 # TQ919 / QCM6125 discovery — parked bench only
 
+**Without a laptop:** Apps → تقرير النظام gathers most of what follows on
+the unit itself — panel size and density, Android and WebView versions,
+every package with the components of vendor-looking ones, sensors,
+system properties and settings keys — and saves it as JSON to Downloads,
+with a share button. Serials, IMEI, MAC/Bluetooth addresses and account
+keys are left out. It is read-only. It cannot read logcat or `dumpsys`,
+which need adb; the commands below still cover those.
+
 No device has been connected. Everything below is a **command to run**,
 not a result that was collected. Nothing here has been verified.
 

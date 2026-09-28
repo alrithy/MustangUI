@@ -78,6 +78,9 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
     private AppCatalog apps;
     private SystemMonitor system;
     private HomeButton homeButton;
+    /** Last report, kept so save and share act on what the driver saw. */
+    private volatile String reportText;
+    private volatile String reportSummary;
 
     private JavaScriptReplyProxy channel;
     private boolean uiReady;
@@ -351,6 +354,45 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
                 // Vendor ROM without that settings screen.
             }
         });
+    }
+
+    @Override
+    public void collectReport() {
+        new Thread(() -> {
+            JSONObject report;
+            try {
+                report = SystemReport.collect(this, web);
+                reportText = report.toString(2);
+                reportSummary = "Mustang launcher system report\n"
+                    + report.getJSONObject("findings").toString(2);
+            } catch (JSONException | RuntimeException failed) {
+                report = new JSONObject();
+                try {
+                    report.put("error", "collection failed");
+                } catch (JSONException impossible) {
+                    throw new IllegalStateException(impossible);
+                }
+            }
+            event("systemReport", report);
+        }, "mustang-report").start();
+    }
+
+    @Override
+    public String saveReport(boolean share) throws Exception {
+        String text = reportText;
+        if (text == null) throw new IllegalStateException("no_report");
+        String[] saved = SystemReport.save(this, text);
+        if (share) {
+            String summary = reportSummary + "\n\nFull report: " + saved[1];
+            main.post(() -> {
+                try {
+                    SystemReport.share(this, saved[0], summary);
+                } catch (RuntimeException noShareTarget) {
+                    // Saved regardless; the path is shown in the HMI.
+                }
+            });
+        }
+        return saved[1];
     }
 
     /* ---------------- Lifecycle ---------------- */
