@@ -1,0 +1,87 @@
+# Temporary. Exists only so workflow_dispatch is offered at all: GitHub
+# lists a manual workflow from the default branch, and the Android
+# implementation lives on a feature branch. This file builds whatever ref
+# it is given; it does not carry any Android sources itself.
+name: Mustang Launcher Alpha Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or SHA to build
+        required: true
+        default: claude/android-launcher-v1
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - name: Checkout the requested ref
+        uses: actions/checkout@v4
+        with:
+          # The workflow comes from the default branch; the sources come
+          # from here. Without this, checkout would build the default
+          # branch and there would be no android/ directory at all.
+          ref: ${{ inputs.ref }}
+
+      - name: Record what is being built
+        run: |
+          echo "ref:    ${{ inputs.ref }}"
+          echo "commit: $(git rev-parse HEAD)"
+          echo "### Building \`${{ inputs.ref }}\` at \`$(git rev-parse HEAD)\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # The APK bundles this output. The Gradle build fails loudly if it
+      # is missing rather than shipping an empty shell.
+      - name: Build the web HMI
+        run: |
+          npm ci
+          npm run build
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install SDK packages
+        run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Assemble debug APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Validate APK contents
+        run: python3 scripts/validate-apk.py android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Checksum
+        run: |
+          APK=android/app/build/outputs/apk/debug/app-debug.apk
+          ls -l "$APK"
+          sha256sum "$APK" | tee apk.sha256
+          {
+            echo '### APK'
+            echo ''
+            echo "size: $(stat -c%s "$APK") bytes"
+            echo ''
+            echo '```'
+            cat apk.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mustang-launcher-alpha-0.1.0
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
