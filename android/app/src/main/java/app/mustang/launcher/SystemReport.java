@@ -104,6 +104,7 @@ final class SystemReport {
         report.put("sensors", sensors(context));
         report.put("battery", battery(context));
         report.put("media", media(context));
+        report.put("connectivity", connectivity(context));
         report.put("packages", packages(context));
         report.put("properties", properties());
         report.put("settings", settings(context));
@@ -272,6 +273,118 @@ final class SystemReport {
         } catch (SecurityException noAccess) {
             result.put(new JSONObject().put("error", "media access not granted"));
         }
+        return result;
+    }
+
+    /**
+     * What the unit offers for talking to external hardware, from public
+     * APIs only and with no new permissions. Nothing is scanned, paired,
+     * connected or opened, and no device address or personal device name
+     * is read. Anything that would need a permission this app does not
+     * hold, or a real peripheral, says so instead of guessing.
+     */
+    private static JSONObject connectivity(Context context) throws JSONException {
+        return new JSONObject()
+            .put("bluetooth", bluetooth(context))
+            .put("usb", usb(context))
+            .put("adbRequired", new JSONArray()
+                .put("wm size / wm density: ADB_REQUIRED")
+                .put("paired devices and their profiles: ADB_REQUIRED (dumpsys bluetooth_manager)")
+                .put("SPP to a specific device: REQUIRES_REAL_DEVICE_TEST")
+                .put("kernel USB log (dmesg): ADB_REQUIRED")
+                .put("USB serial numbers: not collected by design"));
+    }
+
+    private static JSONObject bluetooth(Context context) throws JSONException {
+        PackageManager pm = context.getPackageManager();
+        JSONObject result = new JSONObject();
+        boolean classic = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH);
+        boolean le = pm.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE);
+        result.put("featureBluetooth", classic);
+        result.put("featureBluetoothLe", le);
+        // FEATURE_BLUETOOTH is the Classic (BR/EDR) radio; LE is separate.
+        result.put("classicSupported", classic);
+        result.put("leOnly", le && !classic);
+
+        android.bluetooth.BluetoothManager manager =
+            (android.bluetooth.BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        android.bluetooth.BluetoothAdapter adapter = manager == null ? null : manager.getAdapter();
+        result.put("bluetoothManagerAvailable", manager != null);
+        result.put("adapterAvailable", adapter != null);
+        // The platform stack is reachable by apps exactly when the service
+        // hands out an adapter.
+        result.put("stackAvailableToApps", adapter != null);
+
+        if (adapter == null) {
+            result.put("enabled", false);
+        } else {
+            try {
+                result.put("enabled", adapter.isEnabled());
+            } catch (SecurityException denied) {
+                // Needs BLUETOOTH (<= API 30) or BLUETOOTH_CONNECT (31+),
+                // which this build does not request for the report.
+                result.put("enabled", "PERMISSION_REQUIRED");
+            }
+        }
+
+        // API presence only: no socket is created and no device is touched.
+        boolean rfcommApi;
+        try {
+            android.bluetooth.BluetoothDevice.class.getMethod(
+                "createRfcommSocketToServiceRecord", java.util.UUID.class);
+            android.bluetooth.BluetoothAdapter.class.getMethod(
+                "listenUsingRfcommWithServiceRecord", String.class, java.util.UUID.class);
+            rfcommApi = true;
+        } catch (NoSuchMethodException | RuntimeException absent) {
+            rfcommApi = false;
+        }
+        result.put("rfcommApisPresent", rfcommApi);
+        result.put("sppVerdict", "REQUIRES_REAL_DEVICE_TEST");
+        return result;
+    }
+
+    private static JSONObject usb(Context context) throws JSONException {
+        PackageManager pm = context.getPackageManager();
+        JSONObject result = new JSONObject();
+        boolean host = pm.hasSystemFeature(PackageManager.FEATURE_USB_HOST);
+        result.put("featureUsbHost", host);
+        result.put("featureUsbAccessory", pm.hasSystemFeature(PackageManager.FEATURE_USB_ACCESSORY));
+
+        android.hardware.usb.UsbManager manager =
+            (android.hardware.usb.UsbManager) context.getSystemService(Context.USB_SERVICE);
+        result.put("usbManagerAvailable", manager != null);
+
+        JSONArray devices = new JSONArray();
+        if (manager != null) {
+            try {
+                // Listing needs no permission; serials would, and are not read.
+                for (android.hardware.usb.UsbDevice d : manager.getDeviceList().values()) {
+                    JSONArray interfaces = new JSONArray();
+                    for (int i = 0; i < d.getInterfaceCount(); i++) {
+                        android.hardware.usb.UsbInterface f = d.getInterface(i);
+                        interfaces.put(new JSONObject()
+                            .put("class", f.getInterfaceClass())
+                            .put("subclass", f.getInterfaceSubclass())
+                            .put("protocol", f.getInterfaceProtocol()));
+                    }
+                    devices.put(new JSONObject()
+                        .put("vid", String.format(Locale.US, "0x%04x", d.getVendorId()))
+                        .put("pid", String.format(Locale.US, "0x%04x", d.getProductId()))
+                        .put("class", d.getDeviceClass())
+                        .put("subclass", d.getDeviceSubclass())
+                        .put("protocol", d.getDeviceProtocol())
+                        .put("interfaces", interfaces));
+                }
+            } catch (RuntimeException unavailable) {
+                result.put("deviceListError", "unavailable");
+            }
+        }
+        result.put("devices", devices);
+        // A normal app may ask through UsbManager.requestPermission, which
+        // shows the user a system dialog per device. Not called here.
+        result.put("permissionRequestableByApp", manager != null && host
+            ? "YES_VIA_USER_DIALOG" : "NO");
+        result.put("verdict", host && manager != null ? "USB_HOST_AVAILABLE" : "USB_HOST_NOT_AVAILABLE");
         return result;
     }
 
