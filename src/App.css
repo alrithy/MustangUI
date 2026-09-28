@@ -47,3 +47,14 @@
 .shell__body, .statusbar, .bvb {
   transition: opacity var(--dur-context) var(--ease-standard);
 }
+
+.shell__dim {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: #000;
+  opacity: 0;
+  transition: opacity var(--dur-context) var(--ease-standard);
+}
+[data-dim='on'] .shell__dim { opacity: 0.28; }

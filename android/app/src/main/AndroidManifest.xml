@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!--
       No INTERNET permission. The HMI is served from the APK and must keep
@@ -8,6 +9,14 @@
     -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <!-- The floating Home button over other apps. Granted by the user in
+         Android's own settings; without it the button simply never shows. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- The driver-initiated system report lists vendor packages (MCU,
+         CAN, climate services) that have no launcher entry, which the
+         <queries> block below cannot reach. Sideloaded, never on a store. -->
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
 
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -15,7 +24,7 @@
     <!--
       Package visibility (API 30+). Only the intents this launcher actually
       resolves are declared; the app never enumerates the device beyond
-      launchable activities for the curated grid.
+      launchable activities, which is what the Apps grid shows.
     -->
     <queries>
         <intent>
@@ -35,6 +44,7 @@
         <intent><action android:name="android.settings.BLUETOOTH_SETTINGS" /></intent>
         <intent><action android:name="android.settings.HOME_SETTINGS" /></intent>
         <intent><action android:name="android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS" /></intent>
+        <intent><action android:name="android.settings.action.MANAGE_OVERLAY_PERMISSION" /></intent>
     </queries>
 
     <application

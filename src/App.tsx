@@ -49,7 +49,8 @@ export default function App() {
     el.dataset.mode = colorMode;
     el.dataset.drive = vehicle.driveMode;
     el.dataset.motion = settings.reduceMotion ? 'reduced' : 'full';
-  }, [settings.theme, settings.reduceMotion, colorMode, vehicle.driveMode]);
+    el.dataset.dim = settings.nightDim && colorMode === 'night' ? 'on' : 'off';
+  }, [settings.theme, settings.reduceMotion, settings.nightDim, colorMode, vehicle.driveMode]);
 
   const Screen = SCREENS[screen];
 
@@ -68,7 +69,7 @@ export default function App() {
           <SafetyOverlay />
         </main>
       </div>
-      <BottomVehicleBar />
+      {screen !== 'home' && <BottomVehicleBar />}
       {/* The bench panel drives the simulation, so it only exists where
           there is a simulation. On the head unit the same long-press
           gesture opens the panel-geometry diagnostics instead — the
@@ -76,6 +77,9 @@ export default function App() {
       {isAndroid
         ? devPanelOpen && <PanelDiagnostics onClose={() => dispatch({ type: 'dev-toggle' })} />
         : <DevPanel />}
+      {/* Night dim: one flat layer over everything. Cheaper on this
+          GPU than a filter, and it dims icons from other sources too. */}
+      <div className="shell__dim" aria-hidden="true" />
       {booting && <StartupSequence onDone={() => setBooting(false)} />}
     </div>
   );

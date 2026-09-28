@@ -34,7 +34,7 @@ public interface VehicleDataProvider {
 
         private static final String[] FIELDS = {
             "speedKph", "gear", "fuelPct", "rangeKm", "rpm",
-            "voltage", "coolantC", "oilC", "tires",
+            "voltage", "coolantC", "oilC", "outsideC", "tires",
         };
 
         @Override

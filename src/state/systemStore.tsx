@@ -14,11 +14,12 @@ import {
   type NativeApp, type NativeMedia, type NativeSystem,
 } from '../platform/host';
 import {
-  CONTACTS, DESTINATIONS, INCOMING_CONTACT_ID, ROUTE_STEPS, TRACKS,
+  CONTACTS, DEFAULT_PINS, DEMO_CATALOG, DESTINATIONS, INCOMING_CONTACT_ID, ROUTE_STEPS,
+  SPOTIFY, TRACKS,
 } from './demoData';
 import type {
-  Appearance, ColorMode, Destination, DriveMode, Gear, Motion, RailSide,
-  ScreenId, SourceState, SystemState, ThemeName, Track,
+  Appearance, CatalogApp, ColorMode, Destination, DriveMode, Gear, LauncherPrefs, Motion,
+  RailSide, ScreenId, SourceState, SystemState, ThemeName, Track,
 } from './types';
 
 /* ---------- Demo scenarios ---------------------------------------
@@ -65,10 +66,35 @@ function loadSettings(): SystemState['settings'] {
     greetingOn: true,
     greetingText: 'مرحباً حسن',
     startupChime: true,
+    resumeMedia: true,
+    reopenLastApp: true,
+    nightDim: true,
   };
   try {
     const raw = localStorage.getItem('mustang.settings');
     return raw ? { ...base, ...JSON.parse(raw) } : base;
+  } catch {
+    return base;
+  }
+}
+
+const LAUNCHER_KEY = 'mustang.launcher';
+
+function loadLauncher(): LauncherPrefs {
+  const base: LauncherPrefs = {
+    pinned: DEFAULT_PINS, slots: 4, hidden: [], usage: {}, lastApp: null,
+  };
+  try {
+    const raw = localStorage.getItem(LAUNCHER_KEY);
+    if (!raw) return base;
+    const saved = JSON.parse(raw) as Partial<LauncherPrefs>;
+    return {
+      pinned: Array.isArray(saved.pinned) ? saved.pinned.filter((p) => typeof p === 'string') : base.pinned,
+      slots: saved.slots === 6 ? 6 : 4,
+      hidden: Array.isArray(saved.hidden) ? saved.hidden.filter((p) => typeof p === 'string') : [],
+      usage: saved.usage && typeof saved.usage === 'object' ? saved.usage : {},
+      lastApp: typeof saved.lastApp === 'string' ? saved.lastApp : null,
+    };
   } catch {
     return base;
   }
@@ -86,6 +112,8 @@ export const initialState: SystemState = {
   clock: 0,
   sources: initialSources(),
   native: { media: null, system: null, apps: [] },
+  catalog: isAndroid ? [] : DEMO_CATALOG,
+  launcher: loadLauncher(),
   vehicle: initialVehicle(),
   climate: { driverC: 21.5, passengerC: 22, fan: 3, sync: true, ac: true, seatHeatDriver: 0 },
   media: {
@@ -110,11 +138,19 @@ export type Action =
   | { type: 'native-media'; value: NativeMedia }
   | { type: 'native-system'; value: NativeSystem }
   | { type: 'native-apps'; value: NativeApp[] }
+  | { type: 'native-catalog'; value: CatalogApp[] }
+  | { type: 'open-app'; pkg: string }
+  | { type: 'launcher-visible' }
+  | { type: 'pin-app'; pkg: string; slot?: number }
+  | { type: 'unpin-app'; pkg: string }
+  | { type: 'set-slots'; slots: 4 | 6 }
+  | { type: 'hide-app'; pkg: string }
+  | { type: 'unhide-app'; pkg: string }
   | { type: 'set-theme'; theme: ThemeName }
   | { type: 'set-appearance'; appearance: Appearance }
   | { type: 'set-rail-side'; side: RailSide }
   | { type: 'set-ambient'; daylight: boolean }
-  | { type: 'set-setting'; key: 'reduceMotion' | 'driverAlerts' | 'startupOn' | 'greetingOn' | 'startupChime'; value: boolean }
+  | { type: 'set-setting'; key: BooleanSetting; value: boolean }
   | { type: 'set-greeting-text'; value: string }
   | { type: 'set-chime'; value: number }
   | { type: 'set-drive-mode'; mode: DriveMode }
@@ -147,6 +183,24 @@ export type Action =
   | { type: 'clear-block' }
   | { type: 'dev-toggle' }
   | { type: 'scenario'; id: ScenarioId };
+
+export type BooleanSetting =
+  | 'reduceMotion' | 'driverAlerts' | 'startupOn' | 'greetingOn' | 'startupChime'
+  | 'resumeMedia' | 'reopenLastApp' | 'nightDim';
+
+/** Home tiles that actually resolve on this unit, in pinned order. */
+export function pinnedApps(s: SystemState): CatalogApp[] {
+  const seen = new Set<string>();
+  const out: CatalogApp[] = [];
+  for (const pkg of s.launcher.pinned) {
+    const app = s.catalog.find((a) => a.packageName === pkg);
+    /* TikTok is pinned under both of its package names; show one. */
+    const key = app ? app.label.toLowerCase() : '';
+    if (app && !seen.has(key)) { seen.add(key); out.push(app); }
+    if (out.length >= s.launcher.slots) break;
+  }
+  return out;
+}
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const round1 = (v: number) => Math.round(v * 10) / 10;
@@ -314,6 +368,35 @@ export function reducer(s: SystemState, a: Action): SystemState {
     }
     case 'native-system': return { ...s, native: { ...s.native, system: a.value } };
     case 'native-apps': return { ...s, native: { ...s.native, apps: a.value } };
+    case 'native-catalog':
+      return Array.isArray(a.value) ? { ...s, catalog: a.value } : s;
+
+    /* Launcher */
+    case 'open-app': {
+      const usage = { ...s.launcher.usage, [a.pkg]: (s.launcher.usage[a.pkg] ?? 0) + 1 };
+      return { ...s, launcher: { ...s.launcher, usage, lastApp: a.pkg } };
+    }
+    case 'launcher-visible':
+      return s.launcher.lastApp ? { ...s, launcher: { ...s.launcher, lastApp: null } } : s;
+    case 'pin-app': {
+      /* Only what is shown counts toward the slots, so a pin that does
+         not resolve on this unit never blocks a real one. */
+      const visible = pinnedApps(s).map((p) => p.packageName).filter((p) => p !== a.pkg);
+      if (a.slot !== undefined && a.slot < visible.length) visible[a.slot] = a.pkg;
+      else visible.push(a.pkg);
+      return { ...s, launcher: { ...s.launcher, pinned: visible.slice(0, s.launcher.slots) } };
+    }
+    case 'unpin-app':
+      return {
+        ...s,
+        launcher: { ...s.launcher, pinned: pinnedApps(s).map((p) => p.packageName).filter((p) => p !== a.pkg) },
+      };
+    case 'set-slots': return { ...s, launcher: { ...s.launcher, slots: a.slots } };
+    case 'hide-app':
+      return s.launcher.hidden.includes(a.pkg) ? s
+        : { ...s, launcher: { ...s.launcher, hidden: [...s.launcher.hidden, a.pkg] } };
+    case 'unhide-app':
+      return { ...s, launcher: { ...s.launcher, hidden: s.launcher.hidden.filter((p) => p !== a.pkg) } };
 
     case 'tick': return tick(s);
     case 'navigate': return s.screen === a.screen ? s : { ...s, screen: a.screen, blockedApp: null };
@@ -446,6 +529,12 @@ export function SystemProvider({ children }: { children: ReactNode }) {
   settingsRef.current = state.settings;
   const playingRef = useRef(state.media.playing);
   playingRef.current = state.media.playing;
+  const liveMediaRef = useRef(state.sources.media === 'live');
+  liveMediaRef.current = state.sources.media === 'live';
+  const launcherRef = useRef(state.launcher);
+  launcherRef.current = state.launcher;
+  const catalogRef = useRef(state.catalog);
+  catalogRef.current = state.catalog;
 
   /* On device a few domain actions are requests to Android rather than
      state changes. Translating here keeps every screen writing the same
@@ -453,7 +542,16 @@ export function SystemProvider({ children }: { children: ReactNode }) {
   const dispatch: Dispatch<Action> = useCallback((action: Action) => {
     if (isAndroid) {
       switch (action.type) {
+        case 'open-app':
+          act('launchPackage', { package: action.pkg });
+          break; // recorded below: usage and last app
         case 'media-toggle':
+          if (!liveMediaRef.current) {
+            /* Nothing playing and no session: wake the last player with
+               a PLAY key, and if nothing answers, open Spotify itself. */
+            resumeOrOpenSpotify(() => liveMediaRef.current, rawDispatch);
+            return;
+          }
           act('mediaControl', { command: playingRef.current ? 'pause' : 'play' });
           return;
         case 'media-step':
@@ -471,6 +569,11 @@ export function SystemProvider({ children }: { children: ReactNode }) {
             return;
           }
       }
+    } else if (action.type === 'open-app') {
+      /* Browser prototype: there is nothing to launch, so say what the
+         unit would do. The launch is still recorded for ordering. */
+      const app = catalogRef.current.find((a) => a.packageName === action.pkg);
+      notify(`يفتح ${app?.label ?? action.pkg} على الجهاز`);
     }
     rawDispatch(action);
   }, []);
@@ -483,18 +586,40 @@ export function SystemProvider({ children }: { children: ReactNode }) {
     const offMedia = on<NativeMedia>('media', (value) => rawDispatch({ type: 'native-media', value }));
     const offSystem = on<NativeSystem>('system', (value) => rawDispatch({ type: 'native-system', value }));
     const offApps = on<NativeApp[]>('apps', (value) => rawDispatch({ type: 'native-apps', value }));
+    const offCatalog = on<{ apps: CatalogApp[] }>('catalog', (value) => {
+      if (Array.isArray(value.apps)) rawDispatch({ type: 'native-catalog', value: value.apps });
+    });
+    const offVisible = on<object>('visible', () => rawDispatch({ type: 'launcher-visible' }));
     const home = () => rawDispatch({ type: 'navigate', screen: 'home' });
     window.addEventListener('mustang:home', home);
 
     /* One handshake: stops the launcher's recovery watchdog and opens
        the push channel. Failure here means the host is gone, not that
        the UI should invent values. */
-    void request('subscribe').catch(() => {
+    void request('subscribe').then(() => {
+      /* Power-on behaviour, once per launcher start. sessionStorage lives
+         exactly as long as this WebView, so a page reload inside the
+         same run does not reopen the app a second time. */
+      try {
+        if (sessionStorage.getItem('mustang.booted')) return;
+        sessionStorage.setItem('mustang.booted', '1');
+      } catch { /* storage blocked: treat as first start */ }
+      const settings = settingsRef.current;
+      const last = launcherRef.current.lastApp;
+      if (settings.reopenLastApp && last) {
+        window.setTimeout(() => act('launchPackage', { package: last }), 1200);
+      }
+      if (settings.resumeMedia) {
+        window.setTimeout(() => {
+          if (!playingRef.current) void request('mediaResume').catch(() => undefined);
+        }, 2500);
+      }
+    }).catch(() => {
       rawDispatch({ type: 'native-media', value: { status: 'unavailable' } });
     });
 
     return () => {
-      offMedia(); offSystem(); offApps();
+      offMedia(); offSystem(); offApps(); offCatalog(); offVisible();
       window.removeEventListener('mustang:home', home);
     };
   }, []);
@@ -526,11 +651,32 @@ export function SystemProvider({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(id);
   }, [state.settings]);
 
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      try {
+        localStorage.setItem(LAUNCHER_KEY, JSON.stringify(launcherRef.current));
+      } catch { /* session-only */ }
+    }, 400);
+    return () => window.clearTimeout(id);
+  }, [state.launcher]);
+
   return (
     <StateContext.Provider value={state}>
       <DispatchContext.Provider value={dispatch}>{children}</DispatchContext.Provider>
     </StateContext.Provider>
   );
+}
+
+/** PLAY key first; Spotify itself if no player answers within a few
+ *  seconds. Opening Spotify is the fallback, not the first move, because
+ *  it takes the screen away from the launcher. */
+function resumeOrOpenSpotify(isLive: () => boolean, dispatch: Dispatch<Action>) {
+  void request('mediaResume').catch(() => undefined);
+  window.setTimeout(() => {
+    if (isLive()) return;
+    act('launchPackage', { package: SPOTIFY });
+    dispatch({ type: 'open-app', pkg: SPOTIFY });
+  }, 3500);
 }
 
 export const useSystem = () => useContext(StateContext);

@@ -161,25 +161,24 @@ const check = (name, fn) => checks.push([name, fn]);
 
     check('a host that never answers still leaves a usable HMI', async () => {
       assert.equal(await silent.page.locator('.shell').count(), 1);
-      assert.equal(await silent.page.locator('.mapstage').count(), 1);
+      assert.equal(await silent.page.locator('.player').count(), 1);
     });
 
     check('an unanswered bridge reports no media rather than hanging', async () => {
-      await silent.page.getByRole('button', { name: 'الوسائط', exact: true }).first().click();
-      await silent.page.waitForTimeout(400);
-      const body = await silent.page.locator('body').innerText();
-      assert.match(body, /لا يوجد مصدر وسائط/);
-      // The demo queue must not reappear as a consolation prize.
-      assert.equal(await silent.page.locator('.music__row').count(), 0);
+      const player = await silent.page.locator('.player').innerText();
+      assert.match(player, /اضغط تشغيل/);
+      // No demo track may reappear as a consolation prize.
+      assert.doesNotMatch(player, /ليلة عمر/);
     });
 
     check('an unanswered bridge never fabricates vehicle data', async () => {
-      assert.equal(await silent.page.locator('.bvb__speedval').innerText(), '—');
-      assert.equal(await silent.page.locator('.bvb__gear.is-active').count(), 0);
+      assert.equal(await silent.page.locator('.statusbar__tempval').count(), 0);
+      assert.equal(await silent.page.locator('.statusbar__gear.is-active').count(), 0);
     });
 
     check('screens still navigate with the bridge dead', async () => {
-      await silent.page.getByRole('button', { name: 'الإعدادات', exact: true }).first().click();
+      await silent.page.locator('.rail__item', { hasText: 'التطبيقات' }).click();
+      await silent.page.locator('.apps__sys', { hasText: /^الإعدادات$/ }).click();
       await silent.page.waitForTimeout(300);
       assert.equal(await silent.page.locator('.settings').count(), 1);
     });
@@ -206,7 +205,7 @@ const check = (name, fn) => checks.push([name, fn]);
     });
 
     check('the HMI still works after a stream of garbage', async () => {
-      await malformed.page.getByRole('button', { name: 'التطبيقات', exact: true }).first().click();
+      await malformed.page.locator('.rail__item', { hasText: 'التطبيقات' }).click();
       await malformed.page.waitForTimeout(300);
       assert.equal(await malformed.page.locator('.apps').count(), 1);
     });
@@ -217,13 +216,11 @@ const check = (name, fn) => checks.push([name, fn]);
     await refusing.page.waitForTimeout(6000);
 
     check('a refused action tells the driver why, in their language', async () => {
-      await refusing.page.getByRole('button', { name: 'التطبيقات', exact: true }).first().click();
-      await refusing.page.waitForTimeout(300);
-      await refusing.page.locator('.apps__tile', { hasText: 'الخرائط' }).first().click();
+      await refusing.page.locator('.rail__item', { hasText: 'Waze' }).click();
       await refusing.page.waitForTimeout(600);
 
       const sent = await refusing.page.evaluate(
-        () => window.__calls.some((c) => c.method === 'launch' && c.args.app === 'maps'));
+        () => window.__calls.some((c) => c.method === 'launchPackage' && c.args.package === 'com.waze'));
       assert.ok(sent, 'the launch must have reached the host');
 
       // The refusal surfaces in the status bar's existing centre slot,

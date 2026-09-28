@@ -261,17 +261,54 @@ pretended to be.
 
 ## Apps
 
-Curated, not enumerated. The HMI's tiles map to capability ids in
-`src/platform/appMap.ts`; `AppCatalog` resolves each against installed
-packages and reports availability. A tile with nothing behind it renders
-disabled and marked "غير مثبت" rather than failing when pressed.
+Rebuilt after the first in-car run (0.2.0-alpha). The first layout was
+dense: seven rail items, a map with small overlays, and media controls
+duplicated in the bottom bar, with the largest target around 95 px of the
+900 px panel height. The driver uses Waze, Spotify, YouTube and TikTok
+and never takes calls on the screen, so the launcher now centres on
+opening apps.
 
-`installedApps` exists for discovery and diagnostics, and deliberately
-has no counterpart that will launch an arbitrary package from that list.
+**Home** is two things: the player on the driver's side, and 4 or 6 app
+tiles the driver picks. A long press on a tile enters editing (remove,
+replace, 4 or 6 slots). A tap never edits. There is no map on Home.
 
-The phone-projection receiver package is intentionally unset: head-unit
-receivers are vendor-specific and this one has not been identified. A
-guessed package name would resolve to nothing and look broken.
+**Rail** has three full-height items: Home, Waze (opens the app), Apps.
+Vehicle and launcher settings moved to the Apps header, beside a shortcut
+to Android's own settings.
+
+**Apps** lists every launchable app on the unit with its real icon,
+most-used first. A long press offers "pin to Home" and "hide"; hidden
+apps come back from the "المخفية" button.
+
+The native side sends the list as a `catalog` event: package, label, and
+the icon rendered to a 160 px PNG, cached per package and update time.
+`launchPackage` opens an app by package name, but only through that
+package's own launch intent, only for apps Android lists as launchable,
+and only after the name passes a shape check. The web layer still never
+supplies a component, action, extras or data.
+
+There is no parked-only hold on apps any more. Which apps to open while
+driving is the driver's decision on this unit.
+
+### Getting back, and picking up where it left off
+
+- **Floating Home button.** While another app covers the launcher, a
+  round button on the driver's edge brings it back. It can be dragged
+  up and down. It needs "display over other apps", which is granted once
+  from Settings → المشغّل والتطبيقات.
+- **Resume media.** After power-on the launcher resumes the last player.
+  With a live session that is a play command. Without one, a PLAY media
+  key goes through the audio service to whichever app last played audio,
+  so Spotify resumes without covering the launcher.
+- **Play with nothing playing.** Same PLAY key; if no session appears
+  within 3.5 s, Spotify is opened.
+- **Reopen last app.** If an app was on screen when the unit went off,
+  it is opened again at the next start. Coming back to the launcher
+  clears it, so a start from Home stays on Home.
+- **Night dim.** In night mode one flat black layer at 28% dims the
+  whole HMI. It can be turned off in settings.
+
+All three power-on behaviours can be switched off in settings.
 
 ## Vehicle data
 
@@ -283,6 +320,12 @@ bricked, and "CAN unknown" is not evidence that CAN is reachable.
 When discovery on the physical unit identifies a documented source, it
 becomes a second implementation and nothing above it changes. The web
 layer already renders an unavailable vehicle correctly.
+
+Outside temperature is the first field to wire up: the unit's own UI
+already shows it, so a source exists. The snapshot carries `outsideC`,
+and the status bar shows it as soon as the vehicle source is live. Until
+then the slot is left out rather than filled with a placeholder. Finding
+that source is in `DEVICE-DISCOVERY.md`.
 
 ## Recovery
 

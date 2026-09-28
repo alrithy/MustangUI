@@ -1,5 +1,18 @@
 plugins { id 'com.android.application' }
 
+/** Short hash of the checked-out source, or 'unknown' outside git. */
+def buildCommit() {
+    try {
+        def out = providers.exec {
+            commandLine 'git', 'rev-parse', '--short=12', 'HEAD'
+            ignoreExitValue = true
+        }.standardOutput.asText.get().trim()
+        return out ?: 'unknown'
+    } catch (Exception ignored) {
+        return 'unknown'
+    }
+}
+
 android {
     namespace 'app.mustang.launcher'
     compileSdk 35
@@ -10,10 +23,11 @@ android {
         // API level is a discovery item; see docs/DEVICE-DISCOVERY.md.
         minSdk 26
         targetSdk 35
-        versionCode 1
-        // First installable build. Alpha because nothing in this project
-        // has yet run on the physical TQ919 unit.
-        versionName '0.1.0-alpha'
+        versionCode 6
+        // Second build: driving layout rebuilt after the first in-car run.
+        versionName '0.2.4-alpha'
+        // Stamped into the system report so each report names its APK.
+        buildConfigField 'String', 'BUILD_COMMIT', "\"${buildCommit()}\""
     }
 
     // Diagnostics.enabled() reads BuildConfig.DEBUG, so the panel-metrics

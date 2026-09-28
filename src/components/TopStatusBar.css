@@ -97,3 +97,23 @@
   .statusbar__templabel { display: none; }
   .statusbar__status { gap: var(--space-4); }
 }
+
+/* ---- Driving-scale overrides ----------------------------------------
+   The bar carries four things and each is readable at arm's length. */
+.statusbar__wordmark { font-size: 1.05rem; }
+.statusbar__status { gap: var(--space-8); }
+.statusbar__clock { font-size: 1.9rem; }
+.statusbar__tempval { font-size: 1.6rem; }
+.statusbar__icon { font-size: 1.8rem; }
+.statusbar__gears { display: flex; gap: var(--space-2); pointer-events: none; }
+.statusbar__gear {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: var(--radius-md);
+  font-size: 1.35rem;
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+.statusbar__gear.is-active { background: var(--surface-elevated); color: var(--text-primary); }

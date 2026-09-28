@@ -8,10 +8,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { onNotice } from '../platform/host';
 import { useDispatch, useDerived, useReadout, useSystem } from '../state/systemStore';
+import type { Gear } from '../state/types';
 import { clockTime, temperature } from '../system/format';
 import { Icon } from '../system/icons';
 import { TriBar } from './TriBar';
 import './TopStatusBar.css';
+
+const GEARS: Gear[] = ['P', 'R', 'N', 'D'];
 
 const DRIVE_LABEL: Record<string, { ar: string; tag: string }> = {
   normal: { ar: 'الوضع العادي', tag: 'NORMAL' },
@@ -21,7 +24,7 @@ const DRIVE_LABEL: Record<string, { ar: string; tag: string }> = {
 };
 
 export function TopStatusBar() {
-  const { vehicle, nav, settings, sources, native } = useSystem();
+  const { vehicle, nav, sources, native } = useSystem();
   const { moving } = useDerived();
   const dispatch = useDispatch();
   const readout = useReadout();
@@ -71,12 +74,8 @@ export function TopStatusBar() {
      A real host reports each link, and an unreported link reads as off
      rather than inheriting the prototype's optimism. */
   const link = sources.system === 'demo'
-    ? { gps: true, signal: true, bluetooth: true }
-    : {
-      gps: native.system?.gpsEnabled === true,
-      signal: native.system?.network === true,
-      bluetooth: native.system?.bluetooth === 'on',
-    };
+    ? { bluetooth: true }
+    : { bluetooth: native.system?.bluetooth === 'on' };
 
   return (
     <header className="statusbar">
@@ -116,22 +115,26 @@ export function TopStatusBar() {
       </div>
 
       <div className="statusbar__status">
-        <span className="statusbar__temp">
-          <span className="n-value statusbar__tempval">
-            {readout.num(vehicle.outsideC, temperature)}
+        {/* Only what earns a glance: outside temperature once the unit
+            reports it, Bluetooth, the drivetrain readout and the time. */}
+        {readout.available && (
+          <span className="statusbar__temp">
+            <span className="n-value statusbar__tempval">{temperature(vehicle.outsideC)}</span>
+            <span className="t-label statusbar__templabel">خارجي</span>
           </span>
-          <span className="t-label statusbar__templabel">خارجي</span>
-        </span>
-        <span className="statusbar__icons">
-          <Icon name="gps" className={`statusbar__icon${link.gps ? ' is-on' : ''}`} />
-          <Icon name="signal" className={`statusbar__icon${link.signal ? ' is-on' : ''}`} />
-          <Icon name="bluetooth" className={`statusbar__icon${link.bluetooth ? ' is-on' : ''}`} />
-          {settings.appearance === 'auto' && (
-            <Icon
-              name={settings.ambientDaylight ? 'sun' : 'moon'}
-              className="statusbar__icon"
-            />
-          )}
+        )}
+        <Icon name="bluetooth" className={`statusbar__icon${link.bluetooth ? ' is-on' : ''}`} />
+        {/* Drivetrain: a readout. No handler, inert to pointers. */}
+        <span
+          className="statusbar__gears physical"
+          role="img"
+          aria-label={readout.available ? `ناقل الحركة في الوضع ${vehicle.gear}` : 'وضع ناقل الحركة غير متاح'}
+        >
+          {GEARS.map((g) => (
+            <span key={g} className={`statusbar__gear latin${readout.available && g === vehicle.gear ? ' is-active' : ''}`}>
+              {g}
+            </span>
+          ))}
         </span>
         <span className="statusbar__clock n-value">{now}</span>
       </div>

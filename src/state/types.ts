@@ -177,6 +177,37 @@ export interface SettingsState {
       no autoplay workarounds — but the preference is stored so the
       native layer has something to read on first boot. */
   startupChime: boolean;
+  /** Resume the last player after power-on. */
+  resumeMedia: boolean;
+  /** Reopen the app that was on screen when the unit went off. */
+  reopenLastApp: boolean;
+  /** Night mode dims the whole panel a further step. */
+  nightDim: boolean;
+}
+
+/** One launchable app on the unit (or in the browser demo catalog). */
+export interface CatalogApp {
+  packageName: string;
+  label: string;
+  /** data: URI from the host; empty means draw a monogram tile. */
+  icon: string;
+  /** Demo catalog only: tile colour for the monogram. */
+  tint?: string;
+}
+
+/** What the driver chose to keep on Home and in the Apps grid. Stored
+ *  by package name, so it survives reinstalls and catalog refreshes. */
+export interface LauncherPrefs {
+  /** Home tiles, in order. 4 or 6 slots. */
+  pinned: string[];
+  slots: 4 | 6;
+  /** Removed from the Apps grid; still restorable. */
+  hidden: string[];
+  /** Launch counts, for ordering the Apps grid by use. */
+  usage: Record<string, number>;
+  /** The app that was on top when the launcher last lost the screen;
+   *  cleared when the driver comes back to the launcher. */
+  lastApp: string | null;
 }
 
 /** Where a region of the HMI is getting its values right now.
@@ -212,6 +243,9 @@ export interface SystemState {
     system: import('../platform/host').NativeSystem | null;
     apps: import('../platform/host').NativeApp[];
   };
+  /** Every launchable app, with icons. Demo list in the browser. */
+  catalog: CatalogApp[];
+  launcher: LauncherPrefs;
   vehicle: VehicleState;
   climate: ClimateState;
   media: MediaState;

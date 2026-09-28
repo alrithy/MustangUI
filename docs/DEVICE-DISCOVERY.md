@@ -1,5 +1,13 @@
 # TQ919 / QCM6125 discovery — parked bench only
 
+**Without a laptop:** Apps → تقرير النظام gathers most of what follows on
+the unit itself — panel size and density, Android and WebView versions,
+every package with the components of vendor-looking ones, sensors,
+system properties and settings keys — and saves it as JSON to Downloads,
+with a share button. Serials, IMEI, MAC/Bluetooth addresses and account
+keys are left out. It is read-only. It cannot read logcat or `dumpsys`,
+which need adb; the commands below still cover those.
+
 No device has been connected. Everything below is a **command to run**,
 not a result that was collected. Nothing here has been verified.
 
@@ -95,6 +103,24 @@ accessible.
 Also worth checking: does any Bluetooth media player on this unit publish
 a MediaSession at all? Some vendor players do not, in which case the HMI
 correctly shows no media source.
+
+### Outside temperature
+
+The stock UI shows an outside temperature, so something on the unit
+publishes it. Find out what before writing any code:
+
+```sh
+adb shell dumpsys activity broadcasts | grep -i -E 'temp|mcu|can|car' | head -50
+adb shell dumpsys activity services | grep -i -E 'mcu|can|car|vehicle' | head -50
+adb shell settings list system | grep -i temp
+adb shell settings list global | grep -i temp
+adb shell getprop | grep -i -E 'temp|mcu'
+adb logcat -d | grep -i -E 'outside|out_temp|ambient' | tail -50
+```
+
+Only a documented or clearly observed read path (a broadcast the stock
+app already receives, a settings key, a property) goes into a
+`VehicleDataProvider`. Nothing is written or sent to the MCU.
 
 ## 5. Install and measure
 

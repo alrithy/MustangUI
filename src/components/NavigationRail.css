@@ -1,18 +1,15 @@
 /* ============================================================
    NAVIGATION RAIL
-   Icon-first. Only the active destination carries its label, so the
-   rail reads as a row of marks rather than a column of words, and
-   the selected item is the one thing with text on it.
+   Three tall targets that split the rail's height between them.
    ============================================================ */
 
 .rail {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: var(--space-1);
+  gap: var(--space-3);
   width: var(--rail-w);
   flex: none;
-  padding-block: var(--space-3);
+  padding: var(--space-4) var(--space-3);
   background: var(--bg-chrome);
   position: relative;
   z-index: 2;
@@ -31,15 +28,16 @@
 
 .rail__item {
   position: relative;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
-  min-height: var(--touch-lg);   /* 76dp — reached while driving */
-  padding: var(--space-1);
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
+  gap: var(--space-3);
+  min-height: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius-xl-auto);
+  color: var(--text-secondary);
   transition:
     color var(--dur-base) var(--ease-standard),
     background-color var(--dur-fast) var(--ease-standard);
@@ -52,56 +50,24 @@
   top: 50%;
   transform: translateY(-50%);
 }
-[data-rail='left'] .rail__marker { left: 0.35rem; }
-[data-rail='right'] .rail__marker { right: 0.35rem; }
+[data-rail='left'] .rail__marker { left: 0.5rem; }
+[data-rail='right'] .rail__marker { right: 0.5rem; }
 
-.rail__icon-wrap { position: relative; display: flex; }
-.rail__icon {
-  font-size: var(--icon-lg);
-  transition: transform var(--dur-base) var(--ease-precise);
-}
+.rail__icon { font-size: 3rem; }
 
-/* Labels collapse to nothing until their destination is selected. */
+/* Always labelled: at a glance the word is faster than the glyph. */
 .rail__label {
-  font-size: 0.6875rem;
-  line-height: 1;
+  font-size: 1.35rem;
+  line-height: 1.1;
   font-weight: var(--weight-medium);
   text-align: center;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-height: 0;
-  opacity: 0;
-  transition:
-    max-height var(--dur-base) var(--ease-standard),
-    opacity var(--dur-fast) var(--ease-standard),
-    margin-top var(--dur-base) var(--ease-standard);
-}
-
-.rail__dot {
-  position: absolute;
-  top: -0.15rem;
-  inset-inline-end: -0.4rem;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent-primary);
 }
 
 .rail__item.is-selected {
   color: var(--text-primary);
   background: var(--surface-primary);
-}
-.rail__item.is-selected .rail__label {
-  max-height: 1.2em;
-  opacity: 1;
-  margin-top: 0.3rem;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rail__label { transition: none; }
-}
-@media (max-height: 700px) {
-  .rail__item { min-height: var(--touch-md); }
 }

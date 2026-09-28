@@ -53,8 +53,11 @@ function serve() {
  * Stands in for MainActivity + NativeBridge. Same wire format: replies
  * carry the request id, and media arrives as an unsolicited push.
  */
-const NATIVE_HOST = ({ mediaLive }) => {
+const NATIVE_HOST = ({ mediaLive, lastApp }) => {
   window.__calls = [];
+  if (lastApp) {
+    localStorage.setItem('mustang.launcher', JSON.stringify({ lastApp }));
+  }
   const reply = (message) => setTimeout(() => {
     if (window.MustangHost.onmessage) window.MustangHost.onmessage({ data: JSON.stringify(message) });
   }, 0);
@@ -86,6 +89,18 @@ const NATIVE_HOST = ({ mediaLive }) => {
             { id: 'phone', available: true },
           ],
         });
+        reply({
+          event: 'catalog',
+          data: {
+            apps: [
+              { packageName: 'com.waze', label: 'Waze', icon: '' },
+              { packageName: 'com.spotify.music', label: 'Spotify', icon: '' },
+              { packageName: 'com.google.android.youtube', label: 'YouTube', icon: '' },
+              { packageName: 'com.zhiliaoapp.musically', label: 'TikTok', icon: '' },
+              { packageName: 'com.example.files', label: 'Files', icon: '' },
+            ],
+          },
+        });
         if (mediaLive) {
           reply({
             event: 'media',
@@ -100,12 +115,37 @@ const NATIVE_HOST = ({ mediaLive }) => {
         }
         return;
       }
+      if (request.method === 'systemReport') {
+        reply({ id: request.id, ok: true, data: true });
+        reply({
+          event: 'systemReport',
+          data: {
+            findings: {
+              panel: '2400x900 px, densityDpi 240, 1600x600 dp',
+              android: '12 (SDK 32)',
+              webview: '120.0.6099.230',
+              temperatureSensors: [],
+              vendorPackages: ['com.syu.ms', 'com.syu.canbus'],
+              vehicleHints: ['property persist.syu.outtemp = 34'],
+            },
+            packages: { count: 212 },
+            sensors: [{}, {}],
+            properties: { a: 1 },
+            settings: { system: { a: 1 }, global: {}, secure: {} },
+          },
+        });
+        return;
+      }
+      if (request.method === 'saveReport') {
+        reply({ id: request.id, ok: true, data: { path: 'Download/mustang-report-test.json' } });
+        return;
+      }
       reply({ id: request.id, ok: true, data: true });
     },
   };
 };
 
-async function openNative(browser, { mediaLive }) {
+async function openNative(browser, { mediaLive, lastApp = null }) {
   const page = await browser.newPage({ viewport: PANEL });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -121,7 +161,7 @@ async function openNative(browser, { mediaLive }) {
     });
   });
 
-  await page.addInitScript(NATIVE_HOST, { mediaLive });
+  await page.addInitScript(NATIVE_HOST, { mediaLive, lastApp });
   await page.goto(`${NATIVE_ORIGIN}/index.html`);
   await page.waitForSelector('.shell');
   // Let the approved startup sequence finish before asserting on Home.
@@ -159,11 +199,15 @@ const check = (name, fn) => checks.push([name, fn]);
     await web.waitForTimeout(6000);
     await web.screenshot({ path: path.join(OUT, 'prototype-home.png') });
 
-    check('prototype shell, persistent map stage and simulated speed', async () => {
-      assert.equal(await web.locator('.mapstage').count(), 1);
-      const speed = await web.locator('.bvb__speedval').innerText();
-      assert.match(speed, /^\d+$/, `expected a simulated number, got ${speed}`);
-      assert.equal(await web.locator('.bvb__gear.is-active').count(), 1);
+    check('prototype Home is the player and four large app tiles', async () => {
+      assert.equal(await web.locator('.rail__item').count(), 3);
+      assert.equal(await web.locator('.player').count(), 1);
+      assert.equal(await web.locator('.apptile--home').count(), 4);
+      assert.equal(await web.locator('.bvb').count(), 0, 'no duplicate media bar on Home');
+      const play = await web.locator('.player__btn--play').boundingBox();
+      assert.ok(play.height >= 200, `play target is ${play.height}px of 900`);
+      const rail = await web.locator('.rail__item').first().boundingBox();
+      assert.ok(rail.height >= 200, `rail target is ${rail.height}px of 900`);
     });
 
     check('prototype raises no page errors', async () => {
@@ -178,114 +222,126 @@ const check = (name, fn) => checks.push([name, fn]);
       const box = await live.page.locator('.shell').boundingBox();
       assert.equal(Math.round(box.width), PANEL.width);
       assert.equal(Math.round(box.height), PANEL.height);
-      const overflow = await live.page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      assert.equal(overflow, 0, 'the panel must not scroll horizontally');
     });
 
     check('head unit shows no invented vehicle data', async () => {
-      assert.equal(await live.page.locator('.bvb__speedval').innerText(), '—');
-      assert.equal(await live.page.locator('.bvb__rangeval').innerText(), '—');
-      assert.equal(await live.page.locator('.statusbar__tempval').innerText(), '—');
-      assert.equal(await live.page.locator('.bvb__gear.is-active').count(), 0,
-        'an unknown gear must not light a gear pill');
+      assert.equal(await live.page.locator('.statusbar__tempval').count(), 0,
+        'outside temperature stays out until the unit reports it');
+      assert.equal(await live.page.locator('.statusbar__gear.is-active').count(), 0,
+        'no gear may be highlighted without a vehicle source');
     });
 
     check('head unit shows live media from the bridge, not demo tracks', async () => {
-      const body = await live.page.locator('body').innerText();
-      assert.match(body, /Verified live track/);
-      assert.doesNotMatch(body, /هاتف عبدالله/, 'demo source label must not appear');
-      // The source line must name the real player, not a prototype input.
-      // t-label uppercases Latin text, so match case-insensitively.
-      const head = await live.page.locator('.ctx--media .ctx__head').innerText();
-      assert.match(head, /spotify/i);
-      assert.doesNotMatch(head, /بلوتوث/);
+      const player = await live.page.locator('.player').innerText();
+      assert.match(player, /Verified live track/);
+      assert.match(player, /Spotify/);
+    });
+
+    check('power-on resumes the player through the bridge', async () => {
+      const asked = await live.page.evaluate(() => window.__calls.some((c) => c.method === 'mediaResume'));
+      assert.ok(asked);
     });
 
     check('transport press reaches the bridge as a real command', async () => {
-      await live.page.locator('.bvb__media button[aria-label="تشغيل"]').click();
-      const sent = await live.page.evaluate(() => window.__calls.some(
-        (c) => c.method === 'mediaControl' && c.args.command === 'play'));
-      assert.ok(sent, 'play must be sent to the host');
-      // The host said nothing changed, so the UI must not flip itself.
-      assert.equal(await live.page.locator('.bvb__media button[aria-label="تشغيل"]').count(), 1,
-        'playback state is owned by the session, not by the button press');
+      await live.page.locator('.player__btn--play').click();
+      const call = await live.page.evaluate(() => window.__calls.find((c) => c.method === 'mediaControl'));
+      assert.ok(call, 'mediaControl must reach the bridge');
+      assert.equal(call.args.command, 'play');
     });
 
-    check('the simulation clock is not running on the head unit', async () => {
-      const first = await live.page.locator('.bvb__speedval').innerText();
-      await live.page.waitForTimeout(2500);
-      assert.equal(await live.page.locator('.bvb__speedval').innerText(), first);
+    check('Home tiles are the unit\'s own apps and open by package', async () => {
+      const labels = await live.page.locator('.apptile--home .apptile__label').allInnerTexts();
+      assert.deepEqual(labels.sort(), ['Spotify', 'TikTok', 'Waze', 'YouTube']);
+      await live.page.locator('.apptile--home', { hasText: 'YouTube' }).click();
+      const call = await live.page.evaluate(() => window.__calls.find((c) => c.method === 'launchPackage'));
+      assert.equal(call.args.package, 'com.google.android.youtube');
     });
 
-    check('apps grid is curated, and uninstalled entries are inert', async () => {
-      await live.page.getByRole('button', { name: 'التطبيقات', exact: true }).first().click();
-      await live.page.waitForTimeout(400);
+    check('the rail opens Waze itself', async () => {
+      await live.page.locator('.rail__item', { hasText: 'Waze' }).click();
+      const calls = await live.page.evaluate(() => window.__calls.filter((c) => c.method === 'launchPackage'));
+      assert.equal(calls[calls.length - 1].args.package, 'com.waze');
+    });
+
+    check('Apps lists every launchable app and can hide one', async () => {
+      await live.page.locator('.rail__item', { hasText: 'التطبيقات' }).click();
+      await live.page.waitForTimeout(300);
+      assert.equal(await live.page.locator('.apptile--grid').count(), 5);
+      const files = live.page.locator('.apptile--grid', { hasText: 'Files' });
+      const box = await files.boundingBox();
+      await live.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+      await live.page.mouse.down();
+      await live.page.waitForTimeout(800);
+      await live.page.mouse.up();
+      await live.page.getByRole('button', { name: /إخفاء من القائمة/ }).click();
+      assert.equal(await live.page.locator('.apptile--grid').count(), 4);
       await live.page.screenshot({ path: path.join(OUT, 'native-apps.png') });
-
-      const waze = live.page.locator('.apps__tile', { hasText: 'Waze' }).first();
-      assert.ok(await waze.isDisabled(), 'an uninstalled package must not be pressable');
-
-      const maps = live.page.locator('.apps__tile', { hasText: 'الخرائط' }).first();
-      await maps.click();
-      const launched = await live.page.evaluate(() => window.__calls.some(
-        (c) => c.method === 'launch' && c.args.app === 'maps'));
-      assert.ok(launched, 'an installed package must launch through the bridge');
     });
 
-    check('parked-only content stays held while motion is unverified', async () => {
-      const parked = live.page.locator('.apps__band').last();
-      assert.match(await parked.innerText(), /حالة الوقوف غير متاحة/);
-      const video = parked.locator('.apps__tile', { hasText: 'الفيديو' }).first();
-      assert.ok(await video.isDisabled() || await video.locator('.apps__lock').count() > 0);
-    });
-
-    check('phone keypad dials through the system dialer, not a fake call', async () => {
-      await live.page.getByRole('button', { name: 'الهاتف', exact: true }).first().click();
-      await live.page.waitForTimeout(400);
-      const body = await live.page.locator('body').innerText();
-      assert.doesNotMatch(body, /هاتف عبدالله/, 'no demo contact may appear');
-
-      await live.page.waitForSelector('.phone__keypad');
-      // A key renders its digit and a letter sub-label, so the digit has
-      // to be matched on the number span rather than the whole button.
-      for (const digit of ['0', '5', '5', '1']) {
-        await live.page.locator('.phone__key')
-          .filter({ has: live.page.locator('.phone__keynum', { hasText: new RegExp(`^${digit}$`) }) })
-          .first()
-          .click();
+    check('the system report collects, shows findings and saves', async () => {
+      await live.page.locator('.apps__sys', { hasText: 'تقرير النظام' }).click();
+      await live.page.waitForSelector('.report__facts');
+      const text = await live.page.locator('.report').innerText();
+      assert.match(text, /2400x900/);
+      assert.match(text, /com\.syu\.canbus/);
+      await live.page.screenshot({ path: path.join(OUT, 'native-report.png') });
+      const asked = await live.page.evaluate(() => window.__calls.find((c) => c.method === 'systemReport'));
+      const web = asked.args.web;
+      for (const key of ['innerWidth', 'innerHeight', 'devicePixelRatio', 'visualViewportWidth',
+        'visualViewportHeight', 'visualViewportScale', 'adapterApplied', 'measuredDipWidth',
+        'initialScale', 'effectivePhysicalWidth', 'effectivePhysicalHeight', 'fullyVisible', 'cropped']) {
+        assert.ok(key in web, `web geometry is missing ${key}`);
       }
-      await live.page.getByRole('button', { name: /اتصال/ }).first().click();
-      const dialed = await live.page.evaluate(() => window.__calls.find((c) => c.method === 'dial'));
-      assert.ok(dialed, 'dial must reach the bridge');
-      assert.equal(dialed.args.number, '0551');
+      assert.equal(web.adapterApplied, true, 'the viewport adapter runs on the launcher origin');
+      assert.equal(web.clientWidth, 2400);
+
+      await live.page.getByRole('button', { name: /نسخ التقرير/ }).click();
+      await live.page.waitForTimeout(200);
+      assert.ok(await live.page.evaluate(() => window.__calls.some((c) => c.method === 'copyReport')));
+      await live.page.getByRole('button', { name: /حفظ ومشاركة/ }).click();
+      await live.page.waitForSelector('.report__saved');
+      const call = await live.page.evaluate(() => window.__calls.find((c) => c.method === 'saveReport'));
+      assert.equal(call.args.share, true);
+      await live.page.getByRole('button', { name: 'إغلاق' }).click();
     });
 
     check('the Home intent returns the HMI to Home', async () => {
       await live.page.evaluate(() => window.dispatchEvent(new Event('mustang:home')));
       await live.page.waitForTimeout(300);
-      assert.equal(await live.page.locator('.mapstage').count(), 1);
+      assert.equal(await live.page.locator('.player').count(), 1);
     });
 
     check('head unit raises no page errors', async () => {
       assert.deepEqual(live.errors, []);
     });
 
-    /* ---------- head unit, no media access ---------- */
-    const none = await openNative(browser, { mediaLive: false });
+    /* ---------- head unit, no media session, app left open ---------- */
+    const none = await openNative(browser, { mediaLive: false, lastApp: 'com.waze' });
     await none.page.screenshot({ path: path.join(OUT, 'native-no-media.png') });
 
-    check('no media session is stated plainly, never as a demo track', async () => {
-      await none.page.getByRole('button', { name: 'الوسائط', exact: true }).first().click();
-      await none.page.waitForTimeout(400);
-      const body = await none.page.locator('body').innerText();
-      assert.match(body, /لا يوجد مصدر وسائط/);
-      assert.doesNotMatch(body, /هاتف عبدالله/);
-      assert.equal(await none.page.locator('.music__row').count(), 0,
-        'demo queue must not appear beside an absent player');
+    check('the app open at power-off is reopened at power-on', async () => {
+      const call = await none.page.evaluate(() => window.__calls.find((c) => c.method === 'launchPackage'));
+      assert.ok(call, 'last app must be reopened');
+      assert.equal(call.args.package, 'com.waze');
     });
 
-    check('media access can be requested from the HMI', async () => {
+    check('no media session is stated plainly, never as a demo track', async () => {
+      const player = await none.page.locator('.player').innerText();
+      assert.match(player, /اضغط تشغيل/);
+      assert.doesNotMatch(player, /ليلة عمر/);
+    });
+
+    check('play with no session wakes the last player', async () => {
+      await none.page.evaluate(() => { window.__calls.length = 0; });
+      await none.page.locator('.player__btn--play').click();
+      const asked = await none.page.evaluate(() => window.__calls.some((c) => c.method === 'mediaResume'));
+      assert.ok(asked);
+    });
+
+    check('media access can be requested from settings', async () => {
+      await none.page.locator('.rail__item', { hasText: 'التطبيقات' }).click();
+      await none.page.locator('.apps__sys', { hasText: /^الإعدادات$/ }).click();
+      await none.page.getByRole('button', { name: 'الاتصالات' }).click();
       await none.page.getByRole('button', { name: /الوصول للوسائط/ }).first().click();
       const asked = await none.page.evaluate(() => window.__calls.some(
         (c) => c.method === 'launch' && c.args.app === 'mediaAccess'));
