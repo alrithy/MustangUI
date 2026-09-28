@@ -105,8 +105,9 @@ final class SystemReport {
         report.put("battery", battery(context));
         report.put("media", media(context));
         report.put("connectivity", connectivity(context));
-        report.put("packages", packages(context));
         report.put("properties", properties());
+        report.put("vendorInterfaces", VendorInterfaces.collect(context, report.getJSONObject("properties")));
+        report.put("packages", packages(context));
         report.put("settings", settings(context));
         report.put("findings", findings(report));
         return report;

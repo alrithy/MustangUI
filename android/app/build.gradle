@@ -23,9 +23,9 @@ android {
         // API level is a discovery item; see docs/DEVICE-DISCOVERY.md.
         minSdk 26
         targetSdk 35
-        versionCode 5
+        versionCode 6
         // Second build: driving layout rebuilt after the first in-car run.
-        versionName '0.2.3-alpha'
+        versionName '0.2.4-alpha'
         // Stamped into the system report so each report names its APK.
         buildConfigField 'String', 'BUILD_COMMIT', "\"${buildCommit()}\""
     }
