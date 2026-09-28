@@ -285,6 +285,19 @@ const check = (name, fn) => checks.push([name, fn]);
       assert.match(text, /2400x900/);
       assert.match(text, /com\.syu\.canbus/);
       await live.page.screenshot({ path: path.join(OUT, 'native-report.png') });
+      const asked = await live.page.evaluate(() => window.__calls.find((c) => c.method === 'systemReport'));
+      const web = asked.args.web;
+      for (const key of ['innerWidth', 'innerHeight', 'devicePixelRatio', 'visualViewportWidth',
+        'visualViewportHeight', 'visualViewportScale', 'adapterApplied', 'measuredDipWidth',
+        'initialScale', 'effectivePhysicalWidth', 'effectivePhysicalHeight', 'fullyVisible', 'cropped']) {
+        assert.ok(key in web, `web geometry is missing ${key}`);
+      }
+      assert.equal(web.adapterApplied, true, 'the viewport adapter runs on the launcher origin');
+      assert.equal(web.clientWidth, 2400);
+
+      await live.page.getByRole('button', { name: /نسخ التقرير/ }).click();
+      await live.page.waitForTimeout(200);
+      assert.ok(await live.page.evaluate(() => window.__calls.some((c) => c.method === 'copyReport')));
       await live.page.getByRole('button', { name: /حفظ ومشاركة/ }).click();
       await live.page.waitForSelector('.report__saved');
       const call = await live.page.evaluate(() => window.__calls.find((c) => c.method === 'saveReport'));

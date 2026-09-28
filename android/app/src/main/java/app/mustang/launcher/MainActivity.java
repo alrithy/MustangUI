@@ -357,11 +357,11 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
     }
 
     @Override
-    public void collectReport() {
+    public void collectReport(JSONObject webGeometry) {
         new Thread(() -> {
             JSONObject report;
             try {
-                report = SystemReport.collect(this, web);
+                report = SystemReport.collect(this, web, webGeometry);
                 reportText = report.toString(2);
                 reportSummary = "Mustang launcher system report\n"
                     + report.getJSONObject("findings").toString(2);
@@ -375,6 +375,18 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
             }
             event("systemReport", report);
         }, "mustang-report").start();
+    }
+
+    @Override
+    public void copyReport() {
+        String text = reportText;
+        if (text == null) throw new IllegalStateException("no_report");
+        android.content.ClipboardManager clipboard =
+            (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (clipboard == null) throw new IllegalStateException("unavailable");
+        // A very large clip can exceed the binder limit; the caller is told
+        // it failed and can save the file instead.
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Mustang system report", text));
     }
 
     @Override

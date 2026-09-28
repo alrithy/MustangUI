@@ -9,7 +9,8 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { isAndroid, on, request } from '../platform/host';
+import { pageMetrics, viewportAdapter } from '../platform/diagnostics';
+import { isAndroid, notify, on, request } from '../platform/host';
 import { Icon } from '../system/icons';
 import './ReportPanel.css';
 
@@ -35,6 +36,39 @@ type Phase = 'collecting' | 'ready' | 'failed';
 
 const count = (o: object | undefined) => (o ? Object.keys(o).length : 0);
 
+/** The page's half of the geometry: what the WebView actually handed the
+ *  HMI, and what the viewport adapter did about it. This is the half that
+ *  explains why the UI renders at the size it does. */
+function webGeometry() {
+  const page = pageMetrics();
+  const adapter = viewportAdapter();
+  const meta = document.querySelector('meta[name="viewport"]')?.getAttribute('content') ?? '';
+  const initial = /initial-scale=([0-9.]+)/.exec(meta);
+  return {
+    innerWidth: page.innerWidth,
+    innerHeight: page.innerHeight,
+    devicePixelRatio: page.devicePixelRatio,
+    visualViewportWidth: page.visualViewportWidth,
+    visualViewportHeight: page.visualViewportHeight,
+    visualViewportScale: page.visualViewportScale,
+    clientWidth: page.clientWidth,
+    clientHeight: page.clientHeight,
+    rootFontSizePx: page.rootFontSizePx,
+    adapterApplied: adapter?.applied ?? false,
+    adapterMode: adapter?.mode ?? 'missing',
+    adapterError: adapter?.error ?? '',
+    measuredDipWidth: adapter?.dipWidth ?? null,
+    measuredDipHeight: adapter?.dipHeight ?? null,
+    initialScale: initial ? Number(initial[1]) : null,
+    viewportMeta: meta,
+    effectivePhysicalWidth: page.effectivePhysicalWidth,
+    effectivePhysicalHeight: page.effectivePhysicalHeight,
+    matchesPanel: page.matchesPanel,
+    fullyVisible: page.fullyVisible,
+    cropped: !page.fullyVisible,
+  };
+}
+
 export function ReportPanel({ onClose }: { onClose: () => void }) {
   const [phase, setPhase] = useState<Phase>('collecting');
   const [report, setReport] = useState<Report | null>(null);
@@ -48,7 +82,7 @@ export function ReportPanel({ onClose }: { onClose: () => void }) {
       window.setTimeout(() => setPhase('failed'), 600);
       return;
     }
-    void request('systemReport').catch(() => setPhase('failed'));
+    void request('systemReport', { web: webGeometry() }).catch(() => setPhase('failed'));
   };
 
   useEffect(() => {
@@ -65,6 +99,14 @@ export function ReportPanel({ onClose }: { onClose: () => void }) {
     void request<{ path: string }>('saveReport', { share })
       .then((r) => setSaved(r.path))
       .catch(() => setSaved(''))
+      .finally(() => setBusy(false));
+  };
+
+  const copy = () => {
+    setBusy(true);
+    void request('copyReport')
+      .then(() => notify('نُسخ التقرير كاملاً إلى الحافظة'))
+      .catch(() => notify('تعذر النسخ — استخدم الحفظ بدلاً منه'))
       .finally(() => setBusy(false));
   };
 
@@ -135,6 +177,10 @@ export function ReportPanel({ onClose }: { onClose: () => void }) {
         <footer className="report__actions">
           <button type="button" className="report__btn pressable" onClick={collect} disabled={phase === 'collecting'}>
             <Icon name="sync" /> إعادة الجمع
+          </button>
+          <button type="button" className="report__btn pressable" disabled={phase !== 'ready' || busy}
+            onClick={copy}>
+            <Icon name="queue" /> نسخ التقرير
           </button>
           <button type="button" className="report__btn pressable" disabled={phase !== 'ready' || busy}
             onClick={() => save(false)}>

@@ -41,7 +41,10 @@ final class NativeBridge {
 
         /** Gathers the system report off the main thread and pushes it
          *  as a "systemReport" event. Driver-initiated only. */
-        void collectReport();
+        void collectReport(JSONObject web);
+
+        /** Copies the last collected report, as full JSON, to the clipboard. */
+        void copyReport();
 
         /** Saves the last collected report to Downloads; with share, also
          *  opens the share sheet. Returns where it was written. */
@@ -139,7 +142,13 @@ final class NativeBridge {
                 return true;
 
             case "systemReport":
-                host.collectReport();
+                // The page's own geometry travels with the request; native
+                // code cannot measure what the WebView handed the page.
+                host.collectReport(args == null ? null : args.optJSONObject("web"));
+                return true;
+
+            case "copyReport":
+                host.copyReport();
                 return true;
 
             case "saveReport":

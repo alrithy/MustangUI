@@ -79,16 +79,24 @@ final class SystemReport {
     private SystemReport() {
     }
 
-    static JSONObject collect(Activity activity, View web) throws JSONException {
+    static JSONObject collect(Activity activity, View web, JSONObject webGeometry)
+            throws JSONException {
         Context context = activity.getApplicationContext();
         JSONObject report = new JSONObject();
-        report.put("reportVersion", 1);
+        report.put("reportVersion", 2);
         report.put("generatedAt", new SimpleDateFormat(
             "yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()));
-        report.put("launcherVersion", BuildConfig.VERSION_NAME);
+        // Ties every report to the exact APK that produced it.
+        report.put("build", new JSONObject()
+            .put("versionName", BuildConfig.VERSION_NAME)
+            .put("versionCode", BuildConfig.VERSION_CODE)
+            .put("buildCommit", BuildConfig.BUILD_COMMIT)
+            .put("buildType", BuildConfig.BUILD_TYPE));
 
         report.put("device", device());
         report.put("display", display(activity, web));
+        report.put("displayOverride", displayOverride(activity));
+        report.put("webGeometry", webGeometry == null ? new JSONObject() : webGeometry);
         report.put("webview", webview(context));
         report.put("memory", memory(context));
         report.put("home", home(context));
@@ -142,6 +150,41 @@ final class SystemReport {
         result.put("dpWidth", Math.round(w / metrics.density));
         result.put("dpHeight", Math.round(h / metrics.density));
         result.put("refreshHz", activity.getWindowManager().getDefaultDisplay().getRefreshRate());
+        return result;
+    }
+
+    /**
+     * Physical panel versus what Android is currently configured to use.
+     * Display.Mode carries the panel's native resolution and
+     * DENSITY_DEVICE_STABLE the factory density; a difference from the
+     * live metrics means an override is in effect. This is an inference
+     * from public APIs, not the output of `wm size` / `wm density`, which
+     * needs adb to read directly.
+     */
+    private static JSONObject displayOverride(Activity activity) throws JSONException {
+        JSONObject result = new JSONObject();
+        android.view.Display display = activity.getWindowManager().getDefaultDisplay();
+        DisplayMetrics real = new DisplayMetrics();
+        display.getRealMetrics(real);
+        result.put("currentWidthPx", real.widthPixels);
+        result.put("currentHeightPx", real.heightPixels);
+        result.put("currentDensityDpi", real.densityDpi);
+
+        android.view.Display.Mode mode = display.getMode();
+        int modeW = Math.max(mode.getPhysicalWidth(), mode.getPhysicalHeight());
+        int modeH = Math.min(mode.getPhysicalWidth(), mode.getPhysicalHeight());
+        int curW = Math.max(real.widthPixels, real.heightPixels);
+        int curH = Math.min(real.widthPixels, real.heightPixels);
+        result.put("modeWidthPx", modeW);
+        result.put("modeHeightPx", modeH);
+        result.put("sizeOverrideInferred", modeW != curW || modeH != curH);
+
+        int stable = DisplayMetrics.DENSITY_DEVICE_STABLE;
+        result.put("stableDensityDpi", stable);
+        result.put("densityOverrideInferred", stable > 0 && stable != real.densityDpi);
+
+        result.put("method", "Display.Mode and DENSITY_DEVICE_STABLE vs live metrics");
+        result.put("wmOverride", "ADB_REQUIRED");
         return result;
     }
 
@@ -365,7 +408,19 @@ final class SystemReport {
         JSONArray vendor = report.getJSONObject("packages").getJSONArray("vendor");
         for (int i = 0; i < vendor.length(); i++) vendorPackages.put(vendor.getJSONObject(i).optString("package"));
 
+        JSONObject web = report.optJSONObject("webGeometry");
+        JSONObject build = report.getJSONObject("build");
         return new JSONObject()
+            .put("build", build.optString("versionName") + " (" + build.optInt("versionCode")
+                + ", " + build.optString("buildType") + ", " + build.optString("buildCommit") + ")")
+            .put("page", web == null || web.length() == 0 ? "not reported"
+                : "css " + web.optInt("clientWidth") + "x" + web.optInt("clientHeight")
+                    + ", dpr " + web.optDouble("devicePixelRatio")
+                    + ", scale " + web.optDouble("visualViewportScale")
+                    + ", adapter " + (web.optBoolean("adapterApplied") ? "applied" : "NOT applied")
+                    + ", physical " + web.optInt("effectivePhysicalWidth") + "x"
+                    + web.optInt("effectivePhysicalHeight")
+                    + (web.optBoolean("fullyVisible") ? ", fully visible" : ", CROPPED"))
             .put("panel", display.optInt("displayWidthPx") + "x" + display.optInt("displayHeightPx")
                 + " px, densityDpi " + display.optInt("densityDpi")
                 + ", " + display.optInt("dpWidth") + "x" + display.optInt("dpHeight") + " dp")
