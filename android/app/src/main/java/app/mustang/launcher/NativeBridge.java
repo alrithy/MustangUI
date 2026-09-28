@@ -8,10 +8,11 @@ import org.json.JSONObject;
  * methods, each with its own argument handling.
  *
  * <p>What is deliberately absent matters more than what is here. There is
- * no "run this intent", no "open this package", no "call this method",
- * no reflection, no shell. Every method below either takes no arguments
- * or takes one value that is validated against an allowlist or a pattern
- * before it reaches an Android API.
+ * no "run this intent", no "call this method", no reflection, no shell.
+ * Every method below either takes no arguments or takes one value that is
+ * validated against an allowlist or a pattern before it reaches an Android
+ * API. Opening an app by package goes through that package's own launch
+ * intent and only for apps Android lists as launchable.
  *
  * <p>Errors are returned as short, stable codes rather than exception
  * text, so the HMI can say something useful and nothing internal leaks
@@ -31,6 +32,12 @@ final class NativeBridge {
 
         /** Panel metrics for the debug overlay; null in a release build. */
         JSONObject panelDiagnostics();
+
+        /** Whether the floating Home button may be drawn over other apps. */
+        boolean homeButtonAllowed();
+
+        /** Opens Android's own screen for granting that permission. */
+        void requestHomeButton();
     }
 
     private final Host host;
@@ -112,8 +119,24 @@ final class NativeBridge {
             case "apps":
                 return apps.availability();
 
-            case "installedApps":
-                return apps.installed();
+            case "catalog":
+                return apps.catalog();
+
+            case "launchPackage":
+                apps.launchPackage(require(args, "package"));
+                return true;
+
+            case "mediaResume":
+                media.resume();
+                return true;
+
+            case "homeButton": {
+                // Reports, or with {request:true} asks for, the overlay
+                // permission the floating Home button needs.
+                boolean granted = host.homeButtonAllowed();
+                if (!granted && args != null && args.optBoolean("request")) host.requestHomeButton();
+                return new JSONObject().put("granted", granted);
+            }
 
             case "mediaControl": {
                 String command = args == null ? "" : args.optString("command");
@@ -122,7 +145,7 @@ final class NativeBridge {
             }
 
             case "launch":
-                apps.launch(require(args, "app"), vehicle);
+                apps.launch(require(args, "app"));
                 return true;
 
             case "dial":

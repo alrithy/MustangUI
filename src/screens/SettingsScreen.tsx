@@ -4,9 +4,9 @@
    Settings is intentionally the quietest screen in the system.
    ============================================================ */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Meter, SectionHead, Segmented, TouchButton } from '../components/primitives';
-import { act } from '../platform/host';
+import { act, isAndroid, request } from '../platform/host';
 import { TriBar } from '../components/TriBar';
 import { useDispatch, useSystem } from '../state/systemStore';
 import type { Appearance, RailSide, ThemeName } from '../state/types';
@@ -135,6 +135,8 @@ function DisplaySection() {
         />
       </Row>
       </section>
+
+      <LauncherGroup />
 
       <section className="settings__group">
       <SectionHead title="بدء التشغيل" tag="STARTUP" />
@@ -411,5 +413,60 @@ function DeviceRow({ name, detail, on = false }: { name: string; detail: string;
       </span>
       <span className={`settings__devicedot${on ? ' is-on' : ''}`} aria-hidden="true" />
     </li>
+  );
+}
+
+/* Behaviour of the launcher itself: what happens at power-on, and the
+   way back from another app. */
+function LauncherGroup() {
+  const { settings } = useSystem();
+  const dispatch = useDispatch();
+  const [overlay, setOverlay] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!isAndroid) return;
+    void request<{ granted: boolean }>('homeButton')
+      .then((r) => setOverlay(!!r.granted)).catch(() => setOverlay(null));
+  }, []);
+
+  return (
+    <section className="settings__group">
+      <SectionHead title="المشغّل والتطبيقات" tag="LAUNCHER" />
+      <Row label="متابعة التشغيل عند بدء السيارة" hint="يكمل آخر ما كان يعمل في Spotify">
+        <Toggle
+          on={settings.resumeMedia}
+          onChange={(v) => dispatch({ type: 'set-setting', key: 'resumeMedia', value: v })}
+          label="متابعة التشغيل عند بدء السيارة"
+        />
+      </Row>
+      <Row label="فتح آخر تطبيق" hint="إذا كان Waze مفتوحاً عند الإطفاء يفتح تلقائياً">
+        <Toggle
+          on={settings.reopenLastApp}
+          onChange={(v) => dispatch({ type: 'set-setting', key: 'reopenLastApp', value: v })}
+          label="فتح آخر تطبيق"
+        />
+      </Row>
+      <Row label="تعتيم إضافي ليلاً" hint="يخفض سطوع الواجهة كاملة في الوضع الليلي">
+        <Toggle
+          on={settings.nightDim}
+          onChange={(v) => dispatch({ type: 'set-setting', key: 'nightDim', value: v })}
+          label="تعتيم إضافي ليلاً"
+        />
+      </Row>
+      {isAndroid && (
+        <Row
+          label="زر الرجوع العائم"
+          hint={overlay ? 'مفعّل — يظهر فوق التطبيقات الأخرى' : 'يحتاج إذن «الظهور فوق التطبيقات»'}
+        >
+          <TouchButton
+            size="lg"
+            disabled={overlay === true}
+            onClick={() => { void request('homeButton', { request: true }).catch(() => undefined); }}
+          >
+            {overlay ? 'مفعّل' : 'تفعيل'}
+          </TouchButton>
+        </Row>
+      )}
+    </section>
   );
 }

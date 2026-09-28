@@ -113,3 +113,9 @@
   .bvb__tracktext { display: none; }
   .bvb__guide { display: none; }
 }
+
+/* Media is the whole bar now; it takes the width it needs. */
+.bvb { justify-content: flex-end; }
+.bvb__media { gap: var(--space-4); }
+.bvb__title { font-size: 1.35rem; }
+.bvb__artist { font-size: 1.1rem; }

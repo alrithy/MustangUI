@@ -1,316 +1,231 @@
 /* ============================================================
    HOME
-   One hero, one context. The map is the hero and lives in the
-   shell's map stage, so it is already on screen before guidance
-   starts and simply grows when it does. This screen owns the
-   context panel on the driver's side of the panel, plus the light
-   ambient overlay that sits on the canvas.
+   Two things, both large: the player on the driver's side, and the
+   driver's own app tiles beside it. No map — navigation happens in
+   Waze — and nothing secondary competing for a glance.
 
-   idle      context = now playing
-   guiding   context = maneuver, arrival, collapsed media
-   call      context = caller, answer / decline; the map stays
-   parked    context = now playing with queue, plus app access
+   Tiles are chosen by the driver. A long press enters editing:
+   remove a tile, swap one, add one, choose four or six. A tap never
+   edits, so the tiles cannot be rearranged by a hurried touch.
    ============================================================ */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { AlbumArt } from '../components/AlbumArt';
-import { ManeuverPanel } from '../components/ManeuverPanel';
-import { MiniPlayer } from '../components/MiniPlayer';
-import { IconButton, Meter, TouchButton } from '../components/primitives';
-import { DESTINATIONS, TRACKS, WEATHER } from '../state/demoData';
-import { contactById, useDerived, useDispatch, useSystem, useTrack } from '../state/systemStore';
-import {
-  arrivalTime, clockTime, distanceKm, duration, longDate, temperature, timecode,
-} from '../system/format';
+import { AppIcon, AppTile } from '../components/AppTile';
+import { Meter } from '../components/primitives';
+import { SPOTIFY } from '../state/demoData';
+import { pinnedApps, useDispatch, useSystem, useTrack } from '../state/systemStore';
+import type { CatalogApp } from '../state/types';
 import { Icon } from '../system/icons';
 import './HomeScreen.css';
 
 export function HomeScreen() {
-  const { homeContext } = useDerived();
-  const { phone } = useSystem();
-  const showCall = phone.status !== 'idle';
+  const [editing, setEditing] = useState(false);
+  /* Slot being filled by the picker; -1 appends. null = picker closed. */
+  const [picking, setPicking] = useState<number | null>(null);
 
   return (
-    <div className="screen home" data-context={homeContext}>
-      {/* Ambient layer: sits on the map canvas, never boxes it in. */}
-      <MapOverlay />
-
-      <section className="home__context">
-        {showCall ? <CallContext /> : homeContext === 'nav' ? <GuidanceContext /> : <MediaContext />}
-      </section>
+    <div className="screen home">
+      <PlayerCard />
+      <Tiles
+        editing={editing}
+        onEdit={setEditing}
+        onPick={setPicking}
+      />
+      {picking !== null && (
+        <Picker slot={picking} onClose={() => setPicking(null)} />
+      )}
     </div>
   );
 }
 
-/* ---------- Ambient overlay on the canvas --------------------------
-   Time, date, weather and the two saved destinations. Nothing here is
-   a card: the information floats on the map at low weight so the map
-   stays a calm surface. */
-function MapOverlay() {
-  const { homeContext, colorMode } = useDerived();
-  const { nav } = useSystem();
+/* ---------- Player ---------------------------------------------------- */
+function PlayerCard() {
+  const { media, sources, native } = useSystem();
   const dispatch = useDispatch();
-  const [now, setNow] = useState(() => new Date());
+  const track = useTrack();
 
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), 20_000);
-    return () => window.clearInterval(id);
-  }, []);
+  const demo = sources.media === 'demo';
+  const live = sources.media === 'live';
+  /* The player that owns the session, or Spotify when nothing is
+     playing yet — it is the one this unit uses. */
+  const playerPkg = native.media?.app || SPOTIFY;
+  const source = demo ? 'Spotify' : native.media?.appLabel || 'Spotify';
+  const idle = !demo && !live;
+  const ratio = track.durationSec > 0 ? media.positionSec / track.durationSec : 0;
 
-  const guiding = homeContext === 'nav';
-  const saved = DESTINATIONS.filter((d) => d.kind === 'home' || d.kind === 'work');
+  const openPlayer = () => {
+    if (demo) dispatch({ type: 'navigate', screen: 'music' });
+    else dispatch({ type: 'open-app', pkg: playerPkg });
+  };
 
   return (
-    <div className="home__overlay" data-guiding={guiding}>
-      {!guiding && (
-      <div className="home__ambient">
-        <div className="home__clock">
-          <span className="n-hero home__time">{clockTime(now)}</span>
-          <span className="home__date">{longDate(now)}</span>
-        </div>
-        <span className="home__ambientsep" />
-        <div className="home__weather">
-          <Icon name={colorMode === 'day' ? 'sun' : 'moon'} className="home__wicon" />
-          <span className="n-value home__temp">{temperature(WEATHER.tempC)}</span>
-          <span className="home__wcond">
-            {WEATHER.condition}
-            <span className="n-value home__wrange">{WEATHER.highC}° / {WEATHER.lowC}°</span>
-          </span>
-        </div>
-      </div>
-      )}
+    <section className="player" data-playing={media.playing}>
+      <span className="player__ambient" style={{ background: track.ambient }} aria-hidden="true" />
 
-      {!guiding && (
-        <div className="home__saved">
-          {saved.map((d) => (
+      <header className="player__head">
+        <button type="button" className="player__source pressable" onClick={openPlayer}>
+          <span className="player__live" data-on={media.playing} />
+          <span className="truncate">{source}</span>
+          <Icon name="chevron-left" className="player__go" />
+        </button>
+      </header>
+
+      <button type="button" className="player__track pressable" onClick={openPlayer}
+        aria-label={`فتح ${source}`}>
+        <AlbumArt track={track} size="xl" className="player__art" />
+        <span className="player__meta">
+          <span className="player__title truncate">
+            <bdi>{idle ? source : track.title}</bdi>
+          </span>
+          <span className="player__artist truncate">
+            <bdi>{idle ? 'اضغط تشغيل للمتابعة' : track.artist}</bdi>
+          </span>
+        </span>
+      </button>
+
+      <div className="player__progress">
+        <Meter ratio={idle ? 0 : ratio} height="sm" />
+      </div>
+
+      {/* Three targets that split the card's width. Previous and next
+          keep their physical order in both reading directions. */}
+      <div className="player__transport">
+        <button type="button" className="player__btn pressable" aria-label="المقطع السابق"
+          onClick={() => dispatch({ type: 'media-step', delta: -1 })}>
+          <Icon name="prev" />
+        </button>
+        <button type="button" className="player__btn player__btn--play pressable"
+          aria-label={media.playing ? 'إيقاف مؤقت' : 'تشغيل'}
+          onClick={() => dispatch({ type: 'media-toggle' })}>
+          <Icon name={media.playing ? 'pause' : 'play'} />
+        </button>
+        <button type="button" className="player__btn pressable" aria-label="المقطع التالي"
+          onClick={() => dispatch({ type: 'media-step', delta: 1 })}>
+          <Icon name="next" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- Tiles ----------------------------------------------------- */
+function Tiles({
+  editing, onEdit, onPick,
+}: {
+  editing: boolean;
+  onEdit: (on: boolean) => void;
+  onPick: (slot: number) => void;
+}) {
+  const state = useSystem();
+  const dispatch = useDispatch();
+  const apps = pinnedApps(state);
+  const { slots } = state.launcher;
+  const empty = Math.max(0, slots - apps.length);
+
+  return (
+    <section className="tiles" data-slots={slots} data-editing={editing}>
+      <div className="tiles__grid">
+        {apps.map((app, i) => (
+          <AppTile
+            key={app.packageName}
+            app={app}
+            variant="home"
+            editing={editing}
+            onOpen={() => (editing ? onPick(i) : dispatch({ type: 'open-app', pkg: app.packageName }))}
+            onLongPress={() => onEdit(true)}
+            badge={editing && (
+              <span
+                className="apptile__corner"
+                role="button"
+                aria-label={`إزالة ${app.label}`}
+                onClick={(e) => { e.stopPropagation(); dispatch({ type: 'unpin-app', pkg: app.packageName }); }}
+              >
+                <Icon name="close" />
+              </span>
+            )}
+          />
+        ))}
+        {Array.from({ length: empty }, (_, i) => (
+          <button
+            key={`empty-${i}`}
+            type="button"
+            className="tiles__add pressable"
+            onClick={() => onPick(-1)}
+          >
+            <Icon name="plus" className="tiles__addicon" />
+            <span>إضافة تطبيق</span>
+          </button>
+        ))}
+      </div>
+
+      {editing && (
+        <div className="tiles__bar">
+          <span className="tiles__hint">اضغط خانة لاستبدالها · ✕ للإزالة</span>
+          <div className="tiles__slots" role="group" aria-label="عدد الخانات">
+            {([4, 6] as const).map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`tiles__slot pressable${slots === n ? ' is-on' : ''}`}
+                onClick={() => dispatch({ type: 'set-slots', slots: n })}
+              >
+                <span className="n-value">{n}</span> خانات
+              </button>
+            ))}
+          </div>
+          <button type="button" className="tiles__done pressable" onClick={() => onEdit(false)}>
+            تم
+          </button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/* ---------- Picker ---------------------------------------------------- */
+function Picker({ slot, onClose }: { slot: number; onClose: () => void }) {
+  const state = useSystem();
+  const dispatch = useDispatch();
+  const pinned = new Set(pinnedApps(state).map((a) => a.packageName));
+  const list = sortByUse(state.catalog, state.launcher.usage);
+
+  const choose = (app: CatalogApp) => {
+    dispatch({ type: 'pin-app', pkg: app.packageName, slot: slot < 0 ? undefined : slot });
+    onClose();
+  };
+
+  return (
+    <div className="picker" role="dialog" aria-label="اختر تطبيقاً">
+      <div className="picker__panel">
+        <header className="picker__head">
+          <h2 className="picker__title">اختر تطبيقاً للخانة</h2>
+          <button type="button" className="picker__close pressable" onClick={onClose}>إغلاق</button>
+        </header>
+        <div className="picker__grid">
+          {list.map((app) => (
             <button
-              key={d.id}
+              key={app.packageName}
               type="button"
-              className="home__chip pressable"
-              data-scale="true"
-              onClick={() => dispatch({ type: 'nav-start', destination: d })}
+              className={`picker__item pressable${pinned.has(app.packageName) ? ' is-on' : ''}`}
+              onClick={() => choose(app)}
             >
-              <Icon name={d.kind === 'home' ? 'home' : 'briefcase'} className="home__chipicon" />
-              <span className="home__chiptext">
-                <span className="home__chipname truncate">{d.name}</span>
-                <span className="home__chipsub truncate">{d.district}</span>
-              </span>
-              <span className="home__chipeta">
-                <span className="n-value">{d.etaMin}</span>
-                <span className="home__chipunit">د</span>
-              </span>
+              {pinned.has(app.packageName) && (
+                <span className="apptile__check"><Icon name="check" /></span>
+              )}
+              <AppIcon app={app} className="picker__icon" />
+              <span className="truncate"><bdi>{app.label}</bdi></span>
             </button>
           ))}
         </div>
-      )}
-
-      {guiding && nav.destination && (
-        <button
-          type="button"
-          className="home__routechip pressable"
-          onClick={() => dispatch({ type: 'navigate', screen: 'nav' })}
-        >
-          <Icon name="pin" className="home__routeicon" />
-          <span className="truncate">{nav.destination.name}</span>
-          <Icon name="chevron-left" className="home__routego" />
-        </button>
-      )}
-    </div>
-  );
-}
-
-/* ---------- Context: media ------------------------------------------ */
-function MediaContext() {
-  const { media, sources, native } = useSystem();
-  const { parked } = useDerived();
-  const dispatch = useDispatch();
-  const track = useTrack();
-  const remaining = Math.max(0, track.durationSec - media.positionSec);
-
-  /* Names the real player on the head unit; the prototype's own source
-     vocabulary is only correct for the prototype. */
-  const source = sources.media === 'demo'
-    ? (media.source === 'bluetooth' ? 'بلوتوث' : media.source === 'usb' ? 'USB' : 'راديو')
-    : native.media?.appLabel || native.media?.app || 'لا يوجد مصدر';
-
-  return (
-    <div className="ctx ctx--media">
-      <span className="ctx__ambient" style={{ background: track.ambient }} aria-hidden="true" />
-
-      <header className="ctx__head">
-        <span className="t-label truncate">{source}</span>
-        <span className="ctx__eq" data-on={media.playing} aria-hidden="true"><i /><i /><i /></span>
-      </header>
-
-      <button
-        type="button"
-        className="ctx__artbtn pressable"
-        aria-label={`فتح الوسائط — ${track.title}`}
-        onClick={() => dispatch({ type: 'navigate', screen: 'music' })}
-      >
-        <AlbumArt track={track} size="xl" className="ctx__art" />
-      </button>
-
-      <div className="ctx__meta">
-        <h1 className="ctx__title truncate"><bdi>{track.title}</bdi></h1>
-        <p className="ctx__artist truncate"><bdi>{track.artist}</bdi></p>
       </div>
-
-      <div className="ctx__progress">
-        <Meter
-          ratio={track.durationSec > 0 ? media.positionSec / track.durationSec : 0}
-          height="sm"
-        />
-        <div className="ctx__times">
-          <span className="n-value ctx__time">{timecode(media.positionSec)}</span>
-          <span className="n-value ctx__time">-{timecode(remaining)}</span>
-        </div>
-      </div>
-
-      <div className="ctx__transport">
-        <IconButton icon="prev" label="المقطع السابق" size="xl"
-          onClick={() => dispatch({ type: 'media-step', delta: -1 })} />
-        <IconButton
-          icon={media.playing ? 'pause' : 'play'}
-          label={media.playing ? 'إيقاف مؤقت' : 'تشغيل'}
-          size="2xl" variant="filled" active={media.playing}
-          onClick={() => dispatch({ type: 'media-toggle' })}
-        />
-        <IconButton icon="next" label="المقطع التالي" size="xl"
-          onClick={() => dispatch({ type: 'media-step', delta: 1 })} />
-      </div>
-
-      {parked && <ParkedExtras />}
     </div>
   );
 }
 
-/* Parked unlocks what is unsafe to read while moving. The queue is
-   what the media panel gains; apps stay one tap away on the rail
-   rather than being crammed into this column. */
-function ParkedExtras() {
-  const { media } = useSystem();
-  const dispatch = useDispatch();
-  const upcoming = [1, 2].map((o) => (media.trackIndex + o) % TRACKS.length);
-
-  return (
-    <div className="ctx__parked">
-      <span className="t-label">التالي في القائمة</span>
-      <ul className="ctx__queue">
-        {upcoming.map((i) => {
-          const t = TRACKS[i];
-          return (
-            <li key={t.id}>
-              <button type="button" className="ctx__queueitem pressable"
-                onClick={() => dispatch({ type: 'media-select', index: i })}>
-                <AlbumArt track={t} size="xs" />
-                <span className="ctx__queuetext">
-                  <span className="truncate"><bdi>{t.title}</bdi></span>
-                  <span className="truncate muted"><bdi>{t.artist}</bdi></span>
-                </span>
-                <span className="n-value ctx__queuedur">{timecode(t.durationSec)}</span>
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
-
-/* ---------- Context: guidance ---------------------------------------- */
-function GuidanceContext() {
-  const { nav } = useSystem();
-  const dispatch = useDispatch();
-  const step = nav.steps[nav.stepIndex];
-  const next = nav.steps[nav.stepIndex + 1];
-  const rem = distanceKm(nav.remainingKm);
-  const dur = duration(nav.etaMin);
-
-  return (
-    <div className="ctx ctx--nav">
-      <ManeuverPanel step={step} distanceM={nav.toManeuverM} next={next} />
-
-      <div className="ctx__eta">
-        <EtaCell label="الوصول" value={arrivalTime(nav.etaMin)} />
-        <span className="hairline-v ctx__etasep" />
-        <EtaCell label="المتبقي" value={rem.value} unit={rem.unit} />
-        <span className="hairline-v ctx__etasep" />
-        <EtaCell label="المدة" value={dur.value} unit={dur.unit} />
-      </div>
-
-      <span className="ctx__spacer" />
-
-      <MiniPlayer />
-
-      <TouchButton size="lg" variant="secondary" icon="close" block
-        onClick={() => dispatch({ type: 'nav-end' })}>
-        إنهاء التوجيه
-      </TouchButton>
-    </div>
-  );
-}
-
-function EtaCell({ label, value, unit }: { label: string; value: string; unit?: string }) {
-  return (
-    <div className="ctx__etacell">
-      <span className="t-label">{label}</span>
-      <span className="ctx__etaval">
-        <span className="n-value">{value}</span>
-        {unit && <span className="ctx__etaunit">{unit}</span>}
-      </span>
-    </div>
-  );
-}
-
-/* ---------- Context: call --------------------------------------------
-   The call takes the context panel, never the screen: guidance on the
-   canvas beside it stays exactly where the driver last saw it. */
-function CallContext() {
-  const { phone, nav } = useSystem();
-  const dispatch = useDispatch();
-  const contact = contactById(phone.contactId);
-  if (!contact) return null;
-  const incoming = phone.status === 'incoming';
-
-  return (
-    <div className="ctx ctx--call" data-state={phone.status}>
-      <span className="t-label ctx__callstate">
-        {incoming ? 'مكالمة واردة' : 'مكالمة جارية'}
-      </span>
-      <h1 className="ctx__callname clamp-2">{contact.name}</h1>
-      <span className="ctx__callmeta ltr-num">
-        {incoming ? contact.phone : timecode(phone.durationSec)}
-      </span>
-
-      <span className="ctx__spacer" />
-
-      {incoming ? (
-        <div className="ctx__callactions">
-          <TouchButton variant="accept" size="2xl" icon="phone" block
-            onClick={() => dispatch({ type: 'call-accept' })}>رد</TouchButton>
-          <TouchButton variant="danger" size="2xl" icon="phone-end" block
-            onClick={() => dispatch({ type: 'call-decline' })}>رفض</TouchButton>
-        </div>
-      ) : (
-        <div className="ctx__callactions">
-          <div className="ctx__callrow">
-            <IconButton icon={phone.muted ? 'mic-off' : 'mic'} label="كتم الميكروفون"
-              size="xl" variant="filled" active={phone.muted}
-              onClick={() => dispatch({ type: 'call-mute' })} />
-            <IconButton icon="speaker" label="مكبر الصوت" size="xl" variant="filled"
-              active={phone.speaker} onClick={() => dispatch({ type: 'call-speaker' })} />
-          </div>
-          <TouchButton variant="danger" size="2xl" icon="phone-end" block
-            onClick={() => dispatch({ type: 'call-end' })}>إنهاء المكالمة</TouchButton>
-        </div>
-      )}
-
-      {nav.active && (
-        <p className="ctx__callnav t-meta">
-          <Icon name="nav" /> التوجيه مستمر إلى {nav.destination?.name}
-        </p>
-      )}
-    </div>
-  );
+/** Most-used first, then by name. Shared with the Apps grid. */
+export function sortByUse(apps: CatalogApp[], usage: Record<string, number>): CatalogApp[] {
+  return [...apps].sort((a, b) =>
+    (usage[b.packageName] ?? 0) - (usage[a.packageName] ?? 0)
+    || a.label.localeCompare(b.label, 'ar'));
 }

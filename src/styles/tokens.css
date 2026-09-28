@@ -32,6 +32,8 @@
   --radius-md: 9px;
   --radius-lg: 14px;
   --radius-pill: 999px;
+  /* Large driving surfaces: Home cards and app tiles. */
+  --radius-xl-auto: 1.5rem;
   --chamfer: 18px; /* Mustang signature: single cut corner on hero surfaces */
 
   /* --- Touch geometry -------------------------------------------
@@ -115,8 +117,10 @@
      The physical console already carries volume, tuning, transport
      and climate switchgear, so the bar at the bottom holds only what
      software owns: drivetrain readout and the media handle.        */
-  --rail-w: 6rem;
-  --statusbar-h: 3.25rem;
+  /* Sized for use at a glance while moving: the rail is a column of
+     three large targets, not a strip of glyphs. */
+  --rail-w: 11rem;
+  --statusbar-h: 4rem;
   --bottombar-h: 5rem;
   --content-pad: var(--space-6);
   --gutter: var(--space-5);
@@ -131,7 +135,7 @@
    Driving-critical targets keep their size; the chrome gives way. */
 @media (max-width: 1400px) {
   :root {
-    --rail-w: 5rem;
+    --rail-w: 9rem;
     --content-pad: var(--space-4);
     --gutter: var(--space-4);
     --touch-lg: 4.25rem;

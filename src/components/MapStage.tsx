@@ -8,21 +8,19 @@
    ============================================================ */
 
 import { MapCanvas } from './MapCanvas';
-import { useDerived, useSystem } from '../state/systemStore';
+import { useSystem } from '../state/systemStore';
 import './MapStage.css';
 
 export type StagePlacement = 'home' | 'home-guiding' | 'full' | 'off';
 
-function placementFor(screen: string, guiding: boolean): StagePlacement {
-  if (screen === 'nav') return 'full';
-  if (screen === 'home') return guiding ? 'home-guiding' : 'home';
-  return 'off';
+/* Home has no map: on the unit, navigation happens in Waze. */
+function placementFor(screen: string): StagePlacement {
+  return screen === 'nav' ? 'full' : 'off';
 }
 
 export function MapStage() {
   const { screen, nav } = useSystem();
-  const { homeContext } = useDerived();
-  const placement = placementFor(screen, homeContext === 'nav');
+  const placement = placementFor(screen);
 
   return (
     <div className="mapstage" data-placement={placement} aria-hidden={placement === 'off'}>

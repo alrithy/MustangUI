@@ -7,26 +7,36 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.provider.Settings;
+import android.util.Base64;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Resolves the HMI's curated tiles against packages that are really on
  * this unit, and launches them.
  *
- * <p>The allowlist is the point. JavaScript names a capability — "maps",
- * "settings" — and never a package, a component, or an intent. There is
- * no method here that will launch an arbitrary package or fire an
- * arbitrary intent on request, so a compromised web layer cannot use the
- * launcher as a generic intent gun.
+ * <p>Two ways in, both narrow. A capability id ("maps", "settings") maps
+ * through a fixed table. A package name is accepted only if Android itself
+ * lists it as a launchable app — the same set any launcher shows — and it
+ * is opened through its own launch intent. JavaScript never supplies a
+ * component, an action, extras or data, so the web layer still cannot use
+ * the launcher as a generic intent gun.
  */
 final class AppCatalog {
 
@@ -63,16 +73,27 @@ final class AppCatalog {
     private static final List<String> ALWAYS_REACHABLE =
         Arrays.asList("settings", "bluetooth", "mediaAccess", "homeSettings", "phone");
 
-    /** Capabilities held while the vehicle is not verified parked. */
-    private static final List<String> PARKED_ONLY = Arrays.asList("youtube", "carplay");
+    /** Shape of a package name; anything else is refused before lookup. */
+    private static final Pattern PACKAGE = Pattern.compile("[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+");
+
+    /** Icon edge in physical px: large enough for the Home tiles. */
+    private static final int ICON_PX = 160;
 
     private final Context context;
     private final HostChannel channel;
     private BroadcastReceiver packages;
 
+    /* Icons are rendered off the main thread and cached per package and
+       update time, so a package event re-encodes only what changed. */
+    private final HandlerThread thread = new HandlerThread("mustang-apps");
+    private final Handler worker;
+    private final Map<String, String> iconCache = new HashMap<>();
+
     AppCatalog(Context context, HostChannel channel) {
         this.context = context.getApplicationContext();
         this.channel = channel;
+        thread.start();
+        worker = new Handler(thread.getLooper());
     }
 
     /** Watches for installs and removals so the grid stays truthful. */
@@ -90,6 +111,7 @@ final class AppCatalog {
     }
 
     void release() {
+        thread.quitSafely();
         if (packages == null) return;
         Receivers.unregister(context, packages);
         packages = null;
@@ -101,6 +123,13 @@ final class AppCatalog {
         } catch (JSONException impossible) {
             throw new IllegalStateException(impossible);
         }
+        worker.post(() -> {
+            try {
+                channel.event("catalog", new JSONObject().put("apps", catalog()));
+            } catch (JSONException | RuntimeException failed) {
+                // The grid keeps its last catalog; nothing invented.
+            }
+        });
     }
 
     /** One entry per curated capability, with whether it can be opened. */
@@ -125,35 +154,82 @@ final class AppCatalog {
     }
 
     /**
-     * Every launchable activity on the unit. Inventory only — used for
-     * discovery and diagnostics. Note that no method accepts a package
-     * name from this list and launches it: the grid stays curated.
+     * Every launchable app on the unit, with its label and icon, so the
+     * HMI can offer the same set any launcher would. Icons travel as PNG
+     * data URIs; they are cached, so this is cheap after the first pass.
      */
-    JSONArray installed() throws JSONException {
+    JSONArray catalog() throws JSONException {
         JSONArray result = new JSONArray();
         Intent query = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
         PackageManager pm = context.getPackageManager();
+        Map<String, Boolean> seen = new HashMap<>();
         for (ResolveInfo entry : pm.queryIntentActivities(query, 0)) {
             String pkg = entry.activityInfo.packageName;
-            if (pkg.equals(context.getPackageName())) continue;
+            if (pkg.equals(context.getPackageName()) || seen.containsKey(pkg)) continue;
+            seen.put(pkg, true);
             result.put(new JSONObject()
                 .put("packageName", pkg)
-                .put("label", String.valueOf(entry.loadLabel(pm))));
+                .put("label", String.valueOf(entry.loadLabel(pm)))
+                .put("icon", iconOf(pm, entry, pkg)));
         }
         return result;
+    }
+
+    private String iconOf(PackageManager pm, ResolveInfo entry, String pkg) {
+        long stamp = 0;
+        try {
+            stamp = pm.getPackageInfo(pkg, 0).lastUpdateTime;
+        } catch (PackageManager.NameNotFoundException gone) {
+            return "";
+        }
+        String key = pkg + '\0' + stamp;
+        String cached = iconCache.get(key);
+        if (cached != null) return cached;
+        String encoded = "";
+        try {
+            Drawable drawable = entry.loadIcon(pm);
+            Bitmap bitmap = Bitmap.createBitmap(ICON_PX, ICON_PX, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, ICON_PX, ICON_PX);
+            drawable.draw(canvas);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+            bitmap.recycle();
+            encoded = "data:image/png;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP);
+        } catch (RuntimeException | OutOfMemoryError unreadable) {
+            // A broken icon falls back to the HMI's monogram tile.
+        }
+        iconCache.put(key, encoded);
+        return encoded;
+    }
+
+    /**
+     * Opens an app the unit lists as launchable. The name is checked for
+     * shape, then Android is asked for that package's own launch intent;
+     * a package that is not a launchable app has none and is refused.
+     *
+     * <p>No motion check here. Which apps to open while driving is the
+     * driver's decision on this unit, not the launcher's.
+     */
+    void launchPackage(String pkg) {
+        if (pkg == null || pkg.length() > 200 || !PACKAGE.matcher(pkg).matches()) {
+            throw new IllegalArgumentException("bad package");
+        }
+        if (pkg.equals(context.getPackageName())) throw new IllegalArgumentException("self");
+        Intent intent = context.getPackageManager().getLaunchIntentForPackage(pkg);
+        if (intent == null) throw new IllegalStateException("not_installed");
+        intent.setPackage(pkg);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        context.startActivity(intent);
     }
 
     /**
      * Opens a curated capability.
      *
-     * @throws SecurityException     the capability is held while moving
      * @throws IllegalStateException nothing on this unit can open it
      * @throws IllegalArgumentException the id is not in the allowlist
      */
-    void launch(String id, VehicleDataProvider vehicle) {
-        if (PARKED_ONLY.contains(id) && !vehicle.isVerifiedParked()) {
-            throw new SecurityException("restricted");
-        }
+    void launch(String id) {
         if (!ALWAYS_REACHABLE.contains(id)
             && !PACKAGES.containsKey(id) && !SYSTEM.containsKey(id)) {
             throw new IllegalArgumentException("unknown capability");

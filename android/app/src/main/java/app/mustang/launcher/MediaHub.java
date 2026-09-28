@@ -3,13 +3,16 @@ package app.mustang.launcher;
 import android.content.ComponentName;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.media.AudioManager;
 import android.media.MediaMetadata;
 import android.media.session.MediaController;
 import android.media.session.MediaSessionManager;
 import android.media.session.PlaybackState;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.SystemClock;
 import android.util.Base64;
+import android.view.KeyEvent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -133,6 +136,30 @@ final class MediaHub {
             case "previous": controls.skipToPrevious(); return true;
             default: return false;
         }
+    }
+
+    /**
+     * Starts playback again after power-on. With a live session this is
+     * an ordinary play command. Without one — the player was killed when
+     * the unit slept — a PLAY media key is sent through the audio
+     * service, which Android routes to the app that last played audio,
+     * so Spotify resumes without being brought over the launcher.
+     */
+    void resume() {
+        MediaController controller = current;
+        if (controller != null) {
+            PlaybackState state = controller.getPlaybackState();
+            if (state != null && state.getState() == PlaybackState.STATE_PLAYING) return;
+            controller.getTransportControls().play();
+            return;
+        }
+        AudioManager audio = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (audio == null) throw new IllegalStateException("no_session");
+        long now = SystemClock.uptimeMillis();
+        audio.dispatchMediaKeyEvent(
+            new KeyEvent(now, now, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY, 0));
+        audio.dispatchMediaKeyEvent(
+            new KeyEvent(now, now, KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY, 0));
     }
 
     void release() {

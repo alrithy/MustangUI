@@ -65,6 +65,8 @@ export interface VehicleSnapshot {
   voltage: number | null;
   coolantC: number | null;
   oilC: number | null;
+  /** Outside air temperature, once the unit's source is identified. */
+  outsideC: number | null;
   tires: unknown;
 }
 
@@ -181,6 +183,7 @@ const REASON: Record<string, string> = {
   restricted: 'غير متاح أثناء الحركة',
   no_session: 'لا يوجد مصدر وسائط نشط',
   timeout: 'لم يستجب النظام',
+  bad_request: 'تعذر فتح التطبيق',
 };
 
 /** Fire-and-forget action. A failure tells the driver why, once. */

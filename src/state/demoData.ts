@@ -6,7 +6,7 @@
    ============================================================ */
 
 import type {
-  AppEntry, CallRecord, Contact, Destination, RouteStep, Track,
+  AppEntry, CallRecord, CatalogApp, Contact, Destination, RouteStep, Track,
 } from './types';
 
 /* ---------- Media -------------------------------------------------
@@ -155,3 +155,38 @@ export const WEATHER = {
   lowC: 24,
   condition: 'صحو',
 };
+
+/* ---------- Launcher catalog (browser only) -----------------------
+   Stands in for the unit's launchable apps so the Home tiles and the
+   Apps grid can be judged in the browser. On device the host sends the
+   real list, with real icons, and this is never read. */
+export const DEMO_CATALOG: CatalogApp[] = [
+  { packageName: 'com.waze', label: 'Waze', icon: '', tint: '#2fb7e8' },
+  { packageName: 'com.spotify.music', label: 'Spotify', icon: '', tint: '#1eb954' },
+  { packageName: 'com.google.android.youtube', label: 'YouTube', icon: '', tint: '#e62a2a' },
+  { packageName: 'com.zhiliaoapp.musically', label: 'TikTok', icon: '', tint: '#161616' },
+  { packageName: 'com.google.android.apps.maps', label: 'Google Maps', icon: '', tint: '#3b78e7' },
+  { packageName: 'com.anghami', label: 'Anghami', icon: '', tint: '#8b3fd9' },
+  { packageName: 'com.netflix.mediaclient', label: 'Netflix', icon: '', tint: '#b20710' },
+  { packageName: 'net.mbc.shahid', label: 'Shahid', icon: '', tint: '#1a8f7a' },
+  { packageName: 'com.whatsapp', label: 'WhatsApp', icon: '', tint: '#25a35a' },
+  { packageName: 'com.snapchat.android', label: 'Snapchat', icon: '', tint: '#d9b800' },
+  { packageName: 'com.android.chrome', label: 'Chrome', icon: '', tint: '#3b78e7' },
+  { packageName: 'com.android.vending', label: 'متجر Play', icon: '', tint: '#2a8f5a' },
+  { packageName: 'com.android.documentsui', label: 'الملفات', icon: '', tint: '#44505a' },
+  { packageName: 'com.android.deskclock', label: 'الساعة', icon: '', tint: '#44505a' },
+  { packageName: 'com.android.camera2', label: 'الكاميرا', icon: '', tint: '#44505a' },
+  { packageName: 'com.android.fmradio', label: 'الراديو', icon: '', tint: '#44505a' },
+];
+
+/** Default Home tiles, by package. TikTok ships under two names. */
+export const DEFAULT_PINS = [
+  'com.waze',
+  'com.spotify.music',
+  'com.google.android.youtube',
+  'com.zhiliaoapp.musically',
+  'com.ss.android.ugc.trill',
+];
+
+export const WAZE = 'com.waze';
+export const SPOTIFY = 'com.spotify.music';

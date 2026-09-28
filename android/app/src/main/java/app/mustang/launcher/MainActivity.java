@@ -77,6 +77,7 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
     private MediaHub media;
     private AppCatalog apps;
     private SystemMonitor system;
+    private HomeButton homeButton;
 
     private JavaScriptReplyProxy channel;
     private boolean uiReady;
@@ -195,6 +196,7 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
         media = new MediaHub(this, this);
         apps = new AppCatalog(this, this);
         system = new SystemMonitor(this, this);
+        homeButton = new HomeButton(this);
         bridge = new NativeBridge(this, media, apps, system);
         media.start();
         apps.start();
@@ -335,7 +337,39 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
                 | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
     }
 
+    @Override
+    public boolean homeButtonAllowed() {
+        return HomeButton.allowed(this);
+    }
+
+    @Override
+    public void requestHomeButton() {
+        main.post(() -> {
+            try {
+                startActivity(HomeButton.grantIntent(this));
+            } catch (RuntimeException missing) {
+                // Vendor ROM without that settings screen.
+            }
+        });
+    }
+
     /* ---------------- Lifecycle ---------------- */
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (homeButton != null) homeButton.hide();
+        // Tells the HMI it is on screen again, which is how it knows the
+        // driver left the last app on purpose.
+        event("visible", new JSONObject());
+    }
+
+    @Override
+    protected void onStop() {
+        // Another app now covers the launcher: offer the way back.
+        if (homeButton != null && !isFinishing()) homeButton.show();
+        super.onStop();
+    }
 
     @Override
     protected void onResume() {
@@ -389,6 +423,7 @@ public final class MainActivity extends Activity implements HostChannel, NativeB
         if (media != null) media.release();
         if (apps != null) apps.release();
         if (system != null) system.release();
+        if (homeButton != null) homeButton.hide();
         destroyWebView();
         super.onDestroy();
     }

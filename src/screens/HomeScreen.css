@@ -1,311 +1,232 @@
 /* ============================================================
    HOME
-   The map stage fills the content area behind this screen. Home
-   contributes two things: the ambient overlay that floats on the
-   canvas, and the context panel on the driver's side.
+   Player on the driver's side, tiles beside it. Every target on
+   this screen is at least a sixth of the panel height.
    ============================================================ */
 
 .home {
-  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 42fr) minmax(0, 58fr);
+  gap: var(--space-6);
   height: 100%;
-  min-height: 0;
+  /* Laid out physically: the player sits nearest the driver whatever
+     the reading direction. Children restore RTL for their text. */
+  direction: ltr;
 }
+[data-rail='right'] .home { direction: rtl; }
+.home > * { direction: rtl; min-width: 0; min-height: 0; }
 
-/* ---------- Context panel ---------------------------------------------
-   Occupies the near edge of the panel — the side the driver reaches.
-   Its width is the same token the map stage reads, so the two move as
-   one when guidance starts. */
-.home__context {
-  position: absolute;
-  inset-block: 0;
-  left: 0;
-  width: calc(var(--stage-gap) - var(--gutter));
-  display: flex;
-  z-index: 2;
-  transition: width var(--dur-context) var(--ease-enter);
-}
-.home[data-context='nav'] .home__context {
-  width: calc(var(--stage-gap-guiding) - var(--gutter));
-}
-
-.ctx {
+/* ---------- Player ---------------------------------------------------- */
+.player {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  flex: 1;
-  min-width: 0;
-  padding: var(--space-5) var(--space-5) var(--space-4);
-  border-radius: var(--radius-lg);
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border-radius: var(--radius-xl-auto);
   background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
   overflow: hidden;
 }
-.ctx__spacer { flex: 1; min-height: var(--space-2); }
-
-/* Parked adds the queue to this column, so the artwork gives up more
-   of its floor rather than pushing the queue off the bottom. */
-.home[data-context='parked'] .ctx__artbtn { min-height: 6rem; }
-
-/* The media column hangs off the artwork: head and art at the top,
-   metadata below it, and the transport anchored to the base. */
-/* Every rem the chrome gives up goes to the artwork: it is the only
-   thing in this panel that carries the track at a glance. */
-.ctx--media { gap: var(--space-3); }
-.ctx--media .ctx__meta { margin-top: var(--space-2); }
-.ctx--media .ctx__progress { margin-top: auto; }
-.ctx--media .ctx__transport { margin-top: var(--space-1); }
-
-/* One tensioned corner, cut on the edge that faces the canvas. */
-.ctx::after {
-  content: '';
+.player__ambient {
   position: absolute;
-  inset-block-start: 0;
-  inset-inline-start: 0;
-  width: var(--chamfer);
-  height: var(--chamfer);
-  background: var(--bg-primary);
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-}
-[dir='rtl'] .ctx::after { clip-path: polygon(0 0, 100% 0, 100% 100%); }
-
-/* ---------- Media context --------------------------------------------- */
-.ctx__ambient {
-  position: absolute;
-  inset: 0;
-  opacity: calc(0.5 * var(--ambient-strength));
+  inset: -30% -20% auto auto;
+  width: 80%;
+  height: 90%;
+  border-radius: 50%;
+  opacity: 0.22;
+  filter: blur(80px);
   pointer-events: none;
-  transition: background-color var(--dur-context) var(--ease-standard);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 58%);
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent 58%);
 }
-.ctx > * { position: relative; }
+.player > *:not(.player__ambient) { position: relative; }
 
-.ctx__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.ctx__eq { display: inline-flex; align-items: flex-end; gap: 2px; height: 0.75rem; }
-.ctx__eq i { width: 2px; height: 38%; border-radius: 1px; background: var(--accent-primary); opacity: 0.32; }
-.ctx__eq[data-on='true'] i { opacity: 1; animation: ctx-eq 1.4s var(--ease-standard) infinite; }
-.ctx__eq[data-on='true'] i:nth-child(2) { animation-delay: 0.18s; }
-.ctx__eq[data-on='true'] i:nth-child(3) { animation-delay: 0.36s; }
-@keyframes ctx-eq { 0%, 100% { height: 34%; } 50% { height: 100%; } }
-
-/* The artwork is bounded by the panel height as well as its width, so
-   it can never push the transport off the bottom of the column. */
-/* The artwork takes the slack in the column and derives its width from
-   that height, so it is bounded on both axes and can never overrun the
-   metadata below it. */
-.ctx__artbtn {
-  display: block;
-  width: 100%;
-  flex: 1 1 auto;
-  min-height: 9rem;      /* never collapses when the panel gains content */
-  text-align: center;
-}
-.ctx__art {
-  display: inline-block;
-  height: 100%;
-  width: auto;
-  max-width: 100%;
-  max-height: 30rem;
-  aspect-ratio: 1;
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lift);
-}
-
-.ctx__meta { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
-.ctx__title {
-  font-size: var(--type-title);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--track-tight);
-  line-height: 1.2;
-}
-.ctx__artist { font-size: var(--type-body-lg); color: var(--text-secondary); }
-
-.ctx__progress { display: flex; flex-direction: column; gap: var(--space-2); }
-.ctx__times { display: flex; justify-content: space-between; }
-.ctx__time { font-size: var(--type-meta); font-weight: var(--weight-regular); color: var(--text-muted); }
-
-.ctx__transport {
+.player__head {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: var(--space-4);
 }
-.ctx__transport .ibtn--2xl {
-  border-radius: 50%;
-  background: var(--surface-elevated);
-  color: var(--text-primary);
-  box-shadow: inset 0 0 0 1px var(--border-strong), var(--shadow-soft);
-}
-/* Playing state is carried by a ring, never a fill. */
-.ctx__transport .ibtn--2xl[aria-pressed='true'] {
-  box-shadow: inset 0 0 0 2px var(--accent-primary), 0 0 20px -8px var(--accent-glow);
-}
-
-/* ---------- Parked extras ---------------------------------------------- */
-.ctx__parked {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--divider);
-}
-.ctx__queue { display: flex; flex-direction: column; gap: 1px; }
-.ctx__queueitem {
+.player__source {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  width: 100%;
-  min-height: var(--touch-sm);
-  padding-inline: var(--space-2);
-  border-radius: var(--radius-sm);
-  text-align: start;
-}
-.ctx__queuetext { display: flex; flex-direction: column; min-width: 0; flex: 1; font-size: var(--type-meta); }
-.ctx__queuetext .muted { font-size: var(--type-caption); }
-.ctx__queuedur { font-size: var(--type-caption); color: var(--text-muted); font-weight: var(--weight-regular); }
-
-/* ---------- Guidance context -------------------------------------------- */
-.ctx--nav { gap: var(--space-5); }
-.ctx__eta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
-.ctx__etacell { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.ctx__etaval { display: flex; align-items: baseline; gap: 0.25em; }
-.ctx__etaval .n-value { font-size: var(--type-title-sm); }
-.ctx__etaunit { font-size: var(--type-meta); color: var(--text-muted); }
-.ctx__etasep { height: 2.25rem; }
-
-/* ---------- Call context ------------------------------------------------- */
-.ctx--call { animation: ctx-call-in var(--dur-panel) var(--ease-enter) both; }
-@keyframes ctx-call-in {
-  from { opacity: 0; transform: translateY(0.75rem); }
-  to { opacity: 1; transform: none; }
-}
-.ctx--call[data-state='incoming'] { box-shadow: inset 0 2px 0 0 var(--accent-primary); }
-.ctx__callstate { color: var(--accent-primary); }
-.ctx__callname {
-  font-size: var(--type-title-lg);
+  min-height: 4rem;
+  max-width: 60%;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  font-size: 1.4rem;
   font-weight: var(--weight-medium);
-  letter-spacing: var(--track-tight);
-  line-height: 1.15;
 }
-.ctx__callmeta { font-size: var(--type-body-lg); color: var(--text-muted); }
-.ctx__callactions { display: flex; flex-direction: column; gap: var(--space-3); }
-.ctx__callrow { display: flex; gap: var(--space-3); }
-.ctx__callrow .ibtn { flex: 1; width: auto; }
-.ctx__callnav {
+.player__live {
+  flex: none;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+.player__live[data-on='true'] { background: var(--status-success); }
+.player__go { font-size: var(--icon-md); flex: none; }
+
+.player__track {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  color: var(--text-muted);
-  padding-top: var(--space-1);
+  gap: var(--space-6);
+  min-width: 0;
+  text-align: start;
+  border-radius: var(--radius-lg);
 }
-.ctx__callnav svg { font-size: var(--icon-sm); color: var(--accent-primary); }
+.player__art.albumart { width: 9.5rem; height: 9.5rem; flex: none; }
+.player__meta { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.player__title { font-size: 2.6rem; font-weight: var(--weight-semibold); line-height: 1.25; }
+.player__artist { font-size: 1.6rem; color: var(--text-secondary); }
 
-/* ============================================================
-   AMBIENT OVERLAY ON THE CANVAS
-   Floating information, never a card. It clears the map's centre so
-   the route is never behind text.
-   ============================================================ */
-.home__overlay {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  right: 0;
-  left: var(--stage-gap);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: var(--space-6);
-  pointer-events: none;
-  z-index: 1;
-  transition: left var(--dur-context) var(--ease-enter);
+.player__progress { padding-block: var(--space-1); }
+
+.player__transport {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1.35fr 1fr;
+  gap: var(--space-4);
+  /* Previous on the left, next on the right, as on the console keys. */
+  direction: ltr;
 }
-.home[data-context='nav'] .home__overlay { left: var(--stage-gap-guiding); }
-.home__overlay > * { pointer-events: auto; }
+.player__btn {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  border-radius: var(--radius-xl-auto);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-size: 3.8rem;
+}
+.player__btn--play {
+  background: var(--accent-primary);
+  border-color: transparent;
+  color: var(--text-on-accent);
+  font-size: 4.8rem;
+}
 
-/* A soft ground under the ambient block so the clock never competes
-   with a road label passing beneath it. One gradient, no blur. */
-.home__ambient {
+/* ---------- Tiles ----------------------------------------------------- */
+.tiles {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  align-self: flex-start;
+  flex-direction: column;
+  gap: var(--space-4);
 }
-.home__ambient::before {
-  content: '';
+.tiles__grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+.tiles[data-slots='6'] .tiles__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.tiles[data-slots='6'] .apptile--home .apptile__icon { width: 6.5rem; height: 6.5rem; }
+.tiles[data-slots='6'] .apptile--home .apptile__label { font-size: 1.7rem; }
+
+.tiles__add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  border-radius: var(--radius-xl-auto);
+  border: 2px dashed var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+}
+.tiles__addicon { font-size: 3.5rem; }
+
+.tiles__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 5rem;
+}
+.tiles__hint { flex: 1; color: var(--text-secondary); font-size: 1.3rem; }
+.tiles__slots {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  background: var(--surface-subtle);
+}
+.tiles__slot {
+  min-height: 4.25rem;
+  padding: 0 var(--space-5);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 1.3rem;
+}
+.tiles__slot.is-on { background: var(--surface-elevated); color: var(--text-primary); }
+.tiles__done {
+  min-height: 4.75rem;
+  min-width: 9rem;
+  border-radius: var(--radius-lg);
+  background: var(--accent-primary);
+  color: var(--text-on-accent);
+  font-size: 1.5rem;
+  font-weight: var(--weight-semibold);
+}
+
+/* ---------- Picker ---------------------------------------------------- */
+.picker {
   position: absolute;
-  inset: calc(var(--space-6) * -1) calc(var(--space-8) * -1);
-  z-index: -1;
-  background: radial-gradient(
-    72% 100% at 100% 30%,
-    rgba(var(--surface-fade), 0.78) 0%,
-    rgba(var(--surface-fade), 0.42) 52%,
-    rgba(var(--surface-fade), 0) 100%
-  );
+  inset: calc(var(--content-pad) * -1);
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: var(--scrim);
+  direction: rtl;
 }
-.home__clock { display: flex; flex-direction: column; gap: var(--space-1); }
-.home__time {
-  font-size: 3.6rem;
-  color: var(--text-primary);
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
-}
-.home__date { font-size: var(--type-meta); color: var(--text-secondary); }
-.home__ambientsep { width: 1px; align-self: stretch; margin-block: 0.4rem; background: var(--divider); }
-
-.home__weather { display: flex; align-items: center; gap: var(--space-3); }
-.home__wicon { font-size: var(--icon-lg); color: var(--text-secondary); }
-.home__temp { font-size: var(--type-num-sm); font-weight: var(--weight-medium); }
-.home__wcond { display: flex; flex-direction: column; font-size: var(--type-body); color: var(--text-secondary); }
-.home__wrange { font-size: var(--type-meta); color: var(--text-muted); font-weight: var(--weight-regular); }
-
-/* Saved destinations sit at the far corner, away from the route. */
-.home__saved { display: flex; gap: var(--space-3); align-self: flex-end; }
-.home__chip {
+.picker__panel {
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: var(--touch-lg);
-  min-width: 14rem;
-  padding-inline: var(--space-5);
-  border-radius: var(--radius-md);
-  background: rgba(var(--surface-fade), 0.96);
-  box-shadow: var(--shadow-soft);
-  text-align: start;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: min(100%, 80rem);
+  max-height: 100%;
+  padding: var(--space-6);
+  border-radius: var(--radius-xl-auto);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
 }
-.home__chipicon { font-size: var(--icon-md); color: var(--text-secondary); flex: none; }
-.home__chiptext { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.home__chipname { font-size: var(--type-body-lg); font-weight: var(--weight-medium); }
-.home__chipsub { font-size: var(--type-meta); color: var(--text-muted); }
-.home__chipeta { display: flex; align-items: baseline; gap: 0.2em; flex: none; }
-.home__chipeta .n-value { font-size: var(--type-num-sm); }
-.home__chipunit { font-size: var(--type-caption); color: var(--text-muted); }
-
-.home__routechip {
+.picker__head { display: flex; align-items: center; justify-content: space-between; }
+.picker__title { font-size: 2rem; font-weight: var(--weight-semibold); }
+.picker__close {
+  min-height: 4.5rem;
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--surface-elevated);
+  font-size: 1.4rem;
+}
+.picker__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-rows: 10rem;
+  gap: var(--space-4);
+  overflow-y: auto;
+  min-height: 0;
+}
+.picker__item {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: var(--space-3);
-  align-self: flex-end;
-  margin-top: auto;
-  min-height: var(--touch-lg);
-  max-width: 24rem;
-  padding-inline: var(--space-5);
-  border-radius: var(--radius-md);
-  background: rgba(var(--surface-fade), 0.96);
-  box-shadow: var(--shadow-soft);
-  font-size: var(--type-body-lg);
-  font-weight: var(--weight-medium);
+  min-width: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--surface-subtle);
+  font-size: 1.3rem;
 }
-.home__routeicon { font-size: var(--icon-md); color: var(--accent-primary); flex: none; }
-.home__routego { font-size: var(--icon-sm); color: var(--text-muted); flex: none; }
-
-/* ---------- Compatibility panels ----------------------------------------- */
-@media (max-width: 1500px) {
-  :root { --stage-gap: 42%; --stage-gap-guiding: 34%; }
-  .ctx { padding: var(--space-4); gap: var(--space-3); }
-  .home__overlay { padding: var(--space-4); }
-  .home__time { font-size: 2.8rem; }
-  .home__chip { min-width: 10rem; }
-}
-@media (max-height: 740px) {
-  .ctx__parked { display: none; }
-}
+.picker__item.is-on { box-shadow: inset 0 0 0 3px var(--accent-primary); }
+.picker__icon { width: 5rem; height: 5rem; }
+.picker__icon.appicon--mono { font-size: 2rem; }

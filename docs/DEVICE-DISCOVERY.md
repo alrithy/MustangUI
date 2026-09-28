@@ -96,6 +96,24 @@ Also worth checking: does any Bluetooth media player on this unit publish
 a MediaSession at all? Some vendor players do not, in which case the HMI
 correctly shows no media source.
 
+### Outside temperature
+
+The stock UI shows an outside temperature, so something on the unit
+publishes it. Find out what before writing any code:
+
+```sh
+adb shell dumpsys activity broadcasts | grep -i -E 'temp|mcu|can|car' | head -50
+adb shell dumpsys activity services | grep -i -E 'mcu|can|car|vehicle' | head -50
+adb shell settings list system | grep -i temp
+adb shell settings list global | grep -i temp
+adb shell getprop | grep -i -E 'temp|mcu'
+adb logcat -d | grep -i -E 'outside|out_temp|ambient' | tail -50
+```
+
+Only a documented or clearly observed read path (a broadcast the stock
+app already receives, a settings key, a property) goes into a
+`VehicleDataProvider`. Nothing is written or sent to the MCU.
+
 ## 5. Install and measure
 
 Only after building the APK and recording the original Home component.
